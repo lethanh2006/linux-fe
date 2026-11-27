@@ -1,182 +1,333 @@
 ---
-summary: "Phân biệt IP tạm thời và cấu hình giữ qua khởi động. Thử địa chỉ trên card ảo riêng, đọc mẫu Netplan và biết khi nào dùng NetworkManager/nmtui."
-minutes: 45
-commands: ["ip address add", "ip address del", "ip link", "ifconfig", "netplan generate", "netplan try", "nmtui"]
+summary: Đặt địa chỉ IP cho card mạng theo hai kiểu. Tạm thời bằng ifconfig hoặc ip addr (mất khi khởi động lại), và lâu dài bằng file YAML của netplan. Kèm netplan try để tự quay lại khi cấu hình sai, và nmtui trên máy có NetworkManager.
+minutes: 35
+commands: [ifconfig ... netmask, ip addr add, ip addr del, ip link set up, netplan apply, netplan try, nmtui]
 quiz:
-  - q: "ip address add gắn IP theo cách nào?"
-    options: ["Luôn ghi vào mọi file Netplan", "Tạm thời trong cấu hình đang chạy, trừ khi một công cụ khác lưu lại", "Chỉ thay DNS", "Đổi địa chỉ MAC vật lý"]
+  - q: "Đặt IP bằng `sudo ip addr add 192.168.1.100/24 dev ens4` thì sau khi khởi động lại máy sao?"
+    options: ["IP vẫn còn", "IP mất, vì chỉ là cấu hình tạm thời", "Máy không lên mạng được nữa", "IP đổi thành 192.168.1.1"]
     answer: 1
-    explain: "ip thay cấu hình kernel đang chạy. Địa chỉ có thể mất khi giao diện được cấu hình lại hoặc máy khởi động."
-  - q: "Trong 192.0.2.10/24, /24 tương ứng netmask IPv4 nào?"
-    options: ["255.0.0.0", "255.255.0.0", "255.255.255.255", "255.255.255.0"]
-    answer: 3
-    explain: "24 bit đầu là phần mạng; dạng netmask thập phân tương ứng là 255.255.255.0."
-  - q: "Cần làm gì với tên card trong một mẫu Netplan?"
-    options: ["Xác định tên thật và công cụ quản lý mạng trước khi sửa cấu hình", "Giữ nguyên mọi máy đều enp0s8", "Đổi tên tài khoản thành tên card", "Bỏ toàn bộ phần ethernets"]
-    answer: 0
-    explain: "Tên giao diện, subnet, gateway, DNS và renderer đều phụ thuộc môi trường; mẫu không phải cấu hình dùng chung."
-  - q: "netplan try có thay thế hoàn toàn việc có console và kiểm tra rollback không?"
-    options: ["Có, luôn bảo đảm khôi phục", "Có, nếu đặt timeout dài", "Không; cần kiểm tra kết quả và có cách phục hồi phù hợp", "Chỉ cần tắt SSH"]
+    explain: "`ip` và `ifconfig` chỉ đổi cấu hình đang chạy. Muốn giữ lâu dài phải ghi vào file netplan."
+  - q: "Trên Ubuntu, cấu hình mạng lâu dài nằm ở đâu?"
+    options: ["/etc/network/ip.conf", "Các file .yaml trong /etc/netplan/", "/etc/hosts", "/etc/resolv.conf"]
+    answer: 1
+    explain: "Ubuntu dùng netplan: file YAML trong `/etc/netplan/`, áp dụng bằng `sudo netplan apply`."
+  - q: "`/24` trong `192.168.1.100/24` tương đương mặt nạ mạng nào?"
+    options: ["255.0.0.0", "255.255.0.0", "255.255.255.0", "255.255.255.255"]
     answer: 2
-    explain: "try có cơ chế thử và hoàn tác khi không xác nhận, nhưng tài liệu lưu ý có trường hợp cần xác minh cấu hình đã thực sự trở lại."
+    explain: "24 bit đầu là phần mạng: 255.255.255.0. Mọi máy 192.168.1.x cùng một mạng."
+  - q: "`sudo netplan try` khác `sudo netplan apply` ở chỗ nào?"
+    options: ["Không khác", "try áp dụng thử, nếu không bấm Enter xác nhận trong thời hạn thì tự quay về cấu hình cũ", "try chỉ kiểm tra cú pháp", "try áp dụng cho lần khởi động sau"]
+    answer: 1
+    explain: "Rất hữu ích khi sửa mạng của máy từ xa: lỡ cấu hình sai làm mất kết nối, máy tự trả lại cấu hình cũ."
+  - q: "File YAML của netplan sai ở chỗ nào thì hay bị lỗi nhất?"
+    options: ["Dùng chữ hoa", "Thụt lề sai hoặc dùng phím Tab", "Có chú thích", "Tên file dài"]
+    answer: 1
+    explain: "YAML dựa vào thụt lề bằng **dấu cách** để biết cấp. Dùng Tab hoặc lệch một dấu cách là sai."
 ---
 
-> Bám video TITV bài 34. IP trong ví dụ `192.0.2.0/24` là dải dành cho tài liệu. Phần thực hành tạm thời dùng card ảo lab riêng; cấu hình lâu dài chỉ làm trên VM có console và thông số mạng đã biết.
+> Bài này đi theo video TITV bài 34. Kết quả trong bài lấy trên card `ens4`, là card thứ hai của máy. Đổi IP của card đang dùng để điều khiển máy từ xa sẽ làm mất kết nối; hãy thử trên card không dùng tới, hoặc ngồi trực tiếp trước máy.
 
-## Tạm thời và lâu dài
+Có hai kiểu đặt IP:
 
-Có hai lớp cấu hình cần phân biệt:
+| Kiểu | Cách | Khi khởi động lại |
+|---|---|---|
+| Tạm thời | Lệnh `ifconfig` hoặc `ip` | **Mất** |
+| Lâu dài | Ghi vào file cấu hình netplan | Giữ nguyên |
 
-- Lệnh `ip` hoặc `ifconfig` thay trạng thái mạng đang chạy. Thay đổi có thể mất khi giao diện được quản lý lại hoặc máy khởi động.
-- Netplan hoặc NetworkManager lưu cấu hình để công cụ quản lý mạng áp dụng lại.
+## Đặt IP tạm thời
 
-Một địa chỉ chưa đủ: kết nối ra ngoài subnet thường cần route phù hợp; truy cập bằng tên còn cần phân giải tên. Không lấy IP tĩnh tuỳ ý trong một mạng đang dùng, vì có thể trùng địa chỉ của máy khác.
-
-## Thực hành IP trên card ảo riêng
-
-Thực hiện trên Ubuntu VM lab. Cần quyền quản trị và hỗ trợ giao diện `dummy`; container mặc định thường không có quyền NET_ADMIN để làm phần này.
+### Bằng ifconfig
 
 ```bash
-sudo ip link add labnet0 type dummy
-sudo ip link set dev labnet0 up
-sudo ip address add 192.0.2.10/24 dev labnet0
-ip -4 -br address show dev labnet0
+sudo ifconfig ens4 192.168.1.100 netmask 255.255.255.0 up
+ifconfig ens4 | head -3
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
-| `link add labnet0` | Tạo giao diện lab mới tên labnet0 |
-| `type dummy` | Giao diện ảo phục vụ thử nghiệm, không phải card Internet thật |
-| `link set dev labnet0 up` | Bật giao diện này |
-| `address add` | Thêm địa chỉ, không tự cấu hình DNS hay gateway |
-| `192.0.2.10/24` | IP và số bit mạng; /24 tương ứng 255.255.255.0 |
-| `dev labnet0` | Chỉ rõ giao diện nhận IP |
-| `-4 -br` | Chỉ IPv4, hiển thị ngắn gọn |
+| `ens4` | Card cần đặt (máy trong video là `enp0s3`) |
+| `192.168.1.100` | Địa chỉ IP mới |
+| `netmask 255.255.255.0` | Mặt nạ mạng: ba số đầu `192.168.1` là phần mạng |
+| `up` | Bật card |
 
-Dòng địa chỉ sẽ có `192.0.2.10/24`. Trạng thái hiển thị của card ảo có thể là `UNKNOWN`; hãy đọc cả cờ UP và địa chỉ, không suy ra Internet đã hoạt động từ một chữ trạng thái.
-
-Thử thêm rồi gỡ một địa chỉ thứ hai:
-
-```bash
-sudo ip address add 192.0.2.11/24 dev labnet0
-ip -4 -br address show dev labnet0
-sudo ip address del 192.0.2.11/24 dev labnet0
+```text
+ens4: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.1.100  netmask 255.255.255.0  broadcast 192.168.1.255
+        inet6 fe80::5054:ff:fe12:3457  prefixlen 64  scopeid 0x20<link>
 ```
 
-`add` có thể làm giao diện có nhiều địa chỉ. Nó không có nghĩa tự thay mọi địa chỉ cũ. Sau bài tập, dọn riêng card lab:
+`ifconfig` **thay** IP cũ của card bằng IP mới. Broadcast `192.168.1.255` được tự tính từ mặt nạ.
+
+### Bằng ip (có sẵn)
 
 ```bash
-sudo ip link delete labnet0
+sudo ip addr add 192.168.1.101/24 dev ens4
+sudo ip link set dev ens4 up
+ip -br a show ens4
 ```
 
-Không chạy lệnh xoá với card chính của máy. Nếu tên labnet0 đã tồn tại trước bài, xác định ai tạo nó trước khi tiếp tục, không xoá để tránh lỗi.
+| Phần | Ý nghĩa |
+|---|---|
+| `ip addr add` | Thêm một địa chỉ |
+| `192.168.1.101/24` | IP và mặt nạ viết gọn: `/24` = `255.255.255.0` |
+| `dev ens4` | Card nào |
+| `ip link set dev ens4 up` | Bật card (nếu đang tắt) |
 
-## ifconfig trong video
+```text
+ens4             UP             192.168.1.100/24 192.168.1.101/24 fec0::5054:ff:fe12:3457/64 fe80::5054:ff:fe12:3457/64 
+```
 
-Nếu lab có gói `net-tools`, tạo lại card lab rồi thử cú pháp trong video:
+Khác `ifconfig`: `ip addr add` **cộng thêm** địa chỉ, nên card giờ có hai IP. Thử gọi tới IP mới:
 
 ```bash
-sudo ip link add labnet0 type dummy
-sudo ifconfig labnet0 192.0.2.20 netmask 255.255.255.0 up
-ifconfig labnet0
-sudo ip link delete labnet0
+ping -c 1 192.168.1.101
 ```
 
-`netmask` đặt mặt nạ, `up` bật card. Đây là cú pháp cũ để hiểu video. Khối lệnh tạo và dọn riêng card lab, không thay địa chỉ của card chính.
+```text
+PING 192.168.1.101 (192.168.1.101) 56(84) bytes of data.
+64 bytes from 192.168.1.101: icmp_seq=1 ttl=64 time=0.090 ms
 
-## Netplan: cấu hình giữ qua khởi động
+--- 192.168.1.101 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.090/0.090/0.090/0.000 ms
+```
 
-Ubuntu Server thường dùng Netplan với systemd-networkd. Ubuntu Desktop có thể dùng NetworkManager. Xác định công cụ đang quản lý máy trước; không cài thêm hoặc bật hai công cụ chỉ để bắt chước một ví dụ.
-
-Các file YAML Netplan được kết hợp từ cấu hình hệ thống, nên không giả định một file mới sẽ vô hiệu hết cấu hình cũ. Trước khi sửa, xem cấu hình và sao lưu thư mục cấu hình trên VM lab:
+Gỡ địa chỉ:
 
 ```bash
-sudo netplan get
-sudo cp -a /etc/netplan /etc/netplan.backup-lab
+sudo ip addr del 192.168.1.101/24 dev ens4
+sudo ip addr flush dev ens4
+ip -br a show ens4
 ```
 
-Nếu bản sao đã có sẵn, dùng tên sao lưu mới thay vì ghi chồng. Không chia sẻ file cấu hình có chứa thông tin xác thực Wi-Fi.
+```text
+ens4             UP             
+```
 
-Ví dụ dưới đây dành cho một card lab host-only tên `enp0s8`. Trước hết kiểm tra tên card bằng `ip -br link` và xem các file đang có bằng `sudo netplan get` cùng `ls /etc/netplan`.
+| Lệnh | Làm gì |
+|---|---|
+| `ip addr del IP/mặt-nạ dev card` | Gỡ một địa chỉ |
+| `ip addr flush dev card` | Gỡ mọi địa chỉ của card |
 
-Trên VM lab, nếu card này chưa được khai báo trong file khác và tên file `60-lab.yaml` chưa được dùng, mở file lab:
+Cấu hình kiểu này mất khi khởi động lại máy, hoặc khi dịch vụ mạng cấu hình lại card. Dùng để thử nhanh.
+
+## Đặt IP lâu dài: netplan
+
+Ubuntu lưu cấu hình mạng trong các file **YAML** ở `/etc/netplan/`. Netplan đọc các file này rồi giao cho dịch vụ quản lý mạng (`systemd-networkd` trên server, `NetworkManager` trên desktop, bài 33).
 
 ```bash
-sudoedit /etc/netplan/60-lab.yaml
+ls -l /etc/netplan
 ```
 
-Nhập mẫu bên dưới sau khi thay tên card và địa chỉ theo mạng lab. Nếu card đã có cấu hình, sửa đúng file đang quản lý nó thay vì tạo thêm một khai báo chồng lên. Không thử trên card đang giữ kết nối SSH.
+```text
+total 4
+-rw------- 1 root root 157 Nov 27 19:48 50-cloud-init.yaml
+```
+
+Tên file có số ở đầu; các file được đọc theo thứ tự tên. Máy của bạn có thể có file tên khác, ví dụ `01-network-manager-all.yaml` trên Ubuntu Desktop.
+
+### Mẫu: IP tĩnh cho card chính
+
+Mẫu đầy đủ giống trong video, cho card `enp0s3` dùng IP tĩnh, gateway và DNS:
 
 ```yaml
 network:
   version: 2
   renderer: networkd
   ethernets:
-    enp0s8:
+    enp0s3:
       dhcp4: false
       addresses:
-        - 192.168.56.20/24
+        - 192.168.1.100/24
+      routes:
+        - to: default
+          via: 192.168.1.1
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
 ```
 
-| Phần | Ý nghĩa |
+| Dòng | Ý nghĩa |
 |---|---|
-| `version: 2` | Phiên bản định dạng Netplan |
-| `renderer: networkd` | Backend systemd-networkd cho ví dụ server này |
-| `ethernets` | Nhóm giao diện Ethernet |
-| `enp0s8` | Tên card thật của VM ví dụ, phải kiểm tra trên máy mình |
-| `dhcp4: false` | Không xin IPv4 bằng DHCP cho card ví dụ |
-| `addresses` | Danh sách địa chỉ tĩnh |
+| `version: 2` | Phiên bản cú pháp netplan, luôn là 2 |
+| `renderer: networkd` | Dịch vụ thực hiện: `networkd` (server) hoặc `NetworkManager` (desktop). Bỏ trống thì mặc định `networkd` |
+| `ethernets:` | Các card có dây |
+| `enp0s3:` | Tên card |
+| `dhcp4: false` | Không xin IP tự động |
+| `addresses:` | Danh sách IP tĩnh, kèm `/mặt-nạ` |
+| `routes: - to: default via: 192.168.1.1` | Gateway. Tài liệu cũ viết `gateway4: 192.168.1.1`; cách này đã cũ, netplan mới báo cảnh báo |
+| `nameservers: addresses:` | Máy chủ DNS |
 
-Mẫu host-only không đặt default route hoặc DNS vì chỉ nhằm giao tiếp trong mạng lab. Nếu cấu hình card phục vụ mạng khác, cần thông số gateway/DNS đúng và tránh làm mất đường truy cập hiện tại. Không chép mẫu này nguyên vẹn lên VPS.
+Mẫu này đã được kiểm tra cú pháp bằng `netplan generate`. Thay IP, gateway, tên card cho khớp mạng của bạn.
 
-Sau khi lưu file lab, đặt quyền 600 cho chính file vừa sửa và kiểm tra cú pháp. Nếu chọn tên file khác, thay đường dẫn tương ứng:
+> **YAML rất kén thụt lề:** chỉ dùng **dấu cách** (không dùng phím Tab), các mục cùng cấp phải thẳng hàng. Sai một dấu cách là netplan báo lỗi.
 
-```bash
-sudo chmod 600 /etc/netplan/60-lab.yaml
-sudo netplan generate
-sudo netplan try --timeout 120
-```
+### Làm thật trên card ens4
 
-`generate` kiểm tra và sinh cấu hình, chưa thay thế việc xác minh kết nối thực tế. `try` áp dụng thử, yêu cầu xác nhận và có cơ chế hoàn tác nếu không xác nhận. Tài liệu Netplan lưu ý phải kiểm tra cấu hình có thực sự được khôi phục khi huỷ hoặc hết thời gian; vì vậy vẫn cần console và bản sao cấu hình. Khi xác nhận cấu hình đúng, kiểm tra lại địa chỉ và route.
+Ghi file bằng `sudo` (file trong `/etc` của root; video quên `sudo` nên lưu không được). Có thể mở `sudo nano /etc/netplan/60-ens4.yaml` để gõ tay; ở đây ghi bằng `tee`:
 
 ```bash
-ip -4 -br address show dev enp0s8
-ip route
+printf 'network:\n  version: 2\n  ethernets:\n    ens4:\n      addresses:\n        - 192.168.1.100/24\n      nameservers:\n        addresses: [8.8.8.8, 8.8.4.4]\n' | sudo tee /etc/netplan/60-ens4.yaml
 ```
 
-Thay `enp0s8` bằng tên card lab đã chọn. Đối chiếu địa chỉ với YAML và thử kết nối tới một máy khác trong mạng lab nếu có. Sau khi khởi động lại VM lab, chạy lại các lệnh này để kiểm tra cấu hình đã được giữ.
+```text
+network:
+  version: 2
+  ethernets:
+    ens4:
+      addresses:
+        - 192.168.1.100/24
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+```
 
-## nmtui là lựa chọn cho NetworkManager
+Card phụ này không cần gateway, vì card chính đã lo đường ra Internet. Áp dụng:
 
-Video giới thiệu giao diện chữ `nmtui`. Chỉ dùng nó khi NetworkManager được cài và đang quản lý card cần cấu hình. Trong giao diện, phần sửa kết nối cho phép chọn phương thức IPv4, địa chỉ/prefix, gateway và DNS; phần kích hoạt kết nối áp dụng thay đổi.
+```bash
+sudo netplan apply
+```
 
-Nếu máy server dùng networkd, việc không có nmtui không phải lỗi của Netplan. Không chuyển renderer của card đang phục vụ truy cập từ xa chỉ để làm bài này.
+```text
+
+** (generate:1808): WARNING **: 23:19:29.682: Permissions for /etc/netplan/60-ens4.yaml are too open. Netplan configuration should NOT be accessible by others.
+...
+```
+
+Netplan vẫn chạy nhưng cảnh báo: file cấu hình mạng chỉ nên để root đọc. Sửa quyền (bài 31) rồi áp dụng lại:
+
+```bash
+sudo chmod 600 /etc/netplan/60-ens4.yaml
+sudo netplan apply
+ip -br a show ens4
+resolvectl dns ens4
+```
+
+```text
+ens4             UP             192.168.1.100/24 
+Link 3 (ens4): 8.8.8.8 8.8.4.4
+```
+
+IP và DNS đã đúng, và sẽ giữ nguyên sau khi khởi động lại.
+
+### netplan try: thử có đường lui
+
+Đổi IP sai trên máy ở xa là mất kết nối. `netplan try` áp dụng thử rồi chờ bạn bấm `Enter`; không bấm trong thời hạn (mặc định 120 giây) thì tự trả lại cấu hình cũ. Ví dụ sau khi sửa IP trong file thành `192.168.1.110/24`:
+
+```bash
+sudo netplan try --timeout 30
+```
+
+```text
+Do you want to keep these settings?
+
+
+Press ENTER before the timeout to accept the new configuration
+
+
+Changes will revert in 30 seconds
+Configuration accepted.
+```
+
+Bấm `Enter` thì cấu hình được giữ (`Configuration accepted.`). Nếu mất kết nối và không bấm được, 30 giây sau máy tự quay lại cấu hình cũ.
+
+Dọn sau khi thử: `sudo rm /etc/netplan/60-ens4.yaml`, rồi `sudo netplan apply`.
+
+## nmtui: giao diện trong terminal
+
+Máy có **NetworkManager** (Ubuntu Desktop, hoặc server có cài gói `network-manager`) có `nmtui`: giao diện chọn bằng phím mũi tên ngay trong terminal.
+
+```bash
+sudo nmtui
+```
+
+Các bước: chọn **Edit a connection** → chọn card → ở **IPv4 CONFIGURATION** đổi `Automatic` thành `Manual` → **Show** → điền **Addresses** (`192.168.1.100/24`), **Gateway**, **DNS servers** → **OK**. Sau đó vào **Activate a connection**, tắt rồi bật lại card để áp dụng.
+
+Ubuntu Server mặc định không có NetworkManager nên không có `nmtui`; dùng netplan như trên.
+
+## Giao diện đồ hoạ
+
+Trên Ubuntu Desktop: **Settings → Network** → bấm biểu tượng bánh răng của card → tab **IPv4** → chọn **Manual** → điền địa chỉ, mặt nạ, gateway, DNS → **Apply**.
+
+## Mở rộng (chuẩn LPIC-1)
+
+Chuẩn LPIC-1 mục 109.2 còn có:
+
+| Lệnh, file | Ý nghĩa |
+|---|---|
+| `netplan get` | In cấu hình netplan đang có (gộp mọi file) |
+| `netplan generate` | Chỉ kiểm tra và sinh cấu hình, chưa áp dụng |
+| `nmcli con show`, `nmcli con mod` | Xem, sửa cấu hình NetworkManager bằng lệnh |
+| `ip route add default via IP` | Thêm gateway tạm thời |
+| `/etc/network/interfaces` | Cách cấu hình mạng kiểu Debian cũ, dùng `ifup`/`ifdown` |
+| `/etc/sysconfig/network-scripts/` | Cách cấu hình cũ của họ Red Hat; bản mới dùng NetworkManager |
+| DHCP | Máy chủ trong mạng (thường là router) tự cấp IP. `dhcp4: true` trong netplan |
+
+```bash
+sudo netplan get ethernets.ens4
+```
+
+```text
+addresses:
+- "192.168.1.100/24"
+nameservers:
+  addresses:
+  - 8.8.8.8
+  - 8.8.4.4
+```
 
 ## Thực hành
 
-1. Tạo labnet0, gắn `192.0.2.30/24`, xem kết quả rồi xoá card lab.
-2. Giải thích vì sao thao tác trên không bảo đảm IP tồn tại sau khởi động.
-3. Đọc YAML mẫu và chỉ ra chỗ cần thay theo môi trường thật.
+Làm trên card không dùng để điều khiển máy từ xa.
 
-<details>
-<summary>Xem đáp án</summary>
+1. Gán tạm IP `10.10.10.5/24` cho card, kiểm tra bằng `ip -br a`, rồi gỡ đi.
 
-```bash
-sudo ip link add labnet0 type dummy
-sudo ip link set dev labnet0 up
-sudo ip address add 192.0.2.30/24 dev labnet0
-ip -4 -br address show dev labnet0
-sudo ip link delete labnet0
-```
+   <details>
+   <summary>Xem đáp án</summary>
 
-Đây là cấu hình đang chạy trong kernel. Muốn giữ lâu dài cần cấu hình qua công cụ quản lý mạng phù hợp. Trong YAML phải xác định lại tên card, renderer, phương thức DHCP/tĩnh và địa chỉ; route và DNS tuỳ nhu cầu, không có một bộ giá trị chung cho mọi máy.
+   ```bash
+   sudo ip addr add 10.10.10.5/24 dev ens4
+   ip -br a show ens4
+   sudo ip addr del 10.10.10.5/24 dev ens4
+   ```
 
-</details>
+   Thay `ens4` bằng tên card của bạn.
 
-## Đọc thêm
+   </details>
 
-[Tài liệu chính thức netplan try](https://netplan.readthedocs.io/en/stable/netplan-try/) mô tả xác nhận, timeout và các lưu ý về hoàn tác.
+2. Đổi `255.255.255.0`, `255.255.0.0` ra dạng `/số`.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   `/24` và `/16`: mỗi số `255` là 8 bit.
+
+   </details>
+
+3. Viết file netplan cho card `ens4` dùng IP tự động (DHCP), áp dụng bằng `netplan try`.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```yaml
+   network:
+     version: 2
+     ethernets:
+       ens4:
+         dhcp4: true
+   ```
+
+   Lưu vào `/etc/netplan/60-ens4.yaml`, `sudo chmod 600` file đó, rồi `sudo netplan try` và bấm `Enter`.
+
+   </details>
 
 ## Tóm tắt
 
-Dùng card lab riêng để hiểu IP/prefix và thao tác add/del. Cấu hình tạm thời khác cấu hình được lưu. Với cấu hình thật, xác định công cụ quản lý, sao lưu, kiểm tra cú pháp, thử có khả năng khôi phục rồi xác minh kết nối.
+| Việc | Lệnh |
+|---|---|
+| IP tạm (thay IP cũ) | `sudo ifconfig card IP netmask MẶT-NẠ up` |
+| IP tạm (thêm IP) | `sudo ip addr add IP/24 dev card` |
+| Bật card | `sudo ip link set dev card up` |
+| Gỡ IP | `sudo ip addr del IP/24 dev card` |
+| IP lâu dài | File YAML trong `/etc/netplan/`, quyền 600 |
+| Áp dụng | `sudo netplan apply` |
+| Áp dụng có đường lui | `sudo netplan try` |
+| Giao diện trong terminal | `sudo nmtui` (máy có NetworkManager) |
