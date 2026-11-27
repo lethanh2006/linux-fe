@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
+/** URL backend NestJS mà server Next.js gọi tới (không lộ ra trình duyệt). */
+const API_INTERNAL_URL =
+  process.env.API_INTERNAL_URL ?? "http://localhost:4001/api";
+
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
@@ -11,6 +14,12 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  // Trình duyệt gọi /api/* cùng origin với web, Next.js chuyển tiếp sang backend → không cần CORS.
+  async rewrites() {
+    return [
+      { source: "/api/:path*", destination: `${API_INTERNAL_URL}/:path*` },
+    ];
   },
 };
 
