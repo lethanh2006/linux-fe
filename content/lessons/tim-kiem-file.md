@@ -360,7 +360,7 @@ Dùng dữ liệu `~/web` và `~/logs` đã tạo ở trên.
    which curl git python3
    ```
 
-   Chỉ in đường dẫn những chương trình đã cài. Trong container lab, `curl` có, còn `git` và `python3` không có.
+   Chỉ in đường dẫn những chương trình đã cài. Trong container lab, `curl` và `python3` có, còn `git` không có.
 
    </details>
 

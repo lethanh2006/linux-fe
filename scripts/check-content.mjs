@@ -42,6 +42,20 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".md"))) {
   }
   const fences = (content.match(/^\s*```/gm) ?? []).length;
   if (fences % 2 !== 0) errors.push(`${where}: số dấu \`\`\` lẻ (khối code chưa đóng)`);
+  // Bảng GFM: mọi dòng của một bảng phải có cùng số cột (dấu | trong ô phải viết \\| hoặc &#124;).
+  let inFence = false;
+  let cols = null;
+  for (const [i, raw] of content.split("\n").entries()) {
+    const line = raw.trim();
+    if (line.startsWith("```")) inFence = !inFence;
+    if (inFence || !line.startsWith("|")) {
+      cols = null;
+      continue;
+    }
+    const n = line.replace(/\\\|/g, "").split("|").length;
+    if (cols === null) cols = n;
+    else if (n !== cols) errors.push(`${where}: dòng ${i + 1} của bảng có số cột khác dòng tiêu đề`);
+  }
   const open = (content.match(/<details>/g) ?? []).length;
   const close = (content.match(/<\/details>/g) ?? []).length;
   if (open !== close) errors.push(`${where}: <details> mở ${open}, đóng ${close}`);

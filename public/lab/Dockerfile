@@ -16,7 +16,7 @@ RUN apt-get update \
       curl wget ca-certificates iproute2 iputils-ping dnsutils netcat-openbsd traceroute \
       procps psmisc htop lsof tree file findutils plocate \
       tar gzip bzip2 xz-utils zip unzip bc \
-      cron at tzdata locales acl openssh-client gnupg \
+      cron at tzdata locales acl openssh-client gnupg python3 \
  && locale-gen en_US.UTF-8 vi_VN.UTF-8 \
  && rm -rf /var/lib/apt/lists/*
 
