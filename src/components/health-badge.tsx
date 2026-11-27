@@ -8,7 +8,7 @@ interface HealthStatus {
   db: "up" | "down";
 }
 
-/** Hiện trạng thái backend và MongoDB, gọi qua proxy /api của Next.js. */
+/** Hiện trạng thái backend và database, gọi qua proxy /api của Next.js. */
 export function HealthBadge() {
   const { data, error, isLoading } = useSWR<HealthStatus>("/health", fetcher);
 
@@ -19,10 +19,10 @@ export function HealthBadge() {
     text = "Không gọi được backend (đã chạy backend ở cổng 4001 chưa?)";
   } else if (data && data.db === "up") {
     tone = "bg-success-soft text-success";
-    text = "Backend chạy, MongoDB đã kết nối";
+    text = "Backend chạy, database đã kết nối";
   } else if (data) {
     tone = "bg-warning-soft text-warning";
-    text = "Backend chạy, nhưng MongoDB chưa kết nối";
+    text = "Backend chạy, nhưng database chưa kết nối";
   }
 
   return (

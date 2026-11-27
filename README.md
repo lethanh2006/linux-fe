@@ -14,7 +14,7 @@ pnpm install
 pnpm dev                      # http://localhost:3001
 ```
 
-Trang chủ có ô trạng thái: xanh là backend và MongoDB đều chạy.
+Trang chủ có ô trạng thái: xanh là backend và database đều chạy.
 
 ## Lệnh
 
