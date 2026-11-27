@@ -15,7 +15,7 @@ RUN apt-get update \
       sudo man-db manpages manpages-dev less vim nano bash-completion \
       curl wget ca-certificates iproute2 iputils-ping dnsutils netcat-openbsd traceroute \
       procps psmisc htop lsof tree file findutils plocate \
-      tar gzip bzip2 xz-utils zip unzip \
+      tar gzip bzip2 xz-utils zip unzip bc \
       cron at tzdata locales acl openssh-client gnupg \
  && locale-gen en_US.UTF-8 vi_VN.UTF-8 \
  && rm -rf /var/lib/apt/lists/*
