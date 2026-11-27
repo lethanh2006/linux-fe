@@ -25,7 +25,7 @@ quiz:
     explain: "Ví dụ cấu hình nginx: `daily`, `rotate 14`, `compress` nghĩa là mỗi ngày xoay một lần, giữ 14 bản, bản cũ được nén gzip."
 ---
 
-> Phần journalctl cần máy có systemd (máy ảo, WSL, VPS). Kết quả trong bài lấy từ Ubuntu 24.04.
+> Kết quả trong bài lấy từ Ubuntu 24.04.
 
 ## Hai hệ thống log trên Linux
 
@@ -254,8 +254,6 @@ cat /etc/logrotate.d/nginx
 Vì vậy trong `/var/log/nginx/` bạn thấy `access.log`, `access.log.1`, `access.log.2.gz`… Đọc file `.gz` bằng `zcat`, `zless`, `zgrep`.
 
 ## Thực hành
-
-Làm trên máy ảo hoặc WSL.
 
 1. Xem log của dịch vụ `ssh` (hoặc `cron`) từ lúc máy khởi động, rồi chỉ lấy các dòng mức `warning` trở lên.
 

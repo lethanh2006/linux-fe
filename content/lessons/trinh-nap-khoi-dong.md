@@ -21,11 +21,11 @@ quiz:
     explain: "`update-grub` chỉ sinh lại file cấu hình. `grub-install /dev/vda` (BIOS) hoặc `grub-install` (UEFI) mới ghi chương trình GRUB vào vùng khởi động. Cài kernel mới thì gói tự chạy `update-grub`."
 ---
 
-> Cần **máy ảo hoặc VPS**. Sửa sai cấu hình GRUB có thể làm máy không khởi động được. Hãy làm trên máy ảo, và chép bản dự phòng trước khi sửa.
+> Sửa sai cấu hình GRUB có thể làm máy không khởi động được. Chỉ thử trên máy không chứa dữ liệu quan trọng, và chép bản dự phòng trước khi sửa.
 
 ## GRUB làm gì
 
-Nhắc lại [bài 21](/bai/khoi-dong-he-thong): firmware (BIOS/UEFI) → **GRUB** → kernel + initramfs → systemd. GRUB 2 (**GR**and **U**nified **B**ootloader):
+Nhắc lại [bài 24](/bai/khoi-dong-he-thong): firmware (BIOS/UEFI) → **GRUB** → kernel + initramfs → systemd. GRUB 2 (**GR**and **U**nified **B**ootloader):
 
 - Hiện menu chọn hệ điều hành / phiên bản kernel / chế độ khôi phục.
 - Đọc kernel và initramfs từ `/boot` vào RAM.
@@ -39,7 +39,7 @@ Máy khởi động BIOS hay UEFI:
 
 | | BIOS + GPT | UEFI |
 |---|---|---|
-| Phần lõi GRUB nằm ở | Phân vùng nhỏ "BIOS boot" (máy ảo trong bài: `vda14`, 4 MB) | File `.efi` trong phân vùng EFI, gắn ở `/boot/efi` |
+| Phần lõi GRUB nằm ở | Phân vùng nhỏ "BIOS boot" (máy trong bài: `vda14`, 4 MB) | File `.efi` trong phân vùng EFI, gắn ở `/boot/efi` |
 | Xem / sửa mục khởi động của firmware | Không có | `efibootmgr` |
 
 ## Các file trong /boot
@@ -117,7 +117,7 @@ GRUB_CMDLINE_LINUX=""
 | `GRUB_CMDLINE_LINUX_DEFAULT` | Tham số kernel cho mục khởi động bình thường |
 | `GRUB_CMDLINE_LINUX` | Tham số kernel cho **mọi** mục, kể cả chế độ khôi phục |
 
-Cloud image của Ubuntu ghi đè thêm trong `/etc/default/grub.d/50-cloudimg-settings.cfg` (ví dụ `console=ttyS0` để xuất màn hình ra cổng serial của máy ảo).
+Cloud image của Ubuntu ghi đè thêm trong `/etc/default/grub.d/50-cloudimg-settings.cfg` (ví dụ `console=ttyS0` để xuất màn hình ra cổng serial).
 
 ### Sửa và sinh lại cấu hình
 
@@ -213,7 +213,7 @@ Trên máy UEFI, xem các mục khởi động mà firmware biết: `sudo efiboo
 
 ## Thực hành
 
-Trên máy ảo (VirtualBox hoặc Multipass). Chép bản dự phòng trước.
+Chép bản dự phòng trước khi làm.
 
 1. Máy khởi động bằng BIOS hay UEFI? Có những kernel nào trong `/boot`? Đang chạy kernel nào?
 

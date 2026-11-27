@@ -132,9 +132,9 @@ Current DNS Server: 10.0.2.3
 | `sudo resolvectl flush-caches` | Xoá bộ nhớ đệm DNS (khi vừa đổi bản ghi) |
 | `resolvectl statistics` | Thống kê, số lần trúng bộ nhớ đệm |
 
-Đổi DNS server lâu dài: trong netplan (`nameservers: addresses: [1.1.1.1, 8.8.8.8]`, [bài 44](/bai/cau-hinh-mang)), hoặc `/etc/systemd/resolved.conf` (dòng `DNS=`) rồi `sudo systemctl restart systemd-resolved`.
+Đổi DNS server lâu dài: trong netplan (`nameservers: addresses: [1.1.1.1, 8.8.8.8]`, [bài 33](/bai/cau-hinh-mang)), hoặc `/etc/systemd/resolved.conf` (dòng `DNS=`) rồi `sudo systemctl restart systemd-resolved`.
 
-Trên hệ thống không dùng systemd-resolved (Rocky, Alpine, container), `/etc/resolv.conf` là file thường, ghi thẳng DNS server: `nameserver 8.8.8.8`.
+Trên hệ thống không dùng systemd-resolved (Rocky, Alpine…), `/etc/resolv.conf` là file thường, ghi thẳng DNS server: `nameserver 8.8.8.8`.
 
 ## Công cụ tra DNS
 
@@ -230,7 +230,6 @@ example.com mail is handled by 0 .
 | Tên miền vừa đổi IP mà máy vẫn ra IP cũ | Bộ nhớ đệm: chờ hết TTL, hoặc `sudo resolvectl flush-caches`. So sánh `dig @1.1.1.1` với `dig @8.8.8.8` |
 | Một tên ra IP lạ | Xem `/etc/hosts` có dòng ghi đè không: `getent hosts tên` |
 | Chỉ một số máy trong nội bộ không tra được | Sai `search`, sai DNS nội bộ trong `resolv.conf` / netplan |
-| Container không tra được tên | Xem `/etc/resolv.conf` bên trong container |
 
 ## Thực hành
 

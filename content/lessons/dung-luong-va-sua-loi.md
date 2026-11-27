@@ -25,7 +25,7 @@ quiz:
     explain: "`fsck.xfs` chỉ là chương trình rỗng, không làm gì. Với xfs, dùng `xfs_repair` (gỡ ổ ra trước). `-n` để chỉ kiểm tra, không sửa."
 ---
 
-> Phần `df`, `du` làm được trong container. Phần sửa lỗi filesystem cần **máy ảo** có ổ phụ như [bài 29](/bai/phan-vung-va-filesystem).
+> Phần sửa lỗi filesystem dùng ổ phụ đã chia ở [bài mở rộng 4](/bai/phan-vung-va-filesystem).
 
 ## df: ổ nào sắp đầy
 
@@ -107,14 +107,13 @@ sudo du -h -d 1 /var 2>/dev/null | sort -h | tail
 sudo du -h -d 1 /var/log 2>/dev/null | sort -h | tail
 ```
 
-Thêm `-x` để `du` không đi sang filesystem khác (ví dụ khi đo `/` thì bỏ qua `/boot` và các ổ gắn thêm). Tìm thẳng file lớn: `sudo find / -xdev -type f -size +500M 2>/dev/null` ([bài 10](/bai/tim-kiem-file)). Công cụ `ncdu` (cài bằng `apt`) cho phép duyệt bằng phím mũi tên, rất tiện.
+Thêm `-x` để `du` không đi sang filesystem khác (ví dụ khi đo `/` thì bỏ qua `/boot` và các ổ gắn thêm). Tìm thẳng file lớn: `sudo find / -xdev -type f -size +500M 2>/dev/null` ([bài 16](/bai/lenh-find)). Công cụ `ncdu` (cài bằng `apt`) cho phép duyệt bằng phím mũi tên, rất tiện.
 
 Thủ phạm hay gặp trên server:
 
 | Chỗ | Cách dọn |
 |---|---|
-| `/var/log` (log không xoay vòng, log ứng dụng) | Cấu hình logrotate, `journalctl --vacuum-size=500M` ([bài 23](/bai/nhat-ky-he-thong)) |
-| `/var/lib/docker` | `docker system prune` (cẩn thận: xoá image, container đã dừng) |
+| `/var/log` (log không xoay vòng, log ứng dụng) | Cấu hình logrotate, `journalctl --vacuum-size=500M` ([bài mở rộng 17](/bai/nhat-ky-he-thong)) |
 | `/var/cache/apt` | `sudo apt clean` |
 | File sao lưu cũ, file dump database | Xoá bớt, chuyển đi nơi khác |
 | `/tmp` | Xoá file tạm của chương trình đã chết |
@@ -139,7 +138,7 @@ sudo du -sh /mnt/dulieu
 20K	/mnt/dulieu
 ```
 
-`dd` dừng khi ổ đầy. Đã `rm` file mà `df` vẫn 100%, trong khi `du` chỉ thấy 20K. Lý do: file đã mất tên nhưng tiến trình `sleep` còn đang mở nó, nên kernel chưa giải phóng dữ liệu ([bài 12](/bai/hard-link-soft-link): dữ liệu chỉ bị xoá khi không còn ai trỏ tới). Tìm:
+`dd` dừng khi ổ đầy. Đã `rm` file mà `df` vẫn 100%, trong khi `du` chỉ thấy 20K. Lý do: file đã mất tên nhưng tiến trình `sleep` còn đang mở nó, nên kernel chưa giải phóng dữ liệu ([bài 32](/bai/hard-link-soft-link): dữ liệu chỉ bị xoá khi không còn ai trỏ tới). Tìm:
 
 ```bash
 sudo lsof +L1
@@ -210,7 +209,7 @@ dulieu: 12/32768 files (0.0% non-contiguous), 6353/131072 blocks
 
 Gặp lỗi, e2fsck hỏi từng câu `Fix<y>?`. File mất tên được đưa vào `lost+found`.
 
-Ổ `/` thì không gỡ ra được khi đang chạy. Cách làm: cho kiểm tra ở lần khởi động tới (thêm `fsck.mode=force` vào dòng kernel ở menu GRUB), hoặc khởi động vào chế độ cứu hộ ([bài 21](/bai/khoi-dong-he-thong)). Cột 6 trong `/etc/fstab` quyết định ổ nào được tự kiểm tra khi khởi động.
+Ổ `/` thì không gỡ ra được khi đang chạy. Cách làm: cho kiểm tra ở lần khởi động tới (thêm `fsck.mode=force` vào dòng kernel ở menu GRUB), hoặc khởi động vào chế độ cứu hộ ([bài 24](/bai/khoi-dong-he-thong)). Cột 6 trong `/etc/fstab` quyết định ổ nào được tự kiểm tra khi khởi động.
 
 Nếu superblock chính bị hỏng, e2fsck dùng được bản sao. Vị trí bản sao đã được in lúc `mkfs`, hoặc xem bằng:
 
@@ -295,9 +294,9 @@ Setting reserved blocks percentage to 1% (1310 blocks)
 
    </details>
 
-3. (Máy ảo) Tái hiện trường hợp "xoá rồi mà vẫn đầy" như trong bài, tìm ra tiến trình bằng `lsof +L1`, xử lý cho ổ trống lại.
+3. Tái hiện trường hợp "xoá rồi mà vẫn đầy" như trong bài, tìm ra tiến trình bằng `lsof +L1`, xử lý cho ổ trống lại.
 
-4. (Máy ảo) Gỡ phân vùng ext4 ra, kiểm tra bằng `fsck -f`, xem thông số bằng `tune2fs -l`, rồi gắn lại.
+4. Gỡ phân vùng ext4 ra, kiểm tra bằng `fsck -f`, xem thông số bằng `tune2fs -l`, rồi gắn lại.
 
    <details>
    <summary>Xem đáp án</summary>

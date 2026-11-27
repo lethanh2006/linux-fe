@@ -59,7 +59,7 @@ xclock
 
 **Wayland** là giao thức mới thay X11: đơn giản hơn, an toàn hơn (ứng dụng không đọc trộm được cửa sổ của ứng dụng khác). Ubuntu, Fedora mới mặc định dùng Wayland. Ứng dụng X11 cũ chạy qua lớp tương thích **XWayland**. Xem phiên hiện tại dùng gì: `echo $XDG_SESSION_TYPE` (in `wayland` hoặc `x11`).
 
-Bật / tắt giao diện đồ hoạ khi khởi động là đổi target ([bài 21](/bai/khoi-dong-he-thong)): `graphical.target` hoặc `multi-user.target`.
+Bật / tắt giao diện đồ hoạ khi khởi động là đổi target ([bài 24](/bai/khoi-dong-he-thong)): `graphical.target` hoặc `multi-user.target`.
 
 ### Trợ năng (accessibility)
 
@@ -78,7 +78,7 @@ Các môi trường desktop có sẵn công cụ hỗ trợ người khuyết t�
 
 **CUPS** (Common UNIX Printing System) là hệ thống in của Linux và macOS. Dịch vụ `cupsd` quản lý máy in và hàng đợi in. Trang quản trị web ở `http://localhost:631`. Cấu hình nằm trong `/etc/cups/`.
 
-Thử với một máy in giả (ghi ra `/dev/null`), trong container chạy bằng root:
+Thử với một máy in giả (ghi ra `/dev/null`), chạy bằng root (`sudo -i`):
 
 ```bash
 apt install -y cups cups-client
@@ -168,7 +168,7 @@ root:          admin@congty.vn
 
 Thư gửi cho `postmaster` chuyển sang `root`, thư gửi cho `root` chuyển ra email thật. Nhờ vậy cảnh báo của cron (cron gửi kết quả job cho chủ crontab), `unattended-upgrades`, `smartd` (theo dõi ổ đĩa) đến được tay bạn.
 
-> Tự chạy máy chủ mail gửi ra Internet rất khó: phải cấu hình SPF, DKIM, DMARC, reverse DNS, nếu không thư sẽ vào thư rác. Nhiều nhà cung cấp VPS còn chặn cổng 25. Thực tế người ta cấu hình Postfix gửi qua dịch vụ ngoài (relay) như Amazon SES, SendGrid, hoặc SMTP của Gmail.
+> Tự chạy máy chủ mail gửi ra Internet rất khó: phải cấu hình SPF, DKIM, DMARC, reverse DNS, nếu không thư sẽ vào thư rác. Nhiều nhà cung cấp máy chủ còn chặn cổng 25. Thực tế người ta cấu hình Postfix gửi qua dịch vụ ngoài (relay) như Amazon SES, SendGrid, hoặc SMTP của Gmail.
 
 ## Thực hành
 
@@ -184,9 +184,9 @@ Thư gửi cho `postmaster` chuyển sang `root`, thư gửi cho `root` chuyển
 
    </details>
 
-2. Trong container chạy bằng root (`docker run -it --rm -u root linux-lab`), cài CUPS, tạo máy in giả như trong bài, in một file, xem hàng đợi rồi huỷ.
+2. Chạy bằng root (`sudo -i`), cài CUPS, tạo máy in giả như trong bài, in một file, xem hàng đợi rồi huỷ.
 
-3. Trong container root, cài `postfix` (chọn **Local only**) và `mailutils`, gửi một thư cho `root`, rồi đọc bằng lệnh `mail`.
+3. Chạy bằng root, cài `postfix` (chọn **Local only**) và `mailutils`, gửi một thư cho `root`, rồi đọc bằng lệnh `mail`.
 
    <details>
    <summary>Xem cách làm</summary>

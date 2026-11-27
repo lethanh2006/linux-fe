@@ -47,11 +47,11 @@ Trình duyệt ──80/443──► [ufw] ──► nginx ──┬── /    
                                           └── /api/... → 127.0.0.1:3000 (shop-api, systemd)
 ```
 
-Làm trên **máy ảo** (Multipass, VirtualBox) hoặc **VPS** Ubuntu 24.04. Mọi bước dưới đây đã được chạy thử trên máy ảo; kết quả in ra là kết quả thật. Hãy tự gõ từng lệnh, đừng dán cả khối mà không đọc.
+Làm trên một máy Ubuntu 24.04 (máy chủ thuê hoặc máy riêng). Mọi bước dưới đây đã được chạy thử; kết quả in ra là kết quả thật. Hãy tự gõ từng lệnh, đừng dán cả khối mà không đọc.
 
 ## Bước 0: Chuẩn bị máy và user
 
-Trên VPS mới, bạn thường đăng nhập bằng `root` hoặc `ubuntu`. Tạo user làm việc riêng có sudo và SSH key:
+Trên máy chủ thuê mới, bạn thường đăng nhập bằng `root` hoặc `ubuntu`. Tạo user làm việc riêng có sudo và SSH key:
 
 ```bash
 sudo apt update && sudo apt upgrade -y
@@ -66,7 +66,7 @@ ssh-copy-id deploy@IP-SERVER
 ssh deploy@IP-SERVER
 ```
 
-Khi đã đăng nhập được bằng key, tắt đăng nhập bằng mật khẩu và cấm root ([bài 48](/bai/bao-mat-may-chu)):
+Khi đã đăng nhập được bằng key, tắt đăng nhập bằng mật khẩu và cấm root ([bài mở rộng 27](/bai/bao-mat-may-chu)):
 
 ```bash
 printf "PermitRootLogin no\nPasswordAuthentication no\n" | sudo tee /etc/ssh/sshd_config.d/10-baomat.conf
@@ -164,7 +164,7 @@ sudo chmod 755 /opt/shop/app.py
 
 | Việc | Vì sao |
 |---|---|
-| User `shopapp` hệ thống, shell `nologin` | API chạy với quyền tối thiểu. Có lỗ hổng thì kẻ tấn công cũng không có quyền gì ([bài 17](/bai/lenh-quan-ly-nguoi-dung)) |
+| User `shopapp` hệ thống, shell `nologin` | API chạy với quyền tối thiểu. Có lỗ hổng thì kẻ tấn công cũng không có quyền gì ([bài 27](/bai/lenh-quan-ly-nguoi-dung)) |
 | Mã nguồn thuộc `root`, quyền 755 | `shopapp` đọc và chạy được nhưng **không sửa được** mã của chính nó |
 | Nghe `127.0.0.1` | Chỉ nginx trên cùng máy gọi được |
 | In log ra stdout | systemd tự đưa vào journal |
@@ -191,7 +191,7 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 ```
 
-`NoNewPrivileges=true` chặn tiến trình (và con của nó) leo quyền qua file SUID. Các dòng còn lại đã giải thích ở [bài 22](/bai/systemd-dich-vu).
+`NoNewPrivileges=true` chặn tiến trình (và con của nó) leo quyền qua file SUID. Các dòng còn lại đã giải thích ở [bài mở rộng 16](/bai/systemd-dich-vu).
 
 ```bash
 sudo systemctl daemon-reload
@@ -227,7 +227,7 @@ sudo vim /var/www/shop/index.html
 </html>
 ```
 
-Giao cho user của nginx (`www-data`) và đặt quyền chuẩn ([bài 18](/bai/phan-quyen-file)):
+Giao cho user của nginx (`www-data`) và đặt quyền chuẩn ([bài 30](/bai/phan-quyen-file)):
 
 ```bash
 sudo chown -R www-data:www-data /var/www/shop
@@ -237,7 +237,7 @@ sudo find /var/www/shop -type f -exec chmod 644 {} +
 
 ## Bước 6: Cấu hình nginx
 
-Trên Ubuntu, mỗi site là một file trong `/etc/nginx/sites-available/`, và được **bật** bằng symlink trong `/etc/nginx/sites-enabled/` ([bài 12](/bai/hard-link-soft-link)).
+Trên Ubuntu, mỗi site là một file trong `/etc/nginx/sites-available/`, và được **bật** bằng symlink trong `/etc/nginx/sites-enabled/` ([bài 32](/bai/hard-link-soft-link)).
 
 `/etc/nginx/sites-available/shop`:
 
@@ -402,11 +402,11 @@ log "Đã xoá $so_xoa bản cũ hơn $GIU_NGAY ngày"
 
 | Phần | Ý nghĩa |
 |---|---|
-| `set -euo pipefail` | Dừng ngay khi có lỗi ([bài 39](/bai/bash-thuc-hanh-va-go-loi)) |
-| `$(date +%F_%H%M)` | Tên file có ngày giờ ([bài 40](/bai/ngay-gio-he-thong)) |
-| `tar -czf ... -C / var/www/shop ...` | Đứng ở `/` rồi gói các đường dẫn tương đối, để khi giải nén với `-C /` file về đúng chỗ ([bài 11](/bai/nen-va-luu-tru)) |
-| `logger -t shop-backup` | Ghi vào journal ([bài 23](/bai/nhat-ky-he-thong)) |
-| `find ... -mtime +7 -print -delete \| wc -l` | Xoá bản cũ hơn 7 ngày và đếm số bản đã xoá ([bài 10](/bai/tim-kiem-file)) |
+| `set -euo pipefail` | Dừng ngay khi có lỗi ([bài mở rộng 14](/bai/bash-thuc-hanh-va-go-loi)) |
+| `$(date +%F_%H%M)` | Tên file có ngày giờ ([bài 22](/bai/ngay-gio-he-thong)) |
+| `tar -czf ... -C / var/www/shop ...` | Đứng ở `/` rồi gói các đường dẫn tương đối, để khi giải nén với `-C /` file về đúng chỗ ([bài 18](/bai/nen-va-luu-tru)) |
+| `logger -t shop-backup` | Ghi vào journal ([bài mở rộng 17](/bai/nhat-ky-he-thong)) |
+| `find ... -mtime +7 -print -delete \| wc -l` | Xoá bản cũ hơn 7 ngày và đếm số bản đã xoá ([bài 16](/bai/lenh-find)) |
 
 ```bash
 sudo mkdir -p /srv/backup && sudo chmod 700 /srv/backup
@@ -438,7 +438,7 @@ opt/shop/app.py
 
 Lệnh đầu lỗi vì dấu `*` được **shell của bạn** bung ra trước khi `sudo` chạy, mà bạn không đọc được `/srv/backup` (quyền 700). `sudo bash -c '...'` để shell của root bung.
 
-Hẹn giờ bằng systemd timer ([bài 24](/bai/lap-lich-cong-viec)). `/etc/systemd/system/shop-backup.service`:
+Hẹn giờ bằng systemd timer ([bài mở rộng 18](/bai/lap-lich-cong-viec)). `/etc/systemd/system/shop-backup.service`:
 
 ```ini
 [Unit]
@@ -498,7 +498,7 @@ curl -s -o /dev/null -w "%{http_code}\n" localhost/
 
 Mất `index.html` thì nginx trả 403 (không có file mặc định, và nginx không cho liệt kê thư mục). Khôi phục xong, file có lại đúng chủ và quyền vì `tar` giữ thông tin đó.
 
-> Bản sao lưu nằm cùng máy thì mất máy là mất luôn. Bước tiếp theo nên chép ra nơi khác: `rsync` sang máy khác ([bài 49](/bai/ssh-va-ma-hoa)) hoặc dịch vụ lưu trữ đám mây.
+> Bản sao lưu nằm cùng máy thì mất máy là mất luôn. Bước tiếp theo nên chép ra nơi khác: `rsync` sang máy khác ([bài mở rộng 28](/bai/ssh-va-ma-hoa)) hoặc dịch vụ lưu trữ đám mây.
 
 ## Bước 9: Tự kiểm tra và khôi phục API
 
@@ -520,7 +520,7 @@ fi
 | `-sS` | Im lặng nhưng vẫn in lỗi |
 | `--max-time 5` | API treo quá 5 giây cũng tính là lỗi |
 
-Chạy mỗi 5 phút bằng cron ([bài 24](/bai/lap-lich-cong-viec)):
+Chạy mỗi 5 phút bằng cron ([bài mở rộng 18](/bai/lap-lich-cong-viec)):
 
 ```bash
 sudo chmod 750 /usr/local/bin/shop-health.sh
@@ -544,7 +544,7 @@ Nov 27 17:58:23 lab shop-health[7896]: API không trả lời, khởi động l�
 
 (`Restart=on-failure` chỉ lo trường hợp tiến trình chết. Script này bắt thêm trường hợp tiến trình còn sống nhưng không trả lời.)
 
-Kiểm tra hai script bằng shellcheck ([bài 39](/bai/bash-thuc-hanh-va-go-loi)):
+Kiểm tra hai script bằng shellcheck ([bài mở rộng 14](/bai/bash-thuc-hanh-va-go-loi)):
 
 ```bash
 sudo shellcheck /usr/local/bin/shop-backup.sh /usr/local/bin/shop-health.sh && echo "shellcheck sạch"
@@ -610,11 +610,10 @@ Khi đã xong, mở rộng dự án để luyện tiếp:
 | Mở rộng | Gợi ý |
 |---|---|
 | HTTPS miễn phí | Có tên miền trỏ về IP server, rồi `sudo apt install certbot python3-certbot-nginx` và `sudo certbot --nginx -d ten-mien-cua-ban`. Certbot tự sửa cấu hình nginx và tự gia hạn chứng chỉ |
-| Chặn dò mật khẩu | Cài `fail2ban` ([bài 48](/bai/bao-mat-may-chu)) |
+| Chặn dò mật khẩu | Cài `fail2ban` ([bài mở rộng 27](/bai/bao-mat-may-chu)) |
 | Sao lưu ra máy khác | Thêm `rsync` sang máy thứ hai vào cuối `shop-backup.sh` |
 | Database | Cài PostgreSQL, cho nghe `127.0.0.1`, thêm vào sao lưu bằng `pg_dump` |
-| Giám sát | Script cảnh báo khi ổ đĩa trên 80% (`df`, [bài 31](/bai/dung-luong-va-sua-loi)), gửi qua mail hoặc webhook |
-| Chạy bằng Docker | Đóng API vào container, chạy với `-p 127.0.0.1:3000:3000` |
+| Giám sát | Script cảnh báo khi ổ đĩa trên 80% (`df`, [bài mở rộng 6](/bai/dung-luong-va-sua-loi)), gửi qua mail hoặc webhook |
 | Luyện tiếp | Làm 20 ngày của [Linux Upskill Challenge](https://linuxupskillchallenge.org/) và các bài trên [SadServers](https://sadservers.com/) (xem trang [Nguồn học](/nguon)) |
 
 ## Tóm tắt

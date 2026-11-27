@@ -25,11 +25,11 @@ quiz:
     explain: "`findmnt --verify` kiểm tra cú pháp và các ổ được nhắc tới. `mount -a` gắn mọi dòng chưa gắn: báo lỗi ngay bây giờ thì sửa được, còn hơn để máy treo lúc khởi động."
 ---
 
-> Cần **máy ảo hoặc VPS** (gắn ổ cần quyền mà container thường không có). Bài này tiếp nối [bài 29](/bai/phan-vung-va-filesystem): ổ `/dev/vdb` có `vdb1` (ext4, nhãn `dulieu`), `vdb2` (xfs, nhãn `web`), `vdb3` (swap).
+> Bài này tiếp nối [bài mở rộng 4](/bai/phan-vung-va-filesystem): ổ `/dev/vdb` có `vdb1` (ext4, nhãn `dulieu`), `vdb2` (xfs, nhãn `web`), `vdb3` (swap).
 
 ## mount: gắn filesystem vào cây thư mục
 
-Linux chỉ có một cây thư mục ([bài 4](/bai/cay-thu-muc)). Một filesystem mới chỉ dùng được khi được **gắn** (mount) vào một thư mục trong cây. Thư mục đó gọi là **điểm gắn** (mount point).
+Linux chỉ có một cây thư mục ([bài 6](/bai/cay-thu-muc)). Một filesystem mới chỉ dùng được khi được **gắn** (mount) vào một thư mục trong cây. Thư mục đó gọi là **điểm gắn** (mount point).
 
 ```bash
 sudo mkdir -p /mnt/dulieu
@@ -131,7 +131,7 @@ touch: cannot touch '/mnt/dulieu/b': Read-only file system
 | `defaults` | Bộ mặc định: `rw,suid,dev,exec,auto,nouser,async` |
 | `ro` / `rw` | Chỉ đọc / đọc ghi |
 | `noexec` | Không cho chạy chương trình nằm trên filesystem này. Hay dùng cho `/tmp` để chặn mã độc |
-| `nosuid` | Bỏ qua bit SUID/SGID ([bài 19](/bai/quyen-dac-biet)) |
+| `nosuid` | Bỏ qua bit SUID/SGID ([bài mở rộng 20](/bai/quyen-dac-biet)) |
 | `nodev` | Không coi file thiết bị trên đó là thiết bị |
 | `noatime` | Không ghi lại thời gian đọc file, giảm ghi đĩa |
 | `remount` | Đổi tuỳ chọn của filesystem đang gắn mà không cần gỡ |
@@ -188,7 +188,7 @@ Có thể sửa bằng `sudo vim /etc/fstab`. **Luôn sao lưu trước**: `sudo
 
 ### Kiểm tra trước khi khởi động lại
 
-Một dòng fstab sai (gõ nhầm UUID, sai loại filesystem, thiếu thư mục) có thể làm máy **dừng ở chế độ khẩn cấp** lúc khởi động. Trên VPS, bạn sẽ phải vào console web của nhà cung cấp để sửa. Vì vậy luôn kiểm tra:
+Một dòng fstab sai (gõ nhầm UUID, sai loại filesystem, thiếu thư mục) có thể làm máy **dừng ở chế độ khẩn cấp** lúc khởi động. Máy chủ ở xa thì bạn sẽ phải vào màn hình console của nhà cung cấp để sửa. Vì vậy luôn kiểm tra:
 
 ```bash
 sudo findmnt --verify
@@ -219,7 +219,7 @@ Một fstab có lỗi trông như sau khi kiểm tra:
    [E] unreachable on boot required target: No such file or directory
 ```
 
-Khởi động lại máy ảo để chắc chắn:
+Khởi động lại máy để chắc chắn:
 
 ```bash
 sudo reboot
@@ -242,7 +242,7 @@ Bật mọi swap trong fstab mà không cần khởi động lại: `sudo swapon
 
 ## Thực hành
 
-Trên máy ảo đã làm [bài 29](/bai/phan-vung-va-filesystem).
+Trên máy đã làm [bài mở rộng 4](/bai/phan-vung-va-filesystem).
 
 1. Gắn phân vùng ext4 vào `/mnt/dulieu`, tạo một file trong đó, gỡ ra, rồi kiểm tra file nằm ở đâu.
 

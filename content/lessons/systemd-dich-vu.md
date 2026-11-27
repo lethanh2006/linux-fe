@@ -29,7 +29,7 @@ quiz:
     explain: "`WantedBy=multi-user.target` nghĩa là `enable` sẽ tạo symlink trong `multi-user.target.wants/`, nên dịch vụ chạy khi máy đạt multi-user.target."
 ---
 
-> Cần **máy ảo, WSL hoặc VPS** (có systemd). Kết quả trong bài lấy từ Ubuntu 24.04 có cài nginx (`sudo apt install nginx`).
+> Kết quả trong bài lấy từ Ubuntu 24.04 có cài nginx (`sudo apt install nginx`).
 
 ## systemd và unit
 
@@ -38,8 +38,8 @@ quiz:
 | Loại unit | Đuôi | Ví dụ |
 |---|---|---|
 | Dịch vụ | `.service` | `nginx.service`, `ssh.service` |
-| Hẹn giờ | `.timer` | `logrotate.timer` ([bài 24](/bai/lap-lich-cong-viec)) |
-| Nhóm mục tiêu | `.target` | `multi-user.target` ([bài 21](/bai/khoi-dong-he-thong)) |
+| Hẹn giờ | `.timer` | `logrotate.timer` ([bài mở rộng 18](/bai/lap-lich-cong-viec)) |
+| Nhóm mục tiêu | `.target` | `multi-user.target` ([bài 24](/bai/khoi-dong-he-thong)) |
 | Điểm gắn ổ | `.mount` | `home.mount` |
 | Socket | `.socket` | `ssh.socket` |
 
@@ -161,7 +161,7 @@ Thêm `--no-pager` để in thẳng ra màn hình không qua `less`, `-l` để 
 Các bước tìm lỗi:
 
 1. `systemctl status tên`: xem `Active` và mã thoát.
-2. `journalctl -u tên -n 50 --no-pager`: đọc 50 dòng log gần nhất của dịch vụ ([bài 23](/bai/nhat-ky-he-thong)).
+2. `journalctl -u tên -n 50 --no-pager`: đọc 50 dòng log gần nhất của dịch vụ ([bài mở rộng 17](/bai/nhat-ky-he-thong)).
 3. Với nginx, kiểm tra cấu hình: `sudo nginx -t`.
 4. Thử chạy lệnh trong `ExecStart` bằng tay, bằng đúng user của dịch vụ, để thấy lỗi trực tiếp.
 
@@ -316,8 +316,6 @@ RestartSec=5
 Lưu lại là xong (`systemctl edit` tự `daemon-reload`). Xem kết quả gộp bằng `systemctl cat nginx`.
 
 ## Thực hành
-
-Làm trên máy ảo (Multipass) hoặc WSL có systemd.
 
 1. Cài nginx, kiểm tra nó đang chạy và đã enable. Dừng nginx, kiểm tra bằng `curl -I localhost`, rồi bật lại.
 

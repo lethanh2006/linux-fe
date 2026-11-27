@@ -25,7 +25,7 @@ quiz:
     explain: "sudo ghi lại mọi lệnh: ai chạy, ở thư mục nào, với quyền ai, lệnh gì. Đây là một lý do nên dùng sudo thay vì đăng nhập root."
 ---
 
-> Phần lớn lệnh làm được trong container, nhưng lịch sử đăng nhập, SSH, `nmap` thấy rõ nhất trên máy ảo hoặc VPS. Kết quả lấy từ máy ảo Ubuntu 24.04.
+> Kết quả trong bài lấy từ một máy Ubuntu 24.04.
 
 ## Ai đang và đã đăng nhập
 
@@ -71,13 +71,13 @@ Ví dụ một dòng khi có người thử đăng nhập bằng user không t�
 2026-11-27T09:24:38.840184+00:00 lab sshd[3820]: Connection closed by invalid user khongco 127.0.0.1 port 35600 [preauth]
 ```
 
-Thống kê IP dò nhiều nhất (dùng công thức đếm ở [bài 14](/bai/loc-van-ban)):
+Thống kê IP dò nhiều nhất (dùng công thức đếm ở [bài mở rộng 19](/bai/loc-van-ban)):
 
 ```bash
 sudo grep "Failed password" /var/log/auth.log | grep -oE 'from [0-9.]+' | sort | uniq -c | sort -rn | head
 ```
 
-Cách phòng: tắt đăng nhập bằng mật khẩu, chỉ dùng SSH key ([bài 49](/bai/ssh-va-ma-hoa)), giới hạn tốc độ bằng tường lửa ([bài 48](/bai/bao-mat-may-chu)), dùng `fail2ban` để tự chặn IP dò nhiều lần.
+Cách phòng: tắt đăng nhập bằng mật khẩu, chỉ dùng SSH key ([bài mở rộng 28](/bai/ssh-va-ma-hoa)), giới hạn tốc độ bằng tường lửa ([bài mở rộng 27](/bai/bao-mat-may-chu)), dùng `fail2ban` để tự chặn IP dò nhiều lần.
 
 ## Ai dùng sudo làm gì
 
@@ -97,7 +97,7 @@ Nov 27 16:24:39 lab sudo[3827]: pam_unix(sudo:session): session opened for user 
 | `USER=root` | Với quyền của ai |
 | `COMMAND=` | Lệnh gì |
 
-Cũng có trong `/var/log/auth.log` (`sudo grep COMMAND /var/log/auth.log`). Định kỳ xem lại ai có quyền sudo: `getent group sudo` và `sudo cat /etc/sudoers.d/*` ([bài 5](/bai/sudo-va-root)).
+Cũng có trong `/var/log/auth.log` (`sudo grep COMMAND /var/log/auth.log`). Định kỳ xem lại ai có quyền sudo: `getent group sudo` và `sudo cat /etc/sudoers.d/*` ([bài 8](/bai/sudo-va-root)).
 
 ## Cổng nào đang mở
 
@@ -125,7 +125,7 @@ systemd-r  527 systemd-resolve   15u  IPv4   6526      0t0  TCP 127.0.0.53:53 (L
 | `-n` | Hiện IP thay vì tên máy |
 | `-i :80` | Chỉ cổng 80: ai đang dùng cổng này |
 
-Cổng 22 ở đây do `systemd` (PID 1) mở: Ubuntu 24.04 dùng `ssh.socket`, systemd giữ cổng và chỉ khởi động `sshd` khi có kết nối. `ss -tulpn` đã học ở [bài 45](/bai/kiem-tra-mang).
+Cổng 22 ở đây do `systemd` (PID 1) mở: Ubuntu 24.04 dùng `ssh.socket`, systemd giữ cổng và chỉ khởi động `sshd` khi có kết nối. `ss -tulpn` đã học ở [bài mở rộng 24](/bai/kiem-tra-mang).
 
 ### Từ bên ngoài: nmap
 
@@ -159,7 +159,7 @@ Quét từ **một máy khác** tới IP công cộng của server mới thấy 
 
 ## File SUID lạ
 
-Kẻ tấn công đã vào được máy thường để lại một file SUID root để lần sau lấy lại quyền root ([bài 19](/bai/quyen-dac-biet)):
+Kẻ tấn công đã vào được máy thường để lại một file SUID root để lần sau lấy lại quyền root ([bài mở rộng 20](/bai/quyen-dac-biet)):
 
 ```bash
 sudo find / -xdev -type f \( -perm -4000 -o -perm -2000 \) 2>/dev/null
@@ -170,7 +170,7 @@ sudo find / -xdev -type f \( -perm -4000 -o -perm -2000 \) 2>/dev/null
 | `-xdev` | Không đi sang filesystem khác (bỏ qua `/proc`, ổ gắn thêm) |
 | `-perm -4000 -o -perm -2000` | Có SUID hoặc SGID |
 
-Lưu kết quả lúc máy mới cài (`> suid-chuan.txt`), lần sau so sánh bằng `diff`. Đáng ngờ nhất là file SUID trong `/tmp`, `/var/tmp`, `/dev/shm`, `/home`. Thêm tuỳ chọn `nosuid` khi gắn các phân vùng này ([bài 30](/bai/mount-va-fstab)).
+Lưu kết quả lúc máy mới cài (`> suid-chuan.txt`), lần sau so sánh bằng `diff`. Đáng ngờ nhất là file SUID trong `/tmp`, `/var/tmp`, `/dev/shm`, `/home`. Thêm tuỳ chọn `nosuid` khi gắn các phân vùng này ([bài mở rộng 5](/bai/mount-va-fstab)).
 
 Các kiểm tra liên quan:
 
@@ -190,7 +190,7 @@ Các kiểm tra liên quan:
 | Trạng thái, hạn mật khẩu | `sudo passwd -S tên`, `sudo chage -l tên` |
 | Khoá tài khoản không dùng | `sudo usermod -L tên` và `sudo usermod -e 1 tên` |
 
-Đặt chính sách mật khẩu: `PASS_MAX_DAYS`, `PASS_MIN_DAYS`, `PASS_WARN_AGE` trong `/etc/login.defs` (áp cho user tạo sau), độ mạnh mật khẩu trong `/etc/security/pwquality.conf` ([bài 17](/bai/lenh-quan-ly-nguoi-dung)).
+Đặt chính sách mật khẩu: `PASS_MAX_DAYS`, `PASS_MIN_DAYS`, `PASS_WARN_AGE` trong `/etc/login.defs` (áp cho user tạo sau), độ mạnh mật khẩu trong `/etc/security/pwquality.conf` ([bài 27](/bai/lenh-quan-ly-nguoi-dung)).
 
 ## Giới hạn tài nguyên: ulimit
 
@@ -239,7 +239,7 @@ hocvien      hard    nproc    300
 | Loại | `soft` (mặc định, tự tăng được tới `hard`) / `hard` (trần) |
 | Mục | `nofile` (file mở), `nproc` (tiến trình), `core` (file core dump), `maxlogins` (số phiên đăng nhập) |
 
-Dịch vụ chạy bằng systemd **không** đọc `limits.conf`. Đặt trong unit file: `LimitNOFILE=65536` ([bài 22](/bai/systemd-dich-vu)). Dấu hiệu cần tăng: log báo `Too many open files`.
+Dịch vụ chạy bằng systemd **không** đọc `limits.conf`. Đặt trong unit file: `LimitNOFILE=65536` ([bài mở rộng 16](/bai/systemd-dich-vu)). Dấu hiệu cần tăng: log báo `Too many open files`.
 
 ## Thực hành
 

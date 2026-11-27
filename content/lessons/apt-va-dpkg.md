@@ -37,7 +37,7 @@ Trên Linux, phần mềm thường không tải file cài đặt từ trang web
 
 `apt` là lệnh mới, có thanh tiến trình, dễ đọc. `apt-get` và `apt-cache` là các lệnh cũ, kết quả ổn định hơn nên vẫn dùng trong script (`apt` tự cảnh báo `apt does not have a stable CLI interface` khi bị dùng trong đường ống). Hai bên dùng chung kho và cơ sở dữ liệu.
 
-Các lệnh thay đổi hệ thống cần `sudo`. Làm trong container `lab` (mật khẩu `hocvien`).
+Các lệnh thay đổi hệ thống cần `sudo`.
 
 ## Cập nhật danh sách và nâng cấp
 
@@ -142,7 +142,7 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
 Bản Ubuntu cũ hơn dùng file `/etc/apt/sources.list` với mỗi kho một dòng kiểu `deb http://archive.ubuntu.com/ubuntu noble main universe`.
 
-Phần mềm không có trong kho của Ubuntu (Docker, Node.js bản mới, PostgreSQL bản mới…) thường hướng dẫn **thêm kho của hãng**: tải khoá vào `/etc/apt/keyrings/`, thêm một file trong `/etc/apt/sources.list.d/`, rồi `apt update` và `apt install`. Chỉ thêm kho từ nguồn bạn tin cậy, vì gói từ kho đó được cài bằng quyền root.
+Phần mềm không có trong kho của Ubuntu (Node.js bản mới, PostgreSQL bản mới…) thường hướng dẫn **thêm kho của hãng**: tải khoá vào `/etc/apt/keyrings/`, thêm một file trong `/etc/apt/sources.list.d/`, rồi `apt update` và `apt install`. Chỉ thêm kho từ nguồn bạn tin cậy, vì gói từ kho đó được cài bằng quyền root.
 
 ## dpkg: làm việc với từng gói
 
@@ -223,8 +223,6 @@ Ubuntu còn có **snap**: gói đóng kèm mọi thư viện cần thiết, ch�
 
 ## Thực hành
 
-Làm trong container `lab`.
-
 1. Cập nhật danh sách gói, xem có bao nhiêu gói có thể nâng cấp.
 
    <details>
@@ -250,7 +248,7 @@ Làm trong container `lab`.
    dpkg -l htop
    ```
 
-   (Image lab đã cài sẵn `htop`, nên `apt install` sẽ báo `htop is already the newest version`.)
+   Nếu máy đã có `htop`, `apt install` báo `htop is already the newest version`.
 
    </details>
 

@@ -39,7 +39,7 @@ Mỗi tiến trình có:
 | Trạng thái | Đang chạy, đang ngủ chờ, tạm dừng… |
 | Tài nguyên | CPU, RAM đang dùng |
 
-Tiến trình số 1 là tiến trình đầu tiên kernel chạy khi khởi động (trên máy thật là `systemd`), mọi tiến trình khác là con cháu của nó. Trong container, PID 1 là lệnh khởi đầu của container (ở đây là `bash`).
+Tiến trình số 1 là tiến trình đầu tiên kernel chạy khi khởi động. Trên Ubuntu đó là `systemd` (bài 24), mọi tiến trình khác là con cháu của nó.
 
 ## ps: chụp nhanh danh sách tiến trình
 
@@ -49,11 +49,14 @@ ps
 ```
 
 ```text
+[1] 191
     PID TTY          TIME CMD
-      1 ?        00:00:00 bash
-      8 ?        00:00:00 sleep
-      9 ?        00:00:00 ps
+    189 pts/2    00:00:00 bash
+    191 pts/2    00:00:00 sleep
+    192 pts/2    00:00:00 ps
 ```
+
+`[1] 191` là shell báo: job số 1 đã chạy nền, PID 191. `pts/2` là terminal bạn đang gõ.
 
 `ps` trơn chỉ hiện tiến trình của terminal hiện tại. Hai cách viết hay dùng để xem **tất cả**:
 
@@ -64,10 +67,15 @@ ps -ef
 
 ```text
 USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-hocvien        1 11.1  0.0   4336  3516 ?        Ss   15:18   0:00 bash
-hocvien        8  0.0  0.0   2708  1708 ?        S    15:18   0:00 sleep 300
-hocvien       10  0.0  0.0   7904  4056 ?        R    15:18   0:00 ps aux
+root           1  3.3  0.0  21088 12424 ?        Ss   12:42   0:00 /sbin/init
+root          28  0.8  0.0  33840 12168 ?        Ss   12:42   0:00 /usr/lib/systemd/systemd-journald
+systemd+      51  1.1  0.0  21352 12832 ?        Ss   12:42   0:00 /usr/lib/systemd/systemd-resolved
+root          63  0.0  0.0   4248  2816 ?        Ss   12:42   0:00 /usr/sbin/cron -f -P
+message+      64  0.3  0.0   9456  5216 ?        Ss   12:42   0:00 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+...
 ```
+
+Đây là 5 dòng đầu (danh sách thật dài hơn nhiều). PID 1 là `/sbin/init`, tức `systemd`. Tên user dài hơn 8 ký tự bị cắt và thêm dấu `+` (`systemd+` là `systemd-resolve`).
 
 | Phần lệnh | Ý nghĩa |
 |---|---|
@@ -113,17 +121,22 @@ ps -eo pid,ppid,user,%cpu,%mem,stat,cmd --sort=-%mem | head -5
 
 ## pgrep, pstree: tìm và xem quan hệ
 
+Chạy hai lệnh `sleep 300 &` và `sleep 301 &`, rồi:
+
 ```bash
 pgrep sleep
 pgrep -a sleep
-pstree -p
+pstree -p $$
 ```
 
 ```text
-8
-8 sleep 300
-bash(1)-+-pstree(14)
-        `-sleep(8)
+209
+210
+209 sleep 300
+210 sleep 301
+bash(207)-+-pstree(211)
+          |-sleep(209)
+          `-sleep(210)
 ```
 
 | Lệnh | Làm gì |
@@ -132,7 +145,7 @@ bash(1)-+-pstree(14)
 | `pgrep -a sleep` | In kèm cả dòng lệnh |
 | `pgrep -u www-data` | Tiến trình của user `www-data` |
 | `pgrep -f "node server.js"` | So với **cả dòng lệnh**, không chỉ tên chương trình |
-| `pstree -p` | Vẽ cây cha con, kèm PID |
+| `pstree -p $$` | Vẽ cây con cháu của shell hiện tại, kèm PID. `$$` là PID của shell. Gõ `pstree -p` để vẽ cả cây từ `systemd(1)` |
 
 `ps aux | grep nginx` cũng hay dùng, nhưng kết quả có cả chính dòng `grep nginx`. `pgrep` không bị vậy.
 
@@ -143,21 +156,26 @@ top
 ```
 
 ```text
-top - 15:18:13 up  2:43,  0 user,  load average: 1.26, 2.41, 2.72
-Tasks:   5 total,   1 running,   4 sleeping,   0 stopped,   0 zombie
-%Cpu(s):  5.0 us,  5.0 sy,  0.0 ni, 90.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
-MiB Mem :  19741.6 total,    970.1 free,   9495.7 used,  10782.4 buff/cache
-MiB Swap:   8192.0 total,   8191.9 free,      0.1 used.  10246.0 avail Mem
+top - 12:42:41 up  7:08,  0 user,  load average: 4.23, 3.83, 2.80
+Tasks:  23 total,   1 running,  22 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 32.5 us, 10.0 sy,  0.0 ni, 42.5 id, 15.0 wa,  0.0 hi,  0.0 si,  0.0 st
+MiB Mem : ...
+MiB Swap: ...
 
     PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
-      1 hocvien   20   0    4852   3984   3176 S   0.0   0.0   0:00.03 bash
-     33 hocvien   35  15    2708   1516   1420 S   0.0   0.0   0:00.00 sleep
+      1 root      20   0   21088  12424   9560 S   0.0   0.1   0:00.24 systemd
+     28 root      20   0   33840  12168  11200 S   0.0   0.1   0:00.06 systemd+
+     51 systemd+  20   0   21352  12832  10712 S   0.0   0.1   0:00.08 systemd+
+     63 root      20   0    4248   2816   2572 S   0.0   0.0   0:00.00 cron
+     64 message+  20   0    9456   5216   4640 S   0.0   0.0   0:00.02 dbus-da+
 ```
+
+Hai dòng `MiB Mem`, `MiB Swap` được rút gọn ở đây; trên máy bạn chúng ghi RAM và swap: tổng (`total`), còn trống (`free`), đang dùng (`used`), làm bộ đệm (`buff/cache`), và `avail Mem`.
 
 | Dòng / cột | Ý nghĩa |
 |---|---|
-| `up 2:43` | Máy đã chạy 2 giờ 43 phút |
-| `load average: 1.26, 2.41, 2.72` | Số việc trung bình đang chạy hoặc chờ CPU trong 1, 5, 15 phút qua. So với số nhân CPU (`nproc`): vượt quá số nhân lâu dài là máy quá tải |
+| `up 7:08` | Máy đã chạy 7 giờ 8 phút |
+| `load average: 4.23, 3.83, 2.80` | Số việc trung bình đang chạy hoặc chờ CPU trong 1, 5, 15 phút qua. So với số nhân CPU (`nproc`): vượt quá số nhân lâu dài là máy quá tải |
 | `us`, `sy` | % CPU cho chương trình người dùng / cho kernel |
 | `id` | % CPU rảnh |
 | `wa` | % CPU ngồi chờ ổ đĩa. Cao là ổ đĩa đang nghẽn |
@@ -190,8 +208,8 @@ Phím trong `top`:
 | 19 / 18 | `SIGSTOP` / `SIGCONT` | Tạm dừng / chạy tiếp |
 
 ```bash
-kill 8
-kill -9 8
+kill 209
+kill -9 210
 kill -l
 ```
 
@@ -207,7 +225,7 @@ kill -l
 Khi SIGKILL, shell báo:
 
 ```text
-bash: line 11:     8 Killed                  sleep 301
+[2]+  Killed                  sleep 301
 ```
 
 > **Quy trình đúng:** `kill PID`, đợi vài giây, chỉ khi tiến trình vẫn còn thì mới `kill -9 PID`. Giết database bằng `-9` có thể làm hỏng dữ liệu. Và cẩn thận với `pkill -f`: mẫu quá rộng sẽ giết nhầm tiến trình của người khác. Luôn chạy `pgrep -a mẫu` trước để xem sẽ trúng những gì.
@@ -232,15 +250,15 @@ jobs -l
 ```
 
 ```text
-[1]-     7 Running                 sleep 300 &
-[2]+     8 Running                 sleep 301 &
+[1]-   136 Running                 sleep 300 &
+[2]+   146 Running                 sleep 301 &
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
 | `[1]`, `[2]` | Số job (khác PID, chỉ có nghĩa trong shell này) |
 | `+` / `-` | Job mặc định cho `fg`/`bg` / job kế tiếp |
-| `7`, `8` | PID (`-l` mới hiện) |
+| `136`, `146` | PID (`-l` mới hiện) |
 
 Thử: gõ `sleep 100`, bấm `Ctrl+Z` (hiện `[1]+ Stopped sleep 100`), gõ `bg` để nó chạy nền, gõ `fg` để đưa về, rồi `Ctrl+C` để dừng.
 
@@ -272,8 +290,8 @@ renice -n 15 -p $!
 
 ```text
     PID  NI CMD
-     33  10 sleep 100
-33 (process ID) old priority 10, new priority 15
+    148  10 sleep 100
+148 (process ID) old priority 10, new priority 15
 ```
 
 | Lệnh | Làm gì |
@@ -286,7 +304,7 @@ renice -n 15 -p $!
 User thường chỉ được **tăng** nice (nhường bớt CPU). Giảm nice, hay đặt số âm, phải là root:
 
 ```text
-renice: failed to set priority for 33 (process ID): Permission denied
+renice: failed to set priority for 148 (process ID): Permission denied
 ```
 
 Ứng dụng thực tế: chạy việc nặng không gấp (nén log, sao lưu) bằng `nice -n 19` để không làm chậm web đang phục vụ khách.

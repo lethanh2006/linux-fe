@@ -31,10 +31,10 @@ Khi "không vào được web", đừng đoán. Kiểm tra lần lượt từng 
 
 | Bước | Kiểm tra | Lệnh | Hỏng thì |
 |---|---|---|---|
-| 1 | Card mạng có bật, có IP không | `ip -br a` | Cấu hình mạng ([bài 44](/bai/cau-hinh-mang)) |
+| 1 | Card mạng có bật, có IP không | `ip -br a` | Cấu hình mạng ([bài 33](/bai/cau-hinh-mang)) |
 | 2 | Có gateway không, gateway trả lời không | `ip route`, `ping <gateway>` | Mạng nội bộ, router |
 | 3 | Ra Internet được không (bằng IP) | `ping -c 3 8.8.8.8` | Router, nhà mạng, tường lửa |
-| 4 | Phân giải tên được không | `getent hosts example.com`, `dig example.com` | DNS ([bài 46](/bai/dns-phia-may-khach)) |
+| 4 | Phân giải tên được không | `getent hosts example.com`, `dig example.com` | DNS ([bài mở rộng 25](/bai/dns-phia-may-khach)) |
 | 5 | Cổng dịch vụ có mở không | `nc -zv host 443`, `ss -tlnp` (trên server) | Dịch vụ chưa chạy, tường lửa |
 | 6 | Ứng dụng trả lời đúng không | `curl -I https://host` | Lỗi ứng dụng, cấu hình nginx |
 
@@ -101,7 +101,7 @@ traceroute to 8.8.8.8 (8.8.8.8), 4 hops max, 60 byte packets
 | Mỗi dòng | Một router trên đường đi: số thứ tự, IP, độ trễ |
 | `* * *` | Router đó không trả lời (thường do chặn), chưa chắc là lỗi |
 
-Ở ví dụ: chặng 1 là cầu nối của Docker, chặng 2–3 là router trong nhà, sau đó là mạng của nhà cung cấp. Gói tin dừng ở chặng nào thì sự cố ở quanh đó.
+Ở ví dụ: chặng 1 là cổng ra (gateway) của máy, chặng 2–3 là router trong nhà, sau đó là mạng của nhà cung cấp. Gói tin dừng ở chặng nào thì sự cố ở quanh đó.
 
 | Công cụ | Ghi chú |
 |---|---|
@@ -302,7 +302,7 @@ Mã trạng thái HTTP hay gặp:
    nc -zv 127.0.0.1 8000
    ```
 
-   `python3 -m http.server 8000` chạy một web server đơn giản phục vụ thư mục hiện tại (container lab có sẵn `python3`). Sau khi dừng, `nc` báo `Connection refused`.
+   `python3 -m http.server 8000` chạy một web server đơn giản phục vụ thư mục hiện tại (Ubuntu có sẵn `python3`). Sau khi dừng, `nc` báo `Connection refused`.
 
    </details>
 

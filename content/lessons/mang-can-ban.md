@@ -105,7 +105,7 @@ Hosts/Net: 62                    Class C, Private Internet
 | `100.64.0.0/10` | NAT của nhà mạng (CGNAT) |
 | `0.0.0.0` | "Mọi địa chỉ" (khi một dịch vụ lắng nghe) hoặc "chưa có địa chỉ" |
 
-Máy dùng IP riêng ra Internet nhờ **NAT**: router thay IP riêng bằng IP công cộng của nó. Docker cũng dùng NAT: container có IP `172.17.x.x`, ra ngoài bằng IP của máy chủ.
+Máy dùng IP riêng ra Internet nhờ **NAT**: router thay IP riêng bằng IP công cộng của nó.
 
 ## IPv6
 
@@ -136,7 +136,7 @@ Một máy muốn lên mạng cần 4 thông tin:
 |---|---|---|
 | Địa chỉ IP + mask | `10.0.2.15/24` | Định danh máy trong mạng |
 | **Default gateway** | `10.0.2.2` | Gửi gói tin ra ngoài mạng nội bộ |
-| **DNS server** | `10.0.2.3`, `8.8.8.8` | Đổi tên miền thành IP ([bài 46](/bai/dns-phia-may-khach)) |
+| **DNS server** | `10.0.2.3`, `8.8.8.8` | Đổi tên miền thành IP ([bài mở rộng 25](/bai/dns-phia-may-khach)) |
 | (tự động qua) **DHCP** | | Máy chủ DHCP cấp 3 thông tin trên tự động khi máy vào mạng |
 
 Server thường dùng **IP tĩnh** (đặt tay, không đổi) để người khác luôn tìm thấy nó. Cách đặt ở [bài sau](/bai/cau-hinh-mang).
@@ -152,7 +152,7 @@ Một máy chạy nhiều dịch vụ cùng lúc. **Cổng** (port, số từ 0�
 | Tốc độ | Chậm hơn | Nhanh, nhẹ |
 | Dùng cho | Web, SSH, database, mail | DNS, NTP, DHCP, video call, game |
 
-**ICMP** là giao thức báo lỗi và kiểm tra của tầng IP, không có cổng. `ping` dùng ICMP ([bài 45](/bai/kiem-tra-mang)).
+**ICMP** là giao thức báo lỗi và kiểm tra của tầng IP, không có cổng. `ping` dùng ICMP ([bài mở rộng 24](/bai/kiem-tra-mang)).
 
 Các cổng cần thuộc:
 

@@ -3,7 +3,7 @@ summary: Làm cứng một máy chủ Linux — tắt dịch vụ không cần, 
 minutes: 45
 commands: [systemctl disable, ufw, firewall-cmd, nft, iptables, sshd_config, sshd -t, /etc/nologin, fail2ban, unattended-upgrades]
 quiz:
-  - q: Bật ufw trên VPS qua SSH, việc gì PHẢI làm trước khi chạy ufw enable?
+  - q: Bật ufw trên máy chủ ở xa qua SSH, việc gì PHẢI làm trước khi chạy ufw enable?
     options: ["Khởi động lại máy", "Cho phép cổng SSH (ufw allow OpenSSH hoặc ufw allow 22/tcp)", "Tắt SSH", "Đổi mật khẩu root"]
     answer: 1
     explain: "Mặc định ufw chặn mọi kết nối vào. Bật lên mà chưa mở cổng SSH là bạn tự khoá mình ở ngoài, phải vào console của nhà cung cấp để sửa."
@@ -25,7 +25,7 @@ quiz:
     explain: "Dùng khi bảo trì: tạo file với lời nhắn, xong việc thì xoá. Lệnh shutdown cũng tự tạo file này 5 phút trước giờ tắt máy."
 ---
 
-> Cần **máy ảo hoặc VPS**. Làm sai tường lửa hoặc SSH trên VPS có thể khoá bạn ở ngoài: luôn giữ một phiên SSH đang mở trong lúc sửa, thử kết nối bằng một phiên mới trước khi đóng phiên cũ, và biết cách vào console web của nhà cung cấp. Kết quả lấy từ máy ảo Ubuntu 24.04.
+> Làm sai tường lửa hoặc SSH trên máy chủ ở xa có thể khoá bạn ở ngoài: luôn giữ một phiên SSH đang mở trong lúc sửa, thử kết nối bằng một phiên mới trước khi đóng phiên cũ, và biết cách vào console web của nhà cung cấp. Kết quả lấy từ máy Ubuntu 24.04.
 
 Nguyên tắc chung: **thứ gì không cần thì tắt, thứ gì cần thì giới hạn**. Mỗi dịch vụ chạy, mỗi cổng mở, mỗi tài khoản đăng nhập được là một chỗ có thể bị tấn công.
 
@@ -39,7 +39,7 @@ systemctl status unattended-upgrades
 ls /var/run/reboot-required 2>/dev/null && echo "Cần khởi động lại"
 ```
 
-Ubuntu Server cài sẵn `unattended-upgrades`, tự cài bản vá bảo mật mỗi ngày ([bài 25](/bai/apt-va-dpkg)). Bản vá kernel chỉ có tác dụng sau khi khởi động lại.
+Ubuntu Server cài sẵn `unattended-upgrades`, tự cài bản vá bảo mật mỗi ngày ([bài mở rộng 1](/bai/apt-va-dpkg)). Bản vá kernel chỉ có tác dụng sau khi khởi động lại.
 
 ## 2. Tắt dịch vụ không dùng
 
@@ -61,7 +61,7 @@ ssh.service
 ...
 ```
 
-Với từng dịch vụ, hỏi: máy này có cần không? Ví dụ máy ảo cloud không có modem nên `ModemManager` thừa:
+Với từng dịch vụ, hỏi: máy này có cần không? Ví dụ máy chủ không có modem nên `ModemManager` thừa:
 
 ```bash
 sudo systemctl disable --now ModemManager
@@ -98,7 +98,7 @@ AllowUsers hocvien deploy
 | `X11Forwarding no` | Server không cần giao diện đồ hoạ |
 | `AllowUsers hocvien deploy` | Chỉ những user này được SSH vào |
 
-> **Trước khi tắt đăng nhập bằng mật khẩu, phải chắc là bạn đã đăng nhập được bằng SSH key** ([bài 49](/bai/ssh-va-ma-hoa)).
+> **Trước khi tắt đăng nhập bằng mật khẩu, phải chắc là bạn đã đăng nhập được bằng SSH key** ([bài mở rộng 28](/bai/ssh-va-ma-hoa)).
 
 Kiểm tra cấu hình và áp dụng:
 
@@ -154,7 +154,7 @@ Linux lọc gói tin ngay trong kernel (**netfilter**). Các công cụ chỉ l�
 | **ufw** (Uncomplicated Firewall) | Ubuntu | Đơn giản nhất. Bài này dùng ufw |
 | **firewalld** (`firewall-cmd`) | RHEL, Rocky, Fedora | Quản lý theo vùng (zone) |
 | `nft` (nftables) | Mọi bản mới | Công cụ cấp thấp hiện đại |
-| `iptables` | Hệ thống cũ (nay thường chạy trên nền nftables) | Gặp nhiều trong tài liệu, Docker, Kubernetes |
+| `iptables` | Hệ thống cũ (nay thường chạy trên nền nftables) | Gặp nhiều trong tài liệu và các công cụ cũ |
 
 ### Bật ufw an toàn
 
@@ -239,8 +239,6 @@ sudo ufw --force delete 3
 Rule deleted
 ```
 
-> **Bẫy với Docker:** cổng của container mở bằng `docker run -p 8080:80` **đi vòng qua ufw** (Docker tự thêm luật iptables riêng). Muốn container chỉ nghe nội bộ, dùng `-p 127.0.0.1:8080:80`.
-
 Trên cloud, còn có tường lửa của nhà cung cấp (Security Group của AWS, Firewall của DigitalOcean). Nên bật cả hai lớp.
 
 ### firewalld (RHEL, Rocky)
@@ -260,7 +258,7 @@ echo "Đang bảo trì đến 22h, vui lòng quay lại sau." | sudo tee /etc/no
 sudo rm /etc/nologin
 ```
 
-Khi file này tồn tại, user thường đăng nhập sẽ thấy nội dung file rồi bị ngắt. **root vẫn vào được.** Lệnh `shutdown` tự tạo `/run/nologin` 5 phút trước giờ tắt máy ([bài 21](/bai/khoi-dong-he-thong)).
+Khi file này tồn tại, user thường đăng nhập sẽ thấy nội dung file rồi bị ngắt. **root vẫn vào được.** Lệnh `shutdown` tự tạo `/run/nologin` 5 phút trước giờ tắt máy ([bài 24](/bai/khoi-dong-he-thong)).
 
 ## 6. Tự chặn IP dò mật khẩu: fail2ban
 
@@ -294,19 +292,17 @@ Cấu hình gốc ở `jail.conf`. Mọi thay đổi ghi vào `jail.local` để
 | Việc | Lệnh / nơi |
 |---|---|
 | Cập nhật hệ thống | `sudo apt update && sudo apt upgrade` |
-| Tạo user thường có sudo, dùng SSH key | [bài 17](/bai/lenh-quan-ly-nguoi-dung), [bài 49](/bai/ssh-va-ma-hoa) |
+| Tạo user thường có sudo, dùng SSH key | [bài 27](/bai/lenh-quan-ly-nguoi-dung), [bài mở rộng 28](/bai/ssh-va-ma-hoa) |
 | Tắt root và mật khẩu qua SSH | `/etc/ssh/sshd_config.d/` |
 | Tường lửa: chỉ mở 22, 80, 443 | `ufw` |
-| Database chỉ nghe localhost | `ss -tlnp` ([bài 45](/bai/kiem-tra-mang)) |
+| Database chỉ nghe localhost | `ss -tlnp` ([bài mở rộng 24](/bai/kiem-tra-mang)) |
 | Tắt, gỡ dịch vụ thừa | `systemctl disable --now`, `apt purge` |
 | Tự cập nhật bảo mật | `unattended-upgrades` |
 | Chặn dò mật khẩu | `fail2ban` |
-| Đúng giờ | `timedatectl` ([bài 40](/bai/ngay-gio-he-thong)) |
-| Sao lưu | cron + tar/rsync ([bài 50](/bai/du-an-may-chu-web)) |
+| Đúng giờ | `timedatectl` ([bài 22](/bai/ngay-gio-he-thong)) |
+| Sao lưu | cron + tar/rsync ([bài mở rộng 29](/bai/du-an-may-chu-web)) |
 
 ## Thực hành
-
-Trên máy ảo.
 
 1. Bật ufw theo đúng thứ tự an toàn: mở SSH, đặt mặc định, bật. Mở thêm 80 và 443. Xem trạng thái.
 
@@ -325,12 +321,12 @@ Trên máy ảo.
 
    </details>
 
-2. Chạy `python3 -m http.server 8080` trên máy ảo, thử truy cập từ máy thật (bị chặn). Mở cổng 8080 bằng ufw, thử lại, rồi xoá luật đó.
+2. Chạy `python3 -m http.server 8080` trên máy chủ, thử truy cập từ một máy khác (bị chặn). Mở cổng 8080 bằng ufw, thử lại, rồi xoá luật đó.
 
    <details>
    <summary>Xem đáp án</summary>
 
-   Lấy IP máy ảo bằng `ip -br a` (Multipass: `multipass list`). Trên máy thật: `curl -m 3 http://IP-may-ao:8080` sẽ hết giờ chờ. Trên máy ảo: `sudo ufw allow 8080/tcp`, thử lại thì nhận được danh sách file. Xoá: `sudo ufw delete allow 8080/tcp`.
+   Lấy IP máy chủ bằng `ip -br a`. Trên máy khác: `curl -m 3 http://IP-may-chu:8080` sẽ hết giờ chờ. Trên máy chủ: `sudo ufw allow 8080/tcp`, thử lại thì nhận được danh sách file. Xoá: `sudo ufw delete allow 8080/tcp`.
 
    </details>
 
@@ -347,7 +343,7 @@ Trên máy ảo.
 
    </details>
 
-4. Liệt kê các dịch vụ đang chạy, chọn một dịch vụ thật sự không cần trên máy ảo (ví dụ `ModemManager`), tắt nó và chặn không cho tự bật lại.
+4. Liệt kê các dịch vụ đang chạy, chọn một dịch vụ thật sự không cần trên máy (ví dụ `ModemManager`), tắt nó và chặn không cho tự bật lại.
 
    <details>
    <summary>Xem đáp án</summary>

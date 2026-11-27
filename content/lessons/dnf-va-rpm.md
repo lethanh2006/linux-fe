@@ -10,7 +10,7 @@ quiz:
   - q: "File /usr/bin/ls thuộc gói nào? Lệnh rpm nào trả lời được?"
     options: ["rpm -ql ls", "rpm -qf /usr/bin/ls", "rpm -qi /usr/bin/ls", "rpm -e ls"]
     answer: 1
-    explain: "`rpm -qf` (query file) tương đương `dpkg -S`. Trên Rocky 9 container, kết quả là `coreutils-single-...`."
+    explain: "`rpm -qf` (query file) tương đương `dpkg -S`. Trên Rocky 9 bản tối giản, kết quả là `coreutils-single-...`."
   - q: Muốn biết gói nào cung cấp lệnh dig (chưa cài), dùng lệnh nào?
     options: ["rpm -qf /usr/bin/dig", "dnf provides /usr/bin/dig", "which dig", "dnf info dig"]
     answer: 1
@@ -47,13 +47,7 @@ Nếu đã học [apt và dpkg](/bai/apt-va-dpkg), phần lớn bài này chỉ 
 | Cài file gói tải về | `apt install ./x.deb` | `dnf install ./x.rpm` |
 | Nhóm sudo | `sudo` | `wheel` |
 
-Thực hành bằng container Rocky Linux:
-
-```bash
-docker run -it --rm rockylinux/rockylinux:9 bash
-```
-
-Trong container bạn là root nên không cần `sudo`. Trên máy thật thì thêm `sudo` như với `apt`.
+Kết quả trong bài lấy từ Rocky Linux 9 bản tối giản, chạy bằng root. Nếu bạn là người dùng thường thì thêm `sudo` trước các lệnh cài, gỡ, như với `apt`.
 
 ## dnf: công cụ cấp cao
 
@@ -217,7 +211,7 @@ Cài file `.rpm` tải về: dùng `dnf install ./file.rpm` để được tự 
 
 ## Thực hành
 
-Làm trong container `rockylinux/rockylinux:9`.
+Làm trên máy Rocky Linux, AlmaLinux hoặc Fedora (thêm `sudo` nếu không phải root).
 
 1. Kiểm tra đây là Rocky phiên bản mấy, có bao nhiêu gói đã cài, đang dùng những kho nào.
 
@@ -232,7 +226,7 @@ Làm trong container `rockylinux/rockylinux:9`.
 
    </details>
 
-2. Lệnh `dig` và `ip` thuộc gói nào (container chưa có cả hai)? Cài gói chứa `dig`.
+2. Lệnh `dig` và `ip` thuộc gói nào (bản tối giản chưa có cả hai)? Cài gói chứa `dig`.
 
    <details>
    <summary>Xem đáp án</summary>
@@ -244,7 +238,7 @@ Làm trong container `rockylinux/rockylinux:9`.
    dig -v
    ```
 
-   `dig` thuộc `bind-utils`, `ip` thuộc `iproute`. Image Rocky cho container rất gọn nên chưa có cả hai. `rpm -qf` chỉ hỏi được file đã có trên máy, vì vậy ở đây phải dùng `dnf provides`.
+   `dig` thuộc `bind-utils`, `ip` thuộc `iproute`. Bản tối giản rất gọn nên chưa có cả hai. `rpm -qf` chỉ hỏi được file đã có trên máy, vì vậy ở đây phải dùng `dnf provides`.
 
    </details>
 

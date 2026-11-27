@@ -68,7 +68,7 @@ Ví dụ:
 
 Trang [crontab.guru](https://crontab.guru) giải thích một dòng lịch thành chữ, rất tiện để kiểm tra.
 
-Giờ của cron theo **múi giờ của máy chủ** (`timedatectl` để xem). Nhiều VPS để UTC, tức chậm 7 tiếng so với giờ Việt Nam.
+Giờ của cron theo **múi giờ của máy chủ** (`timedatectl` để xem). Nhiều máy chủ thuê để UTC, tức chậm 7 tiếng so với giờ Việt Nam.
 
 ### crontab của user
 
@@ -164,7 +164,7 @@ job 1 at Fri Nov 27 08:24:00 2026
 | `at -c 1` | Xem nội dung job số 1 |
 | `atrm 1` | Huỷ job số 1 |
 
-Ví dụ thực tế: đổi cấu hình tường lửa trên VPS từ xa, hẹn `at now + 10 minutes` một lệnh khôi phục cấu hình cũ. Nếu lỡ tự khoá mình ngoài, 10 phút sau mọi thứ tự trở lại. Nếu ổn thì `atrm` lệnh khôi phục.
+Ví dụ thực tế: đổi cấu hình tường lửa trên máy chủ ở xa, hẹn `at now + 10 minutes` một lệnh khôi phục cấu hình cũ. Nếu lỡ tự khoá mình ngoài, 10 phút sau mọi thứ tự trở lại. Nếu ổn thì `atrm` lệnh khôi phục.
 
 ## systemd timer: cách hiện đại
 
@@ -309,7 +309,7 @@ Ngoài `OnCalendar` còn có `OnBootSec=5min` (5 phút sau khi khởi động) v
 
    </details>
 
-4. (Máy ảo) Tạo cặp `donlog.service` và `donlog.timer` như trong bài, enable timer, chạy thử service ngay và xem log của nó.
+4. Tạo cặp `donlog.service` và `donlog.timer` như trong bài, enable timer, chạy thử service ngay và xem log của nó.
 
    <details>
    <summary>Xem đáp án</summary>

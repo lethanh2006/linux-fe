@@ -14,7 +14,7 @@ quiz:
   - q: Sau khi chia phân vùng /dev/vdb1, cần làm gì để lưu được file vào đó?
     options: ["Gắn (mount) ngay", "Tạo filesystem (ví dụ mkfs.ext4 /dev/vdb1) rồi mới gắn", "Chạy swapon", "Không cần gì"]
     answer: 1
-    explain: "Phân vùng chỉ là một vùng trống. Phải tạo filesystem (định dạng) để có cấu trúc thư mục, inode… rồi gắn vào cây thư mục ([bài 30](/bai/mount-va-fstab))."
+    explain: "Phân vùng chỉ là một vùng trống. Phải tạo filesystem (định dạng) để có cấu trúc thư mục, inode… rồi gắn vào cây thư mục ([bài mở rộng 5](/bai/mount-va-fstab))."
   - q: Trong LVM, thứ tự tạo đúng là gì?
     options: ["LV → VG → PV", "PV → VG → LV", "VG → PV → LV", "LV → PV → VG"]
     answer: 1
@@ -29,7 +29,7 @@ quiz:
     explain: "Swap có thể là một file. Tạo file, giới hạn quyền 600, định dạng swap, bật lên. Ghi vào /etc/fstab để giữ sau khi khởi động lại."
 ---
 
-> Cần **máy ảo hoặc VPS** có một ổ đĩa trống. Với Multipass, ổ ảo khó gắn thêm, nên dùng VirtualBox (thêm một ổ ảo 2 GB), hoặc VPS cho phép gắn thêm volume. Kết quả trong bài lấy từ máy ảo Ubuntu 24.04 có ổ trống `/dev/vdb` 2 GB.
+> Cần một ổ đĩa **trống** để thực hành (ví dụ ổ phụ, hoặc USB không còn dữ liệu cần giữ). Kết quả trong bài lấy từ máy Ubuntu 24.04 có ổ trống `/dev/vdb` 2 GB.
 >
 > **Các lệnh trong bài xoá sạch dữ liệu trên ổ mà chúng chạm vào.** Luôn kiểm tra tên ổ bằng `lsblk` trước. Gõ nhầm `vda` thay vì `vdb` là mất hệ điều hành.
 
@@ -42,7 +42,7 @@ quiz:
 | Phân vùng | Một vùng liên tục trên ổ: `/dev/vdb1` | |
 | (Tuỳ chọn) LVM | Gom nhiều phân vùng / ổ thành kho chung, cắt ra ổ logic co giãn được | `pvcreate`, `vgcreate`, `lvcreate` |
 | Filesystem | Cấu trúc để lưu file, thư mục, quyền: ext4, xfs… | `mkfs` |
-| Điểm gắn | Thư mục nơi filesystem xuất hiện trong cây | `mount` ([bài 30](/bai/mount-va-fstab)) |
+| Điểm gắn | Thư mục nơi filesystem xuất hiện trong cây | `mount` ([bài mở rộng 5](/bai/mount-va-fstab)) |
 
 ## MBR và GPT
 
@@ -53,7 +53,7 @@ quiz:
 | Đi kèm | BIOS cũ | UEFI |
 | An toàn | Một bản bảng phân vùng ở đầu ổ | Có bản sao ở cuối ổ, có kiểm tra lỗi (CRC) |
 
-Máy mới: **luôn dùng GPT**. Xem ổ hệ điều hành của máy ảo đang dùng gì:
+Máy mới: **luôn dùng GPT**. Xem ổ hệ điều hành của máy đang dùng gì:
 
 ```bash
 sudo fdisk -l /dev/vda
@@ -190,9 +190,9 @@ Writing superblocks and filesystem accounting information: done
 | Dòng | Ý nghĩa |
 |---|---|
 | `131072 4k blocks` | Chia thành 131072 khối, mỗi khối 4 KB (= 512 MB) |
-| `32768 inodes` | Tối đa 32768 file (mỗi file cần một inode, [bài 12](/bai/hard-link-soft-link)) |
+| `32768 inodes` | Tối đa 32768 file (mỗi file cần một inode, [bài 32](/bai/hard-link-soft-link)) |
 | `Filesystem UUID` | Mã định danh duy nhất, dùng trong `/etc/fstab` |
-| `Superblock backups` | Các bản sao thông tin quan trọng, dùng khi sửa lỗi ([bài 31](/bai/dung-luong-va-sua-loi)) |
+| `Superblock backups` | Các bản sao thông tin quan trọng, dùng khi sửa lỗi ([bài mở rộng 6](/bai/dung-luong-va-sua-loi)) |
 
 Xem kết quả:
 
@@ -244,9 +244,9 @@ Swap:          255Mi          0B       255Mi
 | `swapon --show` | Xem các vùng swap đang dùng |
 | `swapoff /dev/vdb3` | Tắt swap |
 
-### Swap file: cách nhanh trên VPS
+### Swap file: thêm swap không cần chia lại ổ
 
-VPS thường không có swap. Không cần chia lại ổ, tạo một file làm swap:
+Máy chủ thuê thường không có swap. Không cần chia lại ổ, tạo một file làm swap:
 
 ```bash
 sudo fallocate -l 512M /swapfile
@@ -360,14 +360,14 @@ vdb              253:16   0    2G  0 disk
 
 | Cách | Khi nào |
 |---|---|
-| Một phân vùng `/` cho tất cả | VPS nhỏ, máy thử nghiệm. Đơn giản nhất (cloud image của Ubuntu làm vậy) |
+| Một phân vùng `/` cho tất cả | Máy chủ nhỏ, máy thử nghiệm. Đơn giản nhất (cloud image của Ubuntu làm vậy) |
 | Tách `/var` hoặc `/var/lib/<database>` ra ổ / LV riêng | Server có log hoặc database lớn: log đầy không làm đầy `/` và treo cả máy |
 | Ổ hệ điều hành riêng + ổ dữ liệu riêng (volume gắn thêm) | Cloud: hỏng máy thì gỡ ổ dữ liệu gắn sang máy khác |
 | Dùng LVM | Khi không đoán trước được dung lượng cần |
 
 ## Thực hành
 
-Trên máy ảo có ổ trống (thay `vdb` bằng tên ổ trống của bạn, kiểm tra bằng `lsblk`).
+Trên máy có ổ trống (thay `vdb` bằng tên ổ trống của bạn, kiểm tra bằng `lsblk`).
 
 1. Tạo bảng GPT trên ổ trống với 2 phân vùng: 1 GB và phần còn lại. Kiểm tra bằng `lsblk`.
 

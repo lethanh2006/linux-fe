@@ -31,7 +31,7 @@ Tên locale có dạng `ngôn-ngữ_QUỐC-GIA.BẢNG-MÃ`:
 |---|---|
 | `vi_VN.UTF-8` | Tiếng Việt, Việt Nam, bảng mã UTF-8 |
 | `en_US.UTF-8` | Tiếng Anh, Mỹ, UTF-8. Phổ biến nhất trên server |
-| `C.UTF-8` | Locale tối thiểu (tiếng Anh, sắp xếp theo byte) nhưng hiểu UTF-8. Mặc định của cloud image Ubuntu và container |
+| `C.UTF-8` | Locale tối thiểu (tiếng Anh, sắp xếp theo byte) nhưng hiểu UTF-8. Mặc định của Ubuntu bản server tối giản |
 | `C` (hay `POSIX`) | Locale tối thiểu, chỉ hiểu ASCII |
 
 ## Xem locale hiện tại
@@ -190,11 +190,11 @@ Tieng Viet
 | `ASCII//TRANSLIT` | Chuyển sang ASCII, thay chữ có dấu bằng chữ gần giống. Tiện để tạo tên file, đường dẫn URL không dấu |
 | `iconv -l` | Danh sách bảng mã hỗ trợ |
 
-File soạn trên Windows còn hay có ký tự xuống dòng `\r\n` thay vì `\n`, làm script lỗi lạ. Sửa bằng `sed -i 's/\r$//' file` hoặc `dos2unix file` ([bài 14](/bai/loc-van-ban)).
+File soạn trên Windows còn hay có ký tự xuống dòng `\r\n` thay vì `\n`, làm script lỗi lạ. Sửa bằng `sed -i 's/\r$//' file` hoặc `dos2unix file` ([bài mở rộng 19](/bai/loc-van-ban)).
 
 ## Gõ tiếng Việt trên Ubuntu desktop (TITV bài 36)
 
-Phần này chỉ dành cho máy có giao diện đồ hoạ (máy ảo cài Ubuntu Desktop). Server không cần.
+Phần này chỉ dành cho máy có giao diện đồ hoạ (Ubuntu Desktop). Server không cần.
 
 | Bước | Làm gì |
 |---|---|
@@ -215,7 +215,7 @@ Phần này chỉ dành cho máy có giao diện đồ hoạ (máy ảo cài Ubu
    locale -a
    ```
 
-   Container `lab` đã tạo sẵn `vi_VN.UTF-8` (xem Dockerfile). Máy mới cài thường chỉ có `C`, `C.utf8`, `POSIX`, `en_US.utf8`.
+   Máy mới cài thường chỉ có `C`, `C.utf8`, `POSIX`, `en_US.utf8`. Chưa có `vi_VN.UTF-8` thì tạo như phần trên.
 
    </details>
 

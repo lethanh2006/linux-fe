@@ -115,7 +115,7 @@ Trình quản lý gói tự chạy `ldconfig` sau khi cài thư viện. Bạn ch
 
 ## Sửa lỗi thiếu thư viện
 
-Tái hiện lỗi bằng cách chuyển thư viện của `curl` sang chỗ khác (chỉ làm trong container thử nghiệm):
+Tái hiện lỗi bằng cách chuyển thư viện của `curl` sang chỗ khác (chỉ làm trên máy thử nghiệm, vì nó làm hỏng `curl`):
 
 ```bash
 sudo mkdir /opt/lib
@@ -171,11 +171,11 @@ curl 8.5.0 (x86_64-pc-linux-gnu) libcurl
    dpkg -S $(readlink -f /lib/x86_64-linux-gnu/libc.so.6)
    ```
 
-   File thật là `/usr/lib/x86_64-linux-gnu/libc.so.6`, thuộc gói `libc6`. Phải đưa đường dẫn thật cho `dpkg -S`. Hỏi bằng `/lib/...` sẽ báo `no path found`, vì trên Ubuntu mới `/lib` chỉ là symlink tới `/usr/lib` ([bài 4](/bai/cay-thu-muc)).
+   File thật là `/usr/lib/x86_64-linux-gnu/libc.so.6`, thuộc gói `libc6`. Phải đưa đường dẫn thật cho `dpkg -S`. Hỏi bằng `/lib/...` sẽ báo `no path found`, vì trên Ubuntu mới `/lib` chỉ là symlink tới `/usr/lib` ([bài 6](/bai/cay-thu-muc)).
 
    </details>
 
-3. (Trong container thử nghiệm, chạy bằng root: `docker run -it --rm -u root linux-lab`) Tái hiện lỗi thiếu `libcurl.so.4` như trong bài, rồi sửa bằng cả `LD_LIBRARY_PATH` lẫn `/etc/ld.so.conf.d/`.
+3. Trên máy thử nghiệm, chạy bằng root: tái hiện lỗi thiếu `libcurl.so.4` như trong bài, rồi sửa bằng cả `LD_LIBRARY_PATH` lẫn `/etc/ld.so.conf.d/`.
 
 ## Tóm tắt
 

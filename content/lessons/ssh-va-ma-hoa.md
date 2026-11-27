@@ -25,7 +25,7 @@ quiz:
     explain: "Mã hoá bằng khoá công khai của người nhận, chỉ khoá bí mật của họ mới giải được. Ngược lại, ký bằng khoá bí mật của mình, người khác kiểm tra bằng khoá công khai của mình."
 ---
 
-> Phần SSH cần một máy chủ SSH: máy ảo, VPS, hoặc chính máy ảo Multipass của bạn. Kết quả trong bài: user `hocvien` trên máy ảo `lab` SSH tới user `deploy` (cùng máy, qua `localhost`). Phần GPG làm được trong container `lab`.
+> Phần SSH cần một máy chạy dịch vụ SSH. Để tự thực hành chỉ với một máy, bài này cho user `hocvien` trên máy `lab` SSH tới user `deploy` trên chính máy đó (qua `localhost`). Với máy chủ thật, chỉ cần thay `localhost` bằng IP hoặc tên máy chủ.
 
 ## Mật mã khoá công khai
 
@@ -107,7 +107,7 @@ deploy
 lab
 ```
 
-Server đã tắt đăng nhập bằng mật khẩu (như VPS hay cloud image) thì không dùng được `ssh-copy-id`. Lúc đó dán nội dung file `.pub` vào `~/.ssh/authorized_keys` trên server bằng đường khác: console web, lúc tạo VPS (ô "SSH key"), hoặc nhờ người đã có quyền.
+Server đã tắt đăng nhập bằng mật khẩu (nhiều máy chủ thuê làm vậy) thì không dùng được `ssh-copy-id`. Lúc đó dán nội dung file `.pub` vào `~/.ssh/authorized_keys` trên server bằng đường khác: console web, lúc tạo máy chủ ở trang của nhà cung cấp (ô "SSH key"), hoặc nhờ người đã có quyền.
 
 ### known_hosts: server có đúng là server không
 
@@ -120,7 +120,7 @@ This key is not known by any other names.
 Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
-So fingerprint này với fingerprint thật của server (lấy bằng lệnh ngay dưới, chạy trên server hoặc xem trong trang quản trị VPS). Khớp thì mới gõ `yes`.
+So fingerprint này với fingerprint thật của server (lấy bằng lệnh ngay dưới, chạy trên server hoặc xem trong trang quản trị của nhà cung cấp máy chủ). Khớp thì mới gõ `yes`.
 
 Trả lời `yes` thì khoá của server được lưu vào `~/.ssh/known_hosts`. Lần sau nếu khoá khác đi, SSH báo `REMOTE HOST IDENTIFICATION HAS CHANGED!` và từ chối kết nối, vì có thể có kẻ đứng giữa giả mạo server.
 
@@ -390,7 +390,7 @@ Chữ ký chứng minh file **do bạn tạo** và **không bị sửa**. Phần
 
    </details>
 
-2. (Máy ảo) Tạo user `deploy` có mật khẩu, đưa khoá của bạn lên bằng `ssh-copy-id deploy@localhost` (nếu server tắt mật khẩu, tạm thêm `PasswordAuthentication yes` vào một file trong `/etc/ssh/sshd_config.d/` và `reload ssh`). Đăng nhập lại không cần mật khẩu.
+2. Tạo user `deploy` có mật khẩu, đưa khoá của bạn lên bằng `ssh-copy-id deploy@localhost` (nếu server tắt mật khẩu, tạm thêm `PasswordAuthentication yes` vào một file trong `/etc/ssh/sshd_config.d/` và `reload ssh`). Đăng nhập lại không cần mật khẩu.
 
 3. Tạo mục `Host` trong `~/.ssh/config` để `ssh lab-deploy` đăng nhập được. Dùng nó để chạy `df -h` từ xa, chép một thư mục lên bằng `rsync`, rồi sửa một file và chạy lại `rsync` để thấy chỉ file đó được gửi.
 
@@ -408,12 +408,12 @@ Chữ ký chứng minh file **do bạn tạo** và **không bị sửa**. Phần
 
    </details>
 
-4. Mở đường hầm để truy cập một web server chỉ nghe `127.0.0.1:9000` trên máy ảo từ cổng 9100 của máy bạn.
+4. Mở đường hầm để truy cập một web server chỉ nghe `127.0.0.1:9000` trên máy chủ từ cổng 9100 của máy bạn.
 
    <details>
    <summary>Xem đáp án</summary>
 
-   Trên máy ảo: `python3 -m http.server 9000 --bind 127.0.0.1`. Trên máy bạn: `ssh -N -L 9100:127.0.0.1:9000 tên-máy-ảo`, rồi mở `http://127.0.0.1:9100`.
+   Trên máy chủ: `python3 -m http.server 9000 --bind 127.0.0.1`. Trên máy bạn: `ssh -N -L 9100:127.0.0.1:9000 tên-máy-chủ`, rồi mở `http://127.0.0.1:9100`.
 
    </details>
 
