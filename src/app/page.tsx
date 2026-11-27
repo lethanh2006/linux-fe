@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpenCheck, Clapperboard, ListChecks, TerminalSquare } from "lucide-react";
+import { ArrowRight, BookOpenCheck, Clapperboard, ListChecks, TerminalSquare } from "lucide-react";
 import { ContinueLink } from "@/components/continue-link";
 import { DoneMark, OverallProgress } from "@/components/lesson-done";
 import { PARTS } from "@/content/curriculum";
@@ -43,6 +43,16 @@ export default function Home() {
         <div className="panel p-5">
           <OverallProgress readySlugs={ready.map((entry) => entry.slug)} total={entries.length} />
         </div>
+      </section>
+
+      <section aria-labelledby="review" className="panel mt-8 flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 id="review" className="font-semibold">Sắp cần demo những gì đã học?</h2>
+          <p className="mt-1 text-sm text-muted">Ôn 30 bài theo chủ đề, tự gõ kịch bản 15–20 phút và tập trả lời câu hỏi.</p>
+        </div>
+        <Link href="/on-tap" className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+          Mở mục ôn tập <ArrowRight className="size-4" aria-hidden />
+        </Link>
       </section>
 
       <section aria-labelledby="how" className="mt-10">
