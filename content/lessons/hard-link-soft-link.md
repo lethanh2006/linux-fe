@@ -1,140 +1,291 @@
 ---
-summary: "Thực hành ln và ln -s để thấy hard link dùng chung inode còn symbolic link giữ một đường dẫn. Kiểm tra điều gì xảy ra khi sửa, di chuyển hoặc xoá tên gốc."
-minutes: 35
-commands: ["ln", "ln -s", "ls -li", "readlink", "stat"]
+summary: Link cho một file nhiều tên hoặc nhiều chỗ truy cập mà không chép dữ liệu. Bài này giải thích inode, hard link (cùng inode) và soft link (đường tắt trỏ tới tên file), thực hành tạo, sửa, xoá để thấy hai loại khác nhau ra sao.
+minutes: 30
+commands: [ls -i, ln, ln -s, readlink]
 quiz:
-  - q: "Hai hard link của cùng một file có đặc điểm gì?"
-    options: ["Cùng inode trên cùng filesystem", "Luôn có inode khác nhau", "Mỗi tên có bản sao dữ liệu độc lập", "Luôn trỏ bằng đường dẫn tuyệt đối"]
-    answer: 0
-    explain: "Hard link là nhiều tên thư mục tham chiếu cùng inode; sửa nội dung qua một tên sẽ thấy qua tên kia."
-  - q: "Xoá file đích của một symbolic link thường gây ra điều gì?"
-    options: ["Link thành hard link", "Dữ liệu tự sao chép sang link", "Link vẫn chứa đường dẫn nhưng không còn tìm thấy đích", "Link tự chuyển sang file khác"]
-    answer: 2
-    explain: "Symbolic link giữ một đường dẫn. Nếu đường dẫn đó không còn dẫn tới đích tồn tại, link bị treo."
-  - q: "Đường dẫn tương đối nằm trong symlink được hiểu từ đâu?"
-    options: ["Thư mục hiện hành của người vừa chạy cat", "Luôn từ /", "Từ home của root", "Từ thư mục chứa chính symlink"]
-    answer: 3
-    explain: "Điều này giải thích vì sao di chuyển symlink sang thư mục khác có thể làm nó hỏng."
-  - q: "Hard link có phải bản sao lưu độc lập để chống sửa nhầm nội dung không?"
-    options: ["Có, vì có tên khác", "Không, vì các tên cùng trỏ một dữ liệu", "Có, nếu tên có đuôi .bak", "Chỉ khi dùng ln -s"]
+  - q: "Hard link và file gốc có gì giống nhau?"
+    options: ["Cùng tên", "Cùng số inode, tức cùng dữ liệu", "Cùng thư mục", "Không giống gì"]
     answer: 1
-    explain: "Sửa hoặc ghi đè nội dung cùng inode tác động tới mọi hard link. Cần bản sao độc lập/phiên bản sao lưu cho mục tiêu này."
+    explain: "Hard link là thêm một tên trỏ tới cùng inode. `ls -li` thấy hai tên có cùng số inode."
+  - q: Xoá file gốc thì hard link ra sao?
+    options: ["Hỏng, không đọc được", "Vẫn đọc được bình thường, dữ liệu còn tới khi xoá hết mọi tên", "Tự xoá theo", "Trở thành thư mục"]
+    answer: 1
+    explain: "Dữ liệu chỉ mất khi số link (cột 2 của `ls -l`) về 0."
+  - q: Xoá file gốc thì soft link ra sao?
+    options: ["Vẫn đọc được", "Tự trỏ sang file khác", "Thành link hỏng: cat báo No such file or directory", "Bị xoá theo"]
+    answer: 2
+    explain: "Soft link chỉ lưu **tên** file gốc. Tên đó không còn thì link trỏ vào chỗ trống."
+  - q: Loại link nào tạo được cho thư mục?
+    options: ["Hard link", "Soft link", "Cả hai", "Không loại nào"]
+    answer: 1
+    explain: "`ln thumuc ...` báo `hard link not allowed for directory`. `ln -s` thì được."
+  - q: "Lệnh nào tạo soft link `web` trỏ tới `/var/www/html`?"
+    options: ["ln /var/www/html web", "ln -s web /var/www/html", "ln -s /var/www/html web", "cp -s /var/www/html web"]
+    answer: 2
+    explain: "Cú pháp giống `cp`: `ln -s đích tên-link`. Thứ tự là cái có sẵn trước, cái mới sau."
 ---
 
-> Bám video TITV bài 32. Toàn bộ thí nghiệm đặt trong một thư mục riêng để việc xoá tên file không ảnh hưởng tài liệu thật.
+> Bài này đi theo video TITV bài 32.
 
-## Tên file và inode
+## Link để làm gì
 
-Một thư mục ánh xạ tên file tới inode trên một filesystem. Inode lưu thông tin như chủ sở hữu, quyền, kích cỡ và tham chiếu dữ liệu. Tên file không phải bản thân dữ liệu.
+**Link** cho một file thêm tên hoặc thêm chỗ truy cập mà **không chép dữ liệu**, không tốn thêm dung lượng. Dùng để:
+
+- Tổ chức file: một file nằm "ở nhiều thư mục" cùng lúc.
+- Quản lý phiên bản: tên `python3` trỏ tới `python3.12`, nâng cấp chỉ cần đổi link.
+- Dùng chung thư viện, file cấu hình: bật một trang web trong nginx là tạo link từ `sites-enabled` sang `sites-available`.
+- Tiết kiệm ổ đĩa.
+
+## inode
+
+Mỗi file có một **inode** (index node): bản ghi chứa mọi thông tin về file trừ tên: kích thước, chủ (UID, GID), quyền, các mốc thời gian, và vị trí các khối dữ liệu trên ổ đĩa (có thể nằm rải rác). Mỗi inode có một **số inode**.
+
+Tên file chỉ là một dòng trong thư mục: "tên này ứng với inode số mấy". Xem số inode bằng `ls -i`:
 
 ```bash
-mkdir -p ~/thuc-hanh/bai32
-cd ~/thuc-hanh/bai32
-printf 'Du lieu ban dau\n' > goc.txt
-ls -li goc.txt
-```
-
-`-l` hiển thị chi tiết, `-i` thêm số inode. Giá trị inode khác nhau giữa các máy; hai file có cùng số inode chỉ có ý nghĩa khi xét cùng filesystem.
-
-## Hard link: nhiều tên, một inode
-
-```bash
-ln goc.txt ten-khac.txt
-ls -li goc.txt ten-khac.txt
-printf 'Noi dung moi\n' >> ten-khac.txt
-cat goc.txt
+mkdir -p ~/thuchanh/bai32 && cd ~/thuchanh/bai32
+touch file1.txt file2.txt
+ls -li
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
-| `ln` | Tạo hard link theo mặc định |
-| `goc.txt` | Tên đang tồn tại của file |
-| `ten-khac.txt` | Tên mới cần tạo |
-| `>>` | Thêm vào cuối dữ liệu, không tạo bản sao độc lập |
-
-Kết quả `cat goc.txt`:
+| `-i` | In số inode ở đầu mỗi dòng |
+| `-l` | Dạng dài |
 
 ```text
-Du lieu ban dau
-Noi dung moi
+total 0
+29800315 -rw-r--r-- 1 hocvien hocvien 0 Nov 27 19:51 file1.txt
+29800316 -rw-r--r-- 1 hocvien hocvien 0 Nov 27 19:51 file2.txt
 ```
 
-Trong `ls -li`, hai tên có cùng inode và số hard link tăng. Không có tên nào là “bản chính” được ưu tiên hơn về dữ liệu.
+Hai file khác nhau có số inode khác nhau. Cột thứ 3 (số `1`) là **số tên** đang trỏ tới inode đó.
+
+## Hard link: thêm một tên cho cùng inode
+
+```text
+ln file-có-sẵn tên-mới
+```
 
 ```bash
-rm goc.txt
-cat ten-khac.txt
+ln file1.txt file1-hlink.txt
+ls -li
 ```
 
-Nội dung vẫn còn qua tên kia. Dữ liệu chỉ có thể được giải phóng khi không còn hard link và không còn tiến trình giữ file mở. Hard link thông thường không tạo được cho thư mục và không vượt qua ranh giới filesystem.
+```text
+total 0
+29800315 -rw-r--r-- 2 hocvien hocvien 0 Nov 27 19:51 file1-hlink.txt
+29800315 -rw-r--r-- 2 hocvien hocvien 0 Nov 27 19:51 file1.txt
+29800316 -rw-r--r-- 1 hocvien hocvien 0 Nov 27 19:51 file2.txt
+```
 
-Hard link giúp có nhiều tên cho cùng dữ liệu, nhưng **không phải bản sao lưu độc lập** chống sửa nhầm. Sửa nội dung qua một tên sẽ thay đổi dữ liệu nhìn qua tên khác.
+`file1.txt` và `file1-hlink.txt` có **cùng số inode** `29800315`, và số tên tăng lên `2`. Không có cái nào là "gốc" hay "bản sao": cả hai đều là tên ngang hàng của cùng một dữ liệu.
 
-## Symbolic link: lưu một đường dẫn
+### Sửa qua tên này, tên kia thấy ngay
 
 ```bash
-ln -s ten-khac.txt loi-tat.txt
-ls -l loi-tat.txt
-readlink loi-tat.txt
-cat loi-tat.txt
+echo "Xin chao hard link" > file1.txt
+cat file1-hlink.txt
+echo "Them tu ten thu hai" >> file1-hlink.txt
+cat file1.txt
 ```
 
-| Phần | Ý nghĩa |
+```text
+Xin chao hard link
+Xin chao hard link
+Them tu ten thu hai
+```
+
+Vì vậy hard link **không phải bản sao lưu**: lỡ sửa hỏng qua tên này thì tên kia cũng hỏng theo.
+
+### Xoá một tên, dữ liệu vẫn còn
+
+```bash
+rm file1.txt
+ls -li
+cat file1-hlink.txt
+```
+
+```text
+total 4
+29800315 -rw-r--r-- 1 hocvien hocvien 39 Nov 27 19:51 file1-hlink.txt
+29800316 -rw-r--r-- 1 hocvien hocvien  0 Nov 27 19:51 file2.txt
+Xin chao hard link
+Them tu ten thu hai
+```
+
+Số tên giảm về `1`, dữ liệu vẫn còn nguyên. Dữ liệu chỉ thật sự bị xoá khi **tên cuối cùng** bị xoá. Lỡ tay `rm` một tên thì dữ liệu vẫn còn ở tên kia.
+
+## Soft link: đường tắt trỏ tới tên file
+
+**Soft link** (symbolic link, symlink) giống **shortcut** trên Windows: một file nhỏ riêng (inode riêng), bên trong chỉ ghi **tên** (đường dẫn) của file đích.
+
+```text
+ln -s đích tên-link
+```
+
+```bash
+ln -s file2.txt file2-slink.txt
+ls -li
+```
+
+```text
+total 4
+29800315 -rw-r--r-- 1 hocvien hocvien 39 Nov 27 19:51 file1-hlink.txt
+29800317 lrwxrwxrwx 1 hocvien hocvien  9 Nov 27 19:51 file2-slink.txt -> file2.txt
+29800316 -rw-r--r-- 1 hocvien hocvien  0 Nov 27 19:51 file2.txt
+```
+
+| Dấu hiệu | Ý nghĩa |
 |---|---|
-| `ln -s` | Tạo symbolic link |
-| `ten-khac.txt` | Đường dẫn đích được lưu trong link |
-| `loi-tat.txt` | Tên symlink mới |
-| `readlink` | Đọc đường dẫn đang được lưu trong symlink |
+| Số inode `29800317` | Khác file đích: soft link là một file riêng |
+| `l` ở đầu | Loại file là link |
+| `-> file2.txt` | Trỏ tới đâu |
+| Kích thước `9` | Đúng 9 byte của chuỗi `file2.txt` |
+| `rwxrwxrwx` | Quyền của link không có ý nghĩa; quyền thật là của file đích |
 
-Kết quả `readlink loi-tat.txt`:
-
-```text
-ten-khac.txt
-```
-
-Symlink có inode riêng, dùng được cho thư mục và có thể trỏ sang filesystem khác. Đích thậm chí có thể chưa tồn tại lúc tạo link.
-
-Đích tương đối được tính từ **thư mục chứa symlink**, không phải thư mục hiện hành của người đang đọc. Ví dụ, link `thu-muc/link` chứa `../du-lieu.txt` sẽ đi lên từ `thu-muc` rồi tìm `du-lieu.txt`.
+Ghi qua link là ghi vào file đích:
 
 ```bash
-rm ten-khac.txt
-cat loi-tat.txt
+echo F2 > file2-slink.txt
+cat file2.txt
 ```
 
-Với ví dụ trên, đích cuối cùng đã bị xoá; `cat` báo không tìm thấy file. Symlink vẫn tồn tại và vẫn lưu chuỗi `ten-khac.txt`. Xoá chính symlink bằng `rm loi-tat.txt` không xoá file đích.
+```text
+F2
+```
 
-## So sánh nhanh
+Xoá link không ảnh hưởng file đích:
 
-| Đặc điểm | Hard link | Symbolic link |
+```bash
+rm file2-slink.txt
+ls
+```
+
+```text
+file1-hlink.txt  file2.txt
+```
+
+### Xoá file đích: link hỏng
+
+```bash
+ln -s file2.txt file2-slink.txt
+rm file2.txt
+ls -l
+cat file2-slink.txt
+```
+
+```text
+total 4
+-rw-r--r-- 1 hocvien hocvien 39 Nov 27 19:51 file1-hlink.txt
+lrwxrwxrwx 1 hocvien hocvien  9 Nov 27 19:51 file2-slink.txt -> file2.txt
+cat: file2-slink.txt: No such file or directory
+```
+
+Link vẫn còn nhưng trỏ vào tên không còn tồn tại: **link hỏng** (broken link). Trong terminal có màu, `ls` tô link hỏng màu đỏ. Tạo lại `file2.txt` thì link tự "sống" lại.
+
+## Thư mục và ổ đĩa khác
+
+```bash
+mkdir thumuc
+ln thumuc thumuc-hlink
+ln -s thumuc tm-link
+ls -ld tm-link
+```
+
+```text
+ln: thumuc: hard link not allowed for directory
+lrwxrwxrwx 1 hocvien hocvien 6 Nov 27 19:51 tm-link -> thumuc
+```
+
+Hard link không tạo được cho thư mục, và không vượt qua ổ đĩa (phân vùng) khác, vì số inode chỉ có nghĩa trong một ổ. Soft link làm được cả hai, vì nó chỉ ghi đường dẫn.
+
+## So sánh
+
+| | Hard link | Soft link |
 |---|---|---|
-| Inode | Cùng inode với tên nguồn | Inode riêng |
-| Qua filesystem khác | Không | Có |
-| Trỏ tới thư mục | Không dùng thông thường | Có |
-| Đích không còn | Tên còn lại vẫn truy cập dữ liệu | Link có thể bị treo |
-| Chống sửa nhầm nội dung | Không | Không |
+| Lệnh | `ln đích tên` | `ln -s đích tên` |
+| Inode | Cùng inode với đích | Inode riêng |
+| Trỏ tới | Dữ liệu (inode) | Tên (đường dẫn) |
+| Xoá đích | Vẫn dùng được | Thành link hỏng |
+| Thư mục | Không | Được |
+| Khác ổ đĩa | Không | Được |
+| Nhận ra trong `ls -l` | Số tên ở cột 2 lớn hơn 1 | Chữ `l` đầu dòng và `->` |
+| Tốc độ | Như file thường | Chậm hơn chút vì phải đọc đường dẫn rồi mới tìm file |
+
+## Mở rộng (chuẩn LPIC-1)
+
+Chuẩn LPIC-1 mục 104.6 còn có:
+
+| Lệnh | Làm gì |
+|---|---|
+| `readlink tm-link` | In đích của soft link (`thumuc`) |
+| `readlink -f tên` | In đường dẫn tuyệt đối cuối cùng, đi qua mọi tầng link |
+| `ln -sf đích tên` | Ghi đè link cũ (**f**orce), dùng khi đổi link sang phiên bản mới |
+| `find . -type l` | Tìm mọi soft link |
+| `find . -xtype l` | Tìm link hỏng |
+| `ls -l` trên thư mục | Cột 2 của thư mục là số tên trỏ tới nó: chính nó, `.` bên trong, và `..` của mỗi thư mục con |
+
+Đường dẫn trong soft link được hiểu **tính từ chỗ đặt link**. `ln -s file2.txt /tmp/x` tạo link `/tmp/x` trỏ tới `/tmp/file2.txt`, không phải file ở thư mục hiện hành. Muốn chắc, dùng đường dẫn tuyệt đối: `ln -s /etc/hostname ten-may`.
 
 ## Thực hành
 
-Trong thư mục mới `~/thuc-hanh/bai32-tu-lam`, tạo `ban-goc.txt`, hard link `cung-du-lieu.txt`, symlink `tham-chieu.txt`. Xoá `ban-goc.txt` rồi dự đoán tên nào còn đọc được. Giải thích trước khi chạy `cat`.
+1. Tạo `original.txt`, tạo hard link `hlink.txt`. Ghi một dòng vào `hlink.txt`, xem nội dung cả hai. Xoá `original.txt` rồi kiểm tra `hlink.txt`.
 
-<details>
-<summary>Xem đáp án</summary>
+   <details>
+   <summary>Xem đáp án</summary>
 
-```bash
-mkdir -p ~/thuc-hanh/bai32-tu-lam
-cd ~/thuc-hanh/bai32-tu-lam
-printf 'Mau lien ket\n' > ban-goc.txt
-ln ban-goc.txt cung-du-lieu.txt
-ln -s ban-goc.txt tham-chieu.txt
-rm ban-goc.txt
-cat cung-du-lieu.txt
-readlink tham-chieu.txt
-```
+   ```bash
+   touch original.txt
+   ln original.txt hlink.txt
+   ls -li original.txt hlink.txt
+   echo "dong moi" > hlink.txt
+   cat original.txt hlink.txt
+   rm original.txt
+   cat hlink.txt
+   ```
 
-Hard link đọc được `Mau lien ket`. Symlink vẫn lưu `ban-goc.txt`, nhưng tên đích này đã mất nên đọc qua `tham-chieu.txt` sẽ lỗi. Muốn symlink hoạt động lại có thể tạo lại đích hoặc tạo link mới trỏ tới tên đang còn.
+   Cùng số inode; nội dung giống nhau; xoá `original.txt` thì `hlink.txt` vẫn còn `dong moi`.
 
-</details>
+   </details>
+
+2. Tạo soft link `tenmay` trỏ tới `/etc/hostname`, đọc tên máy qua link. Vì sao bạn đọc được nhưng không ghi được qua link này?
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   ln -s /etc/hostname tenmay
+   cat tenmay
+   echo test > tenmay
+   ```
+
+   Quyền thật là của `/etc/hostname` (`rw-r--r--`, chủ là root): bạn chỉ được đọc. Lệnh ghi báo `Permission denied`.
+
+   </details>
+
+3. Tạo soft link `nhanh` trỏ tới thư mục `~/thuchanh`, rồi `cd nhanh` và `pwd`. Kết quả là gì?
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   ln -s ~/thuchanh ~/nhanh
+   cd ~/nhanh
+   pwd
+   ```
+
+   `pwd` in `/home/tên-bạn/nhanh`: shell nhớ đường đi qua link. `pwd -P` in đường thật `/home/tên-bạn/thuchanh`.
+
+   </details>
 
 ## Tóm tắt
 
-Dùng `ln` để thêm tên cho cùng inode, dùng `ln -s` để lưu đường dẫn tham chiếu. Khi phân tích link hỏng, kiểm tra đích và cách đường dẫn tương đối được giải quyết.
+| Lệnh | Làm gì |
+|---|---|
+| `ls -i`, `ls -li` | Xem số inode |
+| `ln đích tên` | Tạo hard link |
+| `ln -s đích tên` | Tạo soft link |
+| `readlink tên` | Xem soft link trỏ tới đâu |
+| Hard link | Cùng inode, xoá đích vẫn còn, không cho thư mục |
+| Soft link | Inode riêng, xoá đích thì hỏng, dùng được cho thư mục và khác ổ |

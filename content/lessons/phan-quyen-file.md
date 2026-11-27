@@ -1,119 +1,268 @@
 ---
-summary: "Đọc chuỗi quyền rwx, phân biệt owner/group/others và hiểu quyền trên thư mục khác quyền trên file. Tính được các mức quyền 640, 644, 750 và 755."
+summary: Mỗi file và thư mục có quyền đọc, ghi, chạy (r, w, x) cho ba đối tượng là chủ, nhóm và người khác. Bài này đọc chuỗi quyền trong ls -l, hiểu r, w, x khác nhau ra sao với file và thư mục, và đổi quyền sang dạng số như 755, 644.
 minutes: 35
-commands: ["ls -l", "ls -ld", "stat"]
+commands: [ls -l, stat -c %a, umask]
 quiz:
-  - q: "Trong -rw-r-----, nhóm sở hữu có quyền gì?"
-    options: ["Đọc và ghi", "Chạy", "Chỉ đọc", "Không có quyền"]
-    answer: 2
-    explain: "Sau ký tự loại file, ba cụm là rw- cho owner, r-- cho group và --- cho others."
-  - q: "Trên thư mục, quyền x chủ yếu cho phép gì?"
-    options: ["Đi xuyên/tra cứu tên bên trong thư mục và cd vào khi có đủ quyền liên quan", "Xoá toàn bộ ổ đĩa", "Đọc mọi nội dung file bên trong", "Chạy mọi file bất chấp quyền file"]
+  - q: "Chuỗi quyền `rwxr-x---` dạng số là bao nhiêu?"
+    options: ["750", "755", "640", "570"]
     answer: 0
-    explain: "x trên thư mục là quyền search/traverse. Liệt kê tên cần r; đọc nội dung file còn cần quyền của chính file và đường dẫn."
-  - q: "Mã quyền 640 tương ứng gì?"
-    options: ["rwxr-----", "rw-r-----", "rw-r--r--", "rwxr-x---"]
+    explain: "rwx = 4+2+1 = 7, r-x = 4+0+1 = 5, --- = 0. Ghép lại 750."
+  - q: "Quyền `x` trên một **thư mục** cho phép gì?"
+    options: ["Chạy thư mục như chương trình", "Đi vào thư mục (cd) và truy cập file bên trong", "Xoá thư mục", "Liệt kê tên file"]
     answer: 1
-    explain: "6=4+2 là rw-, 4 là r--, 0 là ---."
-  - q: "Trong trường hợp thông thường không có sticky bit hay hạn chế bổ sung, muốn xoá một tên file cần quyền gì?"
-    options: ["Chỉ quyền ghi của file", "Chỉ là chủ file", "Quyền đọc của file", "Quyền w và x trên thư mục chứa tên file đó"]
-    answer: 3
-    explain: "Xoá tên là thay đổi thư mục. Quyền file khác quyền trên thư mục; sticky bit và cơ chế bổ sung có thể hạn chế thao tác."
+    explain: "Với thư mục: `r` là xem danh sách tên (ls), `w` là tạo, xoá, đổi tên file bên trong, `x` là đi vào và dùng file bên trong."
+  - q: "Quyền đọc và thực thi (không ghi) có số là mấy?"
+    options: ["6", "3", "5", "7"]
+    answer: 2
+    explain: "r = 4, x = 1, cộng lại 5. Đọc và ghi là 4 + 2 = 6."
+  - q: "Trong `-rw-r----- 1 root shadow ... /etc/shadow`, người dùng thường (không thuộc nhóm shadow) có quyền gì?"
+    options: ["Đọc", "Đọc và ghi", "Không có quyền gì", "Chỉ chạy"]
+    answer: 2
+    explain: "Ba ký tự cuối `---` là quyền của người khác: không có gì. Vì vậy `cat /etc/shadow` bị từ chối."
+  - q: "Bạn có quyền đọc file `bi-mat.txt` của người khác. Điều nào đúng?"
+    options: ["Không chép được vì không phải chủ", "Chép được, và bản chép thuộc về bạn, bạn tự đổi quyền bản chép được", "Chép được nhưng bản chép vẫn của chủ cũ", "Chỉ root mới chép được"]
+    answer: 1
+    explain: Có quyền đọc là đọc được nội dung, nên chép được. File mới do bạn tạo nên bạn là chủ. Vì vậy đừng cho người khác quyền đọc những gì không muốn bị chép.
 ---
 
-> Bám video TITV bài 30. Ta đọc và hiểu quyền trước; bài 31 mới dùng chmod, chown, chgrp để thay đổi.
+> Bài này đi theo video TITV bài 30. Bài này đọc và hiểu quyền; bài 31 mới học lệnh đổi quyền.
 
-## Ba nhóm đối tượng
+## Vì sao cần phân quyền
 
-Mỗi file có một chủ sở hữu (owner) và một nhóm sở hữu (group). Các quyền cơ bản được chia cho ba lớp:
+Máy Linux có nhiều người dùng chung. Phân quyền giúp:
 
-| Lớp | Ký hiệu | Áp dụng cho |
+- **An toàn:** người khác không đọc được thư, mật khẩu, dữ liệu riêng của bạn; người dùng thường không sửa được file hệ thống.
+- **Đúng trách nhiệm:** ai làm việc gì thì có đúng quyền cho việc đó, ví dụ nhóm kế toán sửa được sổ sách, nhóm khác chỉ được xem.
+
+## Ba đối tượng, ba quyền
+
+Mỗi file có một **chủ** (user, owner) và một **nhóm** sở hữu. Quyền chia cho ba đối tượng:
+
+| Ký hiệu | Đối tượng | Là ai |
 |---|---|---|
-| Owner | `u` | User sở hữu file |
-| Group | `g` | Người thuộc nhóm sở hữu của file |
-| Others | `o` | Những người còn lại |
+| `u` | Chủ (**u**ser) | Người sở hữu file, thường là người tạo ra nó |
+| `g` | Nhóm (**g**roup) | Thành viên của nhóm sở hữu file |
+| `o` | Người khác (**o**thers) | Tất cả những người còn lại |
 
-Hệ thống chọn lớp phù hợp với người truy cập, không cộng quyền của cả ba lớp lại. ACL, quyền quản trị và các cơ chế bảo mật khác có thể bổ sung quy tắc; bài này tập trung vào quyền Unix cơ bản.
+Mỗi đối tượng có ba quyền: **r** (đọc), **w** (ghi), **x** (chạy). Dấu `-` là không có quyền đó.
 
-## Đọc ls -l
+## Đọc chuỗi quyền trong ls -l
 
 ```bash
-ls -l /etc/hostname
-ls -ld /tmp
+mkdir -p ~/thuchanh/bai30 && cd ~/thuchanh/bai30
+touch baocao.txt && mkdir tailieu
+ls -l
 ```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `ls -l` | Hiện thông tin dạng dài, gồm quyền, owner và group |
-| `-d` | Xem chính thư mục, không liệt kê nội dung của nó |
-| `/etc/hostname` | File cần quan sát |
-| `/tmp` | Thư mục cần quan sát |
-
-Ví dụ chuỗi quyền của một file:
 
 ```text
--rw-r-----
+total 4
+-rw-r--r-- 1 hocvien hocvien    0 Nov 27 19:49 baocao.txt
+drwxr-xr-x 2 hocvien hocvien 4096 Nov 27 19:49 tailieu
 ```
 
-Tách thành `-` + `rw-` + `r--` + `---`. Ký tự đầu chỉ loại file: `-` là file thường, `d` là thư mục, `l` là symbolic link. Các loại khác gồm `c`, `b`, `p`, `s` cho thiết bị ký tự, thiết bị khối, pipe và socket. Chín ký tự sau là ba cụm quyền.
+Chuỗi 10 ký tự đầu dòng gồm **1 ký tự loại file** và **3 cụm, mỗi cụm 3 ký tự**:
 
-## Quyền của file và của thư mục
-
-| Quyền | File thường | Thư mục |
+| Phần | `-rw-r--r--` (baocao.txt) | `drwxr-xr-x` (tailieu) |
 |---|---|---|
-| `r` – read | Đọc nội dung | Liệt kê tên bên trong |
-| `w` – write | Sửa nội dung | Thay đổi các tên bên trong: tạo, xoá, đổi tên; thường cần thêm `x` |
-| `x` – execute | Cho phép thực thi trực tiếp, nếu định dạng và các điều kiện khác phù hợp | Tra cứu tên, đi xuyên thư mục, `cd` vào |
+| Ký tự 1: loại | `-` file thường | `d` thư mục |
+| Ký tự 2–4: chủ (`hocvien`) | `rw-` đọc, ghi | `rwx` đọc, ghi, vào |
+| Ký tự 5–7: nhóm (`hocvien`) | `r--` chỉ đọc | `r-x` đọc, vào |
+| Ký tự 8–10: người khác | `r--` chỉ đọc | `r-x` đọc, vào |
 
-Biết một tên file và có `x` trên thư mục có thể cho phép truy cập tên đó dù không có `r` để liệt kê cả thư mục. Muốn đọc file vẫn phải có quyền đọc file cùng quyền đi qua các thư mục của đường dẫn.
+Ký tự loại file (bài 6): `-` file thường, `d` thư mục, `l` link, `b` thiết bị khối, `c` thiết bị ký tự, `p` pipe, `s` socket.
 
-Một file chỉ đọc vẫn có thể bị xoá tên nếu người dùng có quyền phù hợp trên thư mục cha. Ngược lại, được ghi nội dung file chưa đủ để đổi tên file trong một thư mục không cho thay đổi. Đây là điểm dễ nhầm nhất của bài.
+Tập đọc thêm, tách thành 3 cụm:
 
-Riêng `/tmp` thường có sticky bit, hiện thành `t` ở cuối chuỗi quyền. Nó bổ sung hạn chế xoá/đổi tên trong thư mục dùng chung; không lấy `/tmp` làm ví dụ duy nhất để suy ra quy tắc của mọi thư mục.
+| Chuỗi | Chủ | Nhóm | Người khác |
+|---|---|---|---|
+| `rwxrw----` | đọc, ghi, chạy | đọc, ghi | không gì |
+| `rw-r-----` | đọc, ghi | đọc | không gì |
+| `rwxr-xr--` | đọc, ghi, chạy | đọc, chạy | đọc |
 
-## Đổi rwx sang số
+## r, w, x với file và với thư mục
 
-`r = 4`, `w = 2`, `x = 1`. Cộng các quyền trong từng lớp rồi ghép ba chữ số.
+Cùng một chữ nhưng nghĩa khác nhau tuỳ là file hay thư mục:
 
-| Số | Quyền |
-|---|---|
-| `7` | `rwx` |
-| `6` | `rw-` |
-| `5` | `r-x` |
-| `4` | `r--` |
-| `0` | `---` |
+| Quyền | Với file | Với thư mục |
+|---|---|---|
+| `r` | Xem nội dung (`cat`, `less`, chép file) | Liệt kê tên các file bên trong (`ls`) |
+| `w` | Sửa nội dung | Tạo, xoá, đổi tên file **bên trong**, kể cả file không phải của mình |
+| `x` | Chạy file như một chương trình | Đi vào thư mục (`cd`) và dùng các file bên trong |
 
-Ví dụ `640` là owner đọc/ghi, group chỉ đọc, others không có quyền. `755` là owner đủ quyền, group và others đọc/thực thi. `644` thường dùng cho file dữ liệu; `755` có thể phù hợp cho thư mục cần cho người khác đi qua. Không dùng một mức quyền cho mọi tình huống.
+Vài điểm cần nhớ:
+
+- Linux không dựa vào đuôi file để biết file có chạy được không (không có chuyện `.exe`). File chạy được là file có quyền `x`.
+- Xoá một file là sửa **thư mục** chứa nó, nên quyền xoá file phụ thuộc quyền `w` của thư mục, không phải của file.
+- Thư mục thường cần `r` và `x` đi cùng nhau.
+
+Xem quyền một số file hệ thống:
 
 ```bash
-stat -c '%a %A %n' /etc/hostname
+ls -ld /etc /etc/passwd /etc/shadow /tmp
+```
+
+```text
+drwxr-xr-x 1 root root    4096 Nov 27 19:49 /etc
+-rw-r--r-- 1 root root    1099 Nov 27 19:49 /etc/passwd
+-rw-r----- 1 root shadow   761 Nov 27 19:49 /etc/shadow
+drwxrwxrwt 1 root root    4096 Nov 27 19:49 /tmp
+```
+
+`/etc/passwd` ai cũng đọc được (`r--` cho người khác). `/etc/shadow` người khác không có quyền gì (`---`), nên người dùng thường bị từ chối:
+
+```bash
+cat /etc/shadow
+```
+
+```text
+cat: /etc/shadow: Permission denied
+```
+
+`/tmp` cho mọi người ghi (`rwx`), chữ `t` cuối là quyền đặc biệt, xem phần mở rộng.
+
+## Quyền dạng số
+
+Mỗi quyền có một giá trị: **r = 4, w = 2, x = 1**, không có = 0. Cộng lại cho từng đối tượng:
+
+| Số | Quyền | Cách tính |
+|---|---|---|
+| 7 | `rwx` | 4 + 2 + 1 |
+| 6 | `rw-` | 4 + 2 |
+| 5 | `r-x` | 4 + 1 |
+| 4 | `r--` | 4 |
+| 0 | `---` | 0 |
+
+Ghép ba số cho chủ, nhóm, người khác:
+
+| Số | Chuỗi | Hay dùng cho |
+|---|---|---|
+| `755` | `rwxr-xr-x` | Thư mục, chương trình |
+| `644` | `rw-r--r--` | File thường |
+| `700` | `rwx------` | Thư mục riêng tư |
+| `600` | `rw-------` | File bí mật (khoá SSH) |
+| `760` | `rwxrw----` | |
+| `664` | `rw-rw-r--` | File làm chung trong nhóm |
+| `754` | `rwxr-xr--` | |
+
+Xem quyền dạng số bằng `stat`:
+
+```bash
+stat -c %a baocao.txt
+stat -c "%a %A %n" baocao.txt tailieu /etc/shadow
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
-| `stat` | Xem thuộc tính file |
-| `-c` | Chọn định dạng đầu ra |
+| `stat` | Xem thông tin chi tiết của file |
+| `-c` | Chỉ in theo định dạng tự chọn |
 | `%a` | Quyền dạng số |
-| `%A` | Quyền dạng ký hiệu |
+| `%A` | Quyền dạng chữ |
 | `%n` | Tên file |
 
-Số thực tế phụ thuộc cấu hình máy. Để xem bài tập với quyền xác định, sang bài 31 tạo file trong thư mục riêng rồi dùng chmod.
+```text
+644
+644 -rw-r--r-- baocao.txt
+755 drwxr-xr-x tailieu
+640 -rw-r----- /etc/shadow
+```
+
+Trên Ubuntu, file mới tạo có quyền **644**, thư mục mới có quyền **755**.
+
+## Quyền đọc là chép được
+
+Có quyền đọc một file là đọc được nội dung, nên **chép được**. Bản chép do bạn tạo nên thuộc về bạn:
+
+```bash
+cp /etc/hosts banchep.txt
+ls -l /etc/hosts banchep.txt
+```
+
+```text
+-rw-r--r-- 1 root    root    166 Nov 27 19:25 /etc/hosts
+-rw-r--r-- 1 hocvien hocvien 166 Nov 27 19:49 banchep.txt
+```
+
+File gốc của `root`, bản chép của `hocvien`. Chủ bản chép tự đổi quyền được, kể cả thêm quyền chạy. Vì vậy, file nào không muốn người khác có bản sao thì đừng cho họ quyền đọc.
+
+## Mở rộng (chuẩn LPIC-1)
+
+Chuẩn LPIC-1 mục 104.5 còn có:
+
+| Mục | Nội dung |
+|---|---|
+| `umask` | "Mặt nạ" bớt quyền khi tạo file. Ubuntu là `0022`: file mới 666 − 022 = **644**, thư mục mới 777 − 022 = **755** |
+| Quyền đặc biệt | SUID (`s` ở cụm chủ, như `/usr/bin/passwd`: `-rwsr-xr-x`), SGID (`s` ở cụm nhóm), sticky bit (`t` ở cuối, như `/tmp`). Học ở bài Quyền đặc biệt, phần mở rộng |
+| root | Kernel không kiểm tra quyền `r`, `w` với root |
+| Thứ tự kiểm tra | Bạn là chủ thì chỉ xét cụm chủ; không phải chủ mà thuộc nhóm thì xét cụm nhóm; còn lại xét cụm người khác |
+
+```bash
+umask
+stat baocao.txt
+```
+
+```text
+0022
+  File: baocao.txt
+  Size: 0         	Blocks: 0          IO Block: 4096   regular empty file
+Device: 0,51	Inode: 29803233    Links: 1
+Access: (0644/-rw-r--r--)  Uid: ( 1001/ hocvien)   Gid: ( 1001/ hocvien)
+Access: 2026-11-27 19:49:47.925598525 +0700
+Modify: 2026-11-27 19:49:47.925598525 +0700
+Change: 2026-11-27 19:49:47.925598525 +0700
+ Birth: 2026-11-27 19:49:47.925598525 +0700
+```
+
+`stat` không có `-c` in đủ: quyền, UID, GID, inode (bài 32), các mốc thời gian (bài 16).
 
 ## Thực hành
 
-1. Giải thích `drwxr-x---`.
-2. Đổi `rw-r--r--` sang số.
-3. Giải thích vì sao quyền ghi file không đồng nghĩa được xoá file đó.
+1. Đổi các chuỗi quyền sau ra số: `rwxr-x---`, `rw-rw-r--`, `r--------`.
 
-<details>
-<summary>Xem đáp án</summary>
+   <details>
+   <summary>Xem đáp án</summary>
 
-1. `d` là thư mục. Owner có `rwx`, nhóm có `r-x`, others không có quyền. Owner và thành viên nhóm có thể đi vào; chỉ owner có quyền thay đổi tên bên trong theo các quyền cơ bản này.
-2. `644`: `rw-` bằng 6, `r--` bằng 4, `r--` bằng 4.
-3. Sửa nội dung tác động tới file. Xoá tên tác động tới thư mục chứa nó, thường cần `w` và `x` ở thư mục đó; sticky bit và các cơ chế bổ sung còn có thể hạn chế.
+   `750`, `664`, `400`.
 
-</details>
+   </details>
+
+2. Đổi các số sau ra chuỗi: `711`, `640`, `777`.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   `rwx--x--x`, `rw-r-----`, `rwxrwxrwx`.
+
+   </details>
+
+3. Xem quyền dạng số của thư mục nhà bạn và của `/etc/hostname`. Ai đọc được chúng?
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   stat -c "%a %A %U %n" ~ /etc/hostname
+   ```
+
+   Thư mục nhà trên Ubuntu 24.04 là `750`: chỉ bạn và nhóm của bạn vào được. `/etc/hostname` là `644`: ai cũng đọc được, chỉ root sửa.
+
+   </details>
+
+4. Một thư mục có quyền `rw-rw-rw-` (666). Mọi người có `cd` vào được không?
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   Không. Thiếu `x` thì không đi vào thư mục được, dù có `r` và `w`.
+
+   </details>
 
 ## Tóm tắt
 
-Đọc ký tự loại file rồi ba cụm owner/group/others. Quyền `rwx` trên thư mục mang ý nghĩa khác trên file. Tính số theo `4 + 2 + 1`, và luôn xét cả đường dẫn khi giải thích lỗi Permission denied.
+| Ý | Ghi nhớ |
+|---|---|
+| Ba đối tượng | `u` chủ, `g` nhóm, `o` người khác |
+| Ba quyền | `r` đọc, `w` ghi, `x` chạy hoặc vào thư mục |
+| Chuỗi quyền | 1 ký tự loại + 3 cụm `rwx` |
+| Dạng số | r = 4, w = 2, x = 1. `755`, `644`, `700`, `600` |
+| Xem quyền | `ls -l`, `stat -c %a file` |
+| Mặc định Ubuntu | File 644, thư mục 755, thư mục nhà 750 |
