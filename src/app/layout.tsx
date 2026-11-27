@@ -1,6 +1,7 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { THEME_COLORS, THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 // Font giao diện thiết kế cho tiếng Việt (dấu không bị chồng / lệch).
@@ -25,19 +26,18 @@ export const metadata: Metadata = {
     "Học Linux bài bản theo khung LPIC-1: 50 bài từ cơ bản đến quản trị, giải nghĩa từng phần của lệnh, thực hành có đáp án và câu hỏi kiểm tra.",
 };
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f8fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#121720" },
-  ],
-};
-
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="vi"
+      data-theme="light"
+      suppressHydrationWarning
       className={`${beVietnam.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <meta name="theme-color" content={THEME_COLORS.light} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col font-sans">
         <SiteHeader />
         {children}

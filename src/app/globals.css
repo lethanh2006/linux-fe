@@ -30,30 +30,38 @@
   --terminal-prompt: #6fd39b;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --background: #121720;
-    --foreground: #f1f3f8;
-    --card: #1a2230;
-    --muted: #a2acbc;
-    --subtle: #252e3d;
-    --border: #303a4a;
-    --border-strong: #465164;
-    --primary: #8aa8ff;
-    --primary-hover: #a3bbff;
-    --primary-soft: #1c2640;
-    --primary-foreground: #0f1a33;
-    --success: #55c489;
-    --success-soft: #16291f;
-    --danger: #e56b60;
-    --danger-soft: #331a19;
-    --warning: #e0a04a;
-    --warning-soft: #30230f;
-    --terminal-bg: #0b0f16;
-    --terminal-fg: #e3e8f2;
-    --terminal-prompt: #6fd39b;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #121720;
+  --foreground: #f1f3f8;
+  --card: #1a2230;
+  --muted: #a2acbc;
+  --subtle: #252e3d;
+  --border: #303a4a;
+  --border-strong: #465164;
+  --primary: #8aa8ff;
+  --primary-hover: #a3bbff;
+  --primary-soft: #1c2640;
+  --primary-foreground: #0f1a33;
+  --success: #55c489;
+  --success-soft: #16291f;
+  --danger: #e56b60;
+  --danger-soft: #331a19;
+  --warning: #e0a04a;
+  --warning-soft: #30230f;
+  --terminal-bg: #0b0f16;
+  --terminal-fg: #e3e8f2;
+  --terminal-prompt: #6fd39b;
+}
+
+/* Nội dung nút đổi theo theme ngay từ lần vẽ đầu tiên, trước cả hydration. */
+.theme-toggle-to-light,
+:root[data-theme="dark"] .theme-toggle-to-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle-to-light {
+  display: flex;
 }
 
 @theme inline {
