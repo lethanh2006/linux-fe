@@ -8,7 +8,7 @@ Người học cần ôn nhanh những gì đã học trước buổi demo thứ
 
 - `content/review/summary.md`: 7 chặng kiến thức, liên kết tới đủ 30 bài chính, cú pháp, lỗi hay gặp và câu giải thích.
 - `content/review/demo.md`: một bộ dữ liệu xuyên suốt; thao tác file, lọc log, find, quyền, link, tar/khôi phục, hệ thống/mạng; mỗi bước có lời nói gợi ý và dấu hiệu cần thấy.
-- `content/review/questions.md`: 14 câu hỏi vấn đáp có đáp án ẩn.
+- `content/review/questions.md`: 18 câu hỏi vấn đáp có đáp án ẩn.
 - `src/app/on-tap/page.tsx`: trang server; `src/lib/review.ts` đọc các tài liệu.
 - `src/components/demo-checklist.tsx`: 8 mục tự kiểm tra, lưu localStorage phiên bản riêng; hỗ trợ reset, dữ liệu lưu lỗi và tương tác trong phiên khi lưu trữ bị chặn.
 - Mục điều hướng và thẻ trang chủ dẫn tới `/on-tap`.
@@ -75,3 +75,24 @@ Một kiểm tra phạm vi đã xác nhận đúng bảy disclosure chặng 1–
 Phần giới hạn chặng 7 đã được triển khai. Tham chiếu nhóm 8 ở bước kết thúc đã sửa thành chặng 6; bước khôi phục hiện đọc hai bản bằng cat nên ghi nhận `Khoi phuc khop` ở lượt 23:20 là kết quả của phiên bản trước. Lượt chạy mới xác nhận hai phần cùng bốn dòng và cùng dữ liệu. Một lượt Claude đọc độc lập đã xác nhận phạm vi, đường dẫn tar, lời giải và cho phép push bản giới hạn này.
 
 Các đề xuất bổ sung chi tiết trong mục "Claude đã rà" có thể được Claude xử lý ở commit tiếp theo như đã phân công, bám chặng 1–7. Giữ nguyên guard chuẩn bị && và đường dẫn archive/khôi phục mới; kiểm tra lại các dòng kết quả nếu đổi kịch bản. Những ghi chú "VM lab" ở đây là bối cảnh kiểm thử; phần lời hướng dẫn trên trang cần được đối chiếu với yêu cầu trình bày cụ thể của người học.
+
+## Claude đã áp dụng (27/11, sau 5fb71ff)
+
+Đã làm hết 8 mục trong "Claude đã rà", đúng phạm vi chặng 1–7:
+
+- Bỏ các chữ "VM lab" và "lab". Thay bằng "tập trước trên máy riêng, không chạy trên máy đang demo", kèm cách quay lại (`isolate graphical.target`, `init 5`, đặt lại `set-default`).
+- **Chặng 4:** ghi rõ `cut -c` đếm theo byte trên Ubuntu, kèm ví dụ.
+- **Chặng 5:**
+  - Thêm bảng run level 0/1/3/5/6 cùng `init` và `runlevel`.
+  - Thêm cách đặt giờ: `set-ntp false` rồi mới `set-time`; múi giờ viết dạng Vùng/Thành_phố.
+- **Chặng 6:**
+  - Thêm `chage -m -M -W -I -E`; ghi chú `-I` bị đọc nhầm thành `-l` trong video.
+  - Thêm `usermod -L` / `-U` để khoá, mở khoá mật khẩu.
+- **Chặng 7:**
+  - `ip addr add` thêm địa chỉ, còn `ifconfig` thay địa chỉ.
+  - File netplan để `chmod 600`.
+  - Gateway viết bằng `routes: to default` thay cho `gateway4`.
+  - Thêm bảng các khoá YAML.
+- **`demo.md` bước 7:** viết lại câu về `df`. Không đổi lệnh nào, nên kết quả demo giữ nguyên.
+- **`questions.md`:** thêm câu 15–18 (vi, run level, IP tạm và IP lâu dài, hosts và resolv.conf). Tiêu đề trang đổi thành "18 câu hỏi".
+- **Kiểm tra:** `pnpm check`, `pnpm test` (9/9), `pnpm lint`, `pnpm build` đều qua.

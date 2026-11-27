@@ -59,7 +59,7 @@ Hard link cùng dữ liệu nên không phải bản sao lưu độc lập chố
 <details>
 <summary>9. Làm sao chứng minh bản nén khôi phục được?</summary>
 
-Tạo archive từ dữ liệu lab, dùng tar -t xem danh sách, giải nén vào thư mục khác, rồi dùng cat đọc bản gốc và bản khôi phục để đối chiếu đủ bốn dòng của bài demo. Chỉ có file .tar.gz chưa chứng minh quy trình khôi phục đúng.
+Tạo archive từ dữ liệu demo, dùng tar -t xem danh sách, giải nén vào thư mục khác, rồi dùng cat đọc bản gốc và bản khôi phục để đối chiếu đủ bốn dòng của bài demo. Chỉ có file .tar.gz chưa chứng minh quy trình khôi phục đúng.
 
 </details>
 
@@ -87,7 +87,7 @@ Free xem bộ nhớ; chú ý available bên cạnh used/free. Df xem dung lượ
 <details>
 <summary>13. Set-default khác isolate? Vì sao không thử reboot trên máy đang làm việc?</summary>
 
-Set-default đổi target mặc định cho lần khởi động sau; isolate chuyển tập unit ngay và có thể đóng desktop/dịch vụ. Reboot/tắt máy làm mất phiên và ảnh hưởng công việc đang chạy. Phần này cần VM lab có console nếu muốn thực hành thao tác thay đổi.
+Set-default đổi target mặc định cho lần khởi động sau; isolate chuyển tập unit ngay và có thể đóng desktop/dịch vụ. Reboot/tắt máy làm mất phiên và ảnh hưởng công việc đang chạy. Muốn thực hành thao tác thay đổi thì tập trên máy riêng, ngồi trước máy, và nhớ cách quay lại: `sudo systemctl isolate graphical.target` hoặc `sudo init 5`; đã `set-default` thì đặt lại như cũ.
 
 </details>
 
@@ -95,5 +95,33 @@ Set-default đổi target mặc định cho lần khởi động sau; isolate ch
 <summary>14. Card ở trạng thái UP đã có IP, route và DNS đúng chưa?</summary>
 
 Chưa. Trong phạm vi chặng 7, cần đọc riêng trạng thái link, IP/prefix, route/gateway và phân giải tên. Ip address, ip route, getent trả lời các câu khác nhau. Thay IP bằng ip là cấu hình đang chạy; cấu hình lưu lâu dài thuộc Netplan/NetworkManager phù hợp với máy.
+
+</details>
+
+<details>
+<summary>15. vi có mấy chế độ? Lưu và thoát thế nào?</summary>
+
+Hai chế độ chính: chế độ lệnh (mở vi là ở đây; di chuyển, xoá, tìm, lưu) và chế độ gõ chữ (vào bằng `i`, `a`, `o`; về lại chế độ lệnh bằng Esc). Lưu và thoát: `:wq` hoặc `:x`; thoát không lưu: `:q!`; chỉ lưu: `:w`. Không biết đang ở chế độ nào thì bấm Esc.
+
+</details>
+
+<details>
+<summary>16. Run level 0, 3, 5, 6 là gì? Chuyển bằng lệnh nào?</summary>
+
+0 tắt máy, 3 nhiều người dùng chế độ dòng lệnh (`multi-user.target`), 5 thêm giao diện đồ hoạ (`graphical.target`), 6 khởi động lại. Chuyển ngay bằng `sudo init N` hoặc `sudo systemctl isolate X.target`; xem bằng `runlevel` (in mức trước và mức hiện tại).
+
+</details>
+
+<details>
+<summary>17. Đặt IP tạm thời khác đặt IP lâu dài thế nào?</summary>
+
+Tạm thời: `sudo ip addr add 192.168.1.100/24 dev CARD` (thêm địa chỉ) hoặc `sudo ifconfig CARD 192.168.1.100 netmask 255.255.255.0 up` (thay địa chỉ); mất khi khởi động lại. Lâu dài: ghi vào file YAML trong `/etc/netplan/` (quyền 600) rồi `sudo netplan apply`, hoặc `sudo netplan try` để tự quay lại nếu mất kết nối.
+
+</details>
+
+<details>
+<summary>18. /etc/hosts khác /etc/resolv.conf thế nào?</summary>
+
+`/etc/hosts` tự gán tên cho IP ngay trên máy, được tra trước DNS; ví dụ thêm `127.0.0.1 titv.vn` thì máy này hiểu titv.vn là chính nó. `/etc/resolv.conf` ghi máy chủ DNS mà máy hỏi (`nameserver`); trên Ubuntu là `127.0.0.53` của systemd-resolved, DNS thật xem bằng `resolvectl dns`.
 
 </details>

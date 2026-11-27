@@ -141,7 +141,7 @@ Muốn xoá theo kết quả tìm kiếm, trước hết chạy cùng điều ki
 | `tar -xzf backup.tar.gz -C noi-khoi-phuc` | Giải nén vào thư mục đã tạo |
 | `gzip file` / `gunzip file.gz` | Nén/giải nén một file; hành vi mặc định có thể thay file nguồn |
 
-`c` là create, `x` extract, `t` list, `z` gzip, `f` chọn tên archive. Với cách viết trên, tên archive đứng sau cụm có `f`. Khi demo, chỉ giải nén gói mình vừa tạo vào thư mục lab riêng.
+`c` là create, `x` extract, `t` list, `z` gzip, `f` chọn tên archive. Với cách viết trên, tên archive đứng sau cụm có `f`. Khi demo, chỉ giải nén gói mình vừa tạo vào một thư mục riêng (`-C thư-mục`), để không ghi đè file đang có.
 
 **Vi cần thuộc một vòng thao tác:** mở file → vào Insert bằng `i` → gõ → Esc về Normal → `:wq` lưu và thoát. `:q!` bỏ các thay đổi chưa lưu. Không gõ lệnh Normal khi còn ở Insert.
 
@@ -167,7 +167,7 @@ cut -d ':' -f 1 du-an/data/dich-vu.txt | sort | uniq -c
 
 Pipeline lấy tên dịch vụ, sắp xếp rồi đếm các dòng trùng kề nhau. `uniq -c` không tự đếm mọi dòng giống nhau nằm rải rác nếu chưa sắp xếp cho chúng đứng cạnh nhau.
 
-`-f` chọn trường, `-d` chọn delimiter; mặc định delimiter là Tab. `-c` chọn vị trí ký tự theo công cụ, `-b` chọn byte. Dữ liệu UTF-8 có thể có nhiều byte cho một ký tự nên nên dùng mẫu ASCII để hiểu vị trí trước.
+`-f` chọn trường, `-d` chọn delimiter; mặc định delimiter là Tab. `-b` chọn byte, `-c` theo lý thuyết chọn ký tự. Nhưng `cut` trên Ubuntu (GNU coreutils 9.4) vẫn đếm `-c` theo **byte**: chữ có dấu chiếm 2–3 byte nên bị cắt đôi, ví dụ `echo "Lê Văn Đức" | cut -c 1-2` ra `L` kèm một ký tự lỗi. Dữ liệu có dấu thì cắt theo trường (`-d`, `-f`).
 
 **Lỗi dễ mắc:** `-d ' '` là một dấu cách, không tự gom nhiều dấu cách căn cột. `cut -d ','` cũng không phải bộ đọc CSV đầy đủ vì không xử lý các quy tắc nháy/escape của CSV.
 
@@ -197,7 +197,19 @@ Boot đi khái quát từ firmware → bootloader → kernel/initramfs → init/
 
 **Ba thao tác phải phân biệt:** get-default chỉ xem, set-default đổi mặc định cho lần boot sau, isolate chuyển tập unit ngay và có thể đóng desktop. Runlevel là cách diễn đạt truyền thống; trên systemd các mức 2/3/4 thường cùng ánh xạ multi-user.target.
 
-`shutdown -r +10` lên lịch reboot sau 10 phút; `shutdown -c` huỷ lịch còn chờ. Các lệnh shutdown, reboot, isolate hoặc đặt đồng hồ cần VM lab có console. Với kịch bản chính, trình bày ý nghĩa và đọc trạng thái là đủ để chứng minh hiểu.
+| Run level | Ý nghĩa | Lệnh chuyển |
+|---|---|---|
+| 0 | Tắt máy | `sudo init 0` |
+| 1 | Một người dùng, chế độ cứu hộ | `sudo init 1` |
+| 3 | Nhiều người dùng, dòng lệnh (`multi-user.target`) | `sudo init 3` |
+| 5 | Như 3 cộng giao diện đồ hoạ (`graphical.target`) | `sudo init 5` |
+| 6 | Khởi động lại | `sudo init 6` |
+
+`runlevel` in hai số: mức trước và mức hiện tại (`N 5` là từ lúc khởi động chưa đổi, đang ở 5).
+
+**Đặt giờ:** khi đồng bộ tự động (NTP) đang bật, `sudo timedatectl set-time "..."` báo `Automatic time synchronization is enabled`; phải `sudo timedatectl set-ntp false` trước, thử xong `set-ntp true`. Múi giờ viết dạng Vùng/Thành_phố: `sudo timedatectl set-timezone Asia/Ho_Chi_Minh`; viết `+07` bị từ chối.
+
+`shutdown -r +10` lên lịch reboot sau 10 phút; `shutdown -c` huỷ lịch còn chờ. Các lệnh shutdown, reboot, isolate, init hoặc đặt đồng hồ làm thay đổi cả máy: tập trước trên máy riêng, không chạy trên máy đang dùng để demo. Với kịch bản chính, trình bày ý nghĩa và đọc trạng thái là đủ để chứng minh hiểu.
 
 Đọc thêm: [ngày giờ](/bai/ngay-gio-he-thong), [tắt/khởi động lại](/bai/tat-va-khoi-dong-lai), [boot/target](/bai/khoi-dong-he-thong), [thông tin hệ thống](/bai/thong-tin-he-thong).
 
@@ -220,7 +232,7 @@ User được nhận diện bằng UID, nhóm bằng GID. Mỗi user có một n
 
 `/etc/passwd` có 7 trường: tên, trường mật khẩu, UID, GID chính, mô tả, home, shell. `/etc/shadow` có 9 trường về xác thực và tuổi mật khẩu, kể cả trường dự phòng. Không đưa hash mật khẩu thật lên màn hình chia sẻ để “chứng minh có file”. `/etc/group` có 4 trường; danh sách cuối không nhất thiết liệt kê lại người dùng nhóm đó làm nhóm chính.
 
-**Cần thuộc cú pháp quản trị**, thực hành với tài khoản mới trong VM lab:
+**Cần thuộc cú pháp quản trị**, tập trước trên máy riêng với tài khoản, nhóm tạo mới trong bài (không đụng tài khoản đang dùng):
 
 | Lệnh mẫu | Ý nghĩa và điểm cần nhớ |
 |---|---|
@@ -229,6 +241,8 @@ User được nhận diện bằng UID, nhóm bằng GID. Mỗi user có một n
 | `sudo groupadd demo_group` | Tạo nhóm |
 | `sudo usermod -aG demo_group demo_user` | Thêm nhóm phụ, giữ các nhóm phụ cũ |
 | `sudo chage -l demo_user` | Đọc chính sách tuổi mật khẩu |
+| `sudo chage -m 5 -M 90 -W 14 -I 10 -E 2030-04-30 demo_user` | `-m` tối thiểu, `-M` tối đa số ngày giữa hai lần đổi mật khẩu, `-W` báo trước, `-I` (chữ i hoa, video đọc nhầm là `-l`) khoá sau khi hết hạn bao nhiêu ngày, `-E` ngày tài khoản hết hiệu lực |
+| `sudo usermod -L demo_user` / `-U` | Khoá / mở khoá mật khẩu: thêm / bỏ dấu `!` trước mật khẩu mã hoá trong `/etc/shadow` |
 | `sudo userdel -r demo_user` | Xoá user thử nghiệm và home/mail spool; không tự quét mọi file khắp máy |
 | `sudo groupdel demo_group` | Xoá định nghĩa nhóm; cần xử lý nếu đang là nhóm chính |
 
@@ -281,7 +295,14 @@ UP không bảo đảm đã có IP, route hay DNS đúng. Các thông tin này c
 
 `/etc/hosts` là ánh xạ cục bộ; DNS là cơ chế phân giải tên theo cấu hình hệ thống. `/etc/resolv.conf` có thể do dịch vụ quản lý; `127.0.0.53` thường là stub cục bộ của systemd-resolved. Dùng `resolvectl status` trên máy có dịch vụ đó để xem DNS theo giao diện.
 
-`ip address add IP/PREFIX dev CARD` thay cấu hình đang chạy; không tự lưu qua reboot. Netplan/NetworkManager quản lý cấu hình lưu lâu dài. Với Netplan: xác định card và cấu hình hiện có → sao lưu → sửa YAML đúng file → `netplan generate` → thử bằng `netplan try` → kiểm tra IP/route/kết nối và sau reboot trong VM. Cần có console để phục hồi; không xem rollback là lời bảo đảm cho mọi trường hợp.
+`ip address add IP/PREFIX dev CARD` **thêm** một địa chỉ vào cấu hình đang chạy (giữ địa chỉ cũ); `ifconfig CARD IP netmask ...` thì **thay** địa chỉ cũ. Cả hai đều mất khi khởi động lại. Netplan/NetworkManager quản lý cấu hình lưu lâu dài. Với Netplan: xác định card và cấu hình hiện có → sao lưu → sửa YAML đúng file trong `/etc/netplan/` → `sudo chmod 600` file đó (không thì `netplan apply` cảnh báo `Permissions ... are too open`) → `sudo netplan generate` → thử bằng `sudo netplan try` → kiểm tra IP/route/kết nối, và kiểm tra lại sau khi khởi động lại. Cần ngồi trước máy (hoặc có console) để phục hồi; không xem rollback là lời bảo đảm cho mọi trường hợp.
+
+| YAML netplan | Ý nghĩa |
+|---|---|
+| `addresses: [192.168.1.100/24]` | IP tĩnh và prefix |
+| `routes:` → `- to: default` / `via: 192.168.1.1` | Gateway. Cách viết cũ `gateway4:` nay bị báo deprecated |
+| `nameservers: addresses: [8.8.8.8]` | Máy chủ DNS |
+| Thụt lề | Chỉ dùng dấu cách, không dùng Tab |
 
 Video có `ifconfig`, `route -n`; trên Ubuntu mới nên biết thêm `ip`. Trong demo chính, dùng các lệnh đọc để giải thích cấu hình, tránh đổi IP của card đang phục vụ kết nối.
 

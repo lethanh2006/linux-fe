@@ -164,7 +164,7 @@ ip route
 getent hosts localhost
 ```
 
-**Cần giải thích:** free xem RAM, available hữu ích khi đánh giá bộ nhớ có thể cấp thêm. Df xem filesystem chứa dấu chấm, không phải tổng dung lượng mọi file trong du-an. Ip address xem địa chỉ; ip route xem đường đi; getent tra tên theo cấu hình phân giải của máy.
+**Cần giải thích:** free xem RAM, available hữu ích khi đánh giá bộ nhớ có thể cấp thêm. Df xem filesystem chứa thư mục hiện tại (`.`), không phải tổng dung lượng mọi file trong du-an (việc đó là của `du -sh du-an`). Ip address xem địa chỉ; ip route xem đường đi; getent tra tên theo cấu hình phân giải của máy.
 
 Tên card, RAM, dung lượng và route phụ thuộc môi trường. Máy không có default route vẫn có thể đọc và giải thích trạng thái đó; không cần đổi mạng để tạo ra một kết quả giống mẫu.
 
@@ -176,7 +176,7 @@ Tóm tắt theo trình tự: **xác định môi trường → tổ chức file 
 
 Nếu cần minh hoạ vi: tại thư mục demo, mở `vi ghi-chu.txt`, bấm i, gõ một câu, Esc, `:wq`, Enter, rồi `cat ghi-chu.txt`. Phần này là tương tác bàn phím, không phải một khối lệnh dán hàng loạt.
 
-Nếu cần trình bày user/nhóm, trước hết dùng `id`, `id -gn`, `getent passwd "$(whoami)"`. Các thao tác tạo/xoá user cần VM lab và quyền quản trị; xem chặng 6 ở phần tóm tắt và các bài 26–29. Không cần reboot, đổi target hay đổi IP của card đang dùng để hoàn thành kịch bản chính.
+Nếu cần trình bày user/nhóm, trước hết dùng `id`, `id -gn`, `getent passwd "$(whoami)"`. Các thao tác tạo/xoá user cần quyền quản trị và chỉ nên tập trước trên máy riêng, với tài khoản tạo mới; xem chặng 6 ở phần tóm tắt và các bài 26–29. Không cần reboot, đổi target hay đổi IP của card đang dùng để hoàn thành kịch bản chính.
 
 ### Khi gặp lỗi giữa buổi demo
 

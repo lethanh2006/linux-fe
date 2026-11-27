@@ -83,7 +83,7 @@ export default function ReviewPage() {
         </section>
 
         <section id="cau-hoi" aria-labelledby="questions-title" className="mt-12 scroll-mt-20 border-t border-border pt-8">
-          <h2 id="questions-title" className="text-2xl font-bold">14 câu hỏi để tập trả lời</h2>
+          <h2 id="questions-title" className="text-2xl font-bold">18 câu hỏi để tập trả lời</h2>
           <Markdown source={guides.questions} />
         </section>
 
