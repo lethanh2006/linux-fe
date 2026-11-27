@@ -131,7 +131,7 @@ export const CURRICULUM: ModuleOutline[] = [
       { slug: "khoi-dong-he-thong", title: "Quá trình khởi động, target, tắt và khởi động lại", objectives: ["101.2", "101.3"], videos: [23, 24], lab: "vm" },
       { slug: "systemd-dich-vu", title: "Quản lý dịch vụ bằng systemctl và viết unit file", objectives: ["101.3"], videos: [], lab: "vm" },
       { slug: "nhat-ky-he-thong", title: "Nhật ký hệ thống: journalctl và /var/log", objectives: ["108.2"], videos: [], lab: "vm" },
-      { slug: "lap-lich-cong-viec", title: "Hẹn giờ chạy việc: cron, at, systemd timer", objectives: ["107.2"], videos: [], lab: "docker" },
+      { slug: "lap-lich-cong-viec", title: "Hẹn giờ chạy việc: cron, at, systemd timer", objectives: ["107.2"], videos: [], lab: "vm" },
     ],
   },
   {
