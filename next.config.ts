@@ -7,6 +7,10 @@ const API_INTERNAL_URL =
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // Bài học đọc từ content/lessons/*.md: phải đóng gói thư mục này vào server khi deploy.
+  outputFileTracingIncludes: {
+    "/**": ["./content/**/*"],
+  },
   turbopack: {
     rules: {
       "*.css": {

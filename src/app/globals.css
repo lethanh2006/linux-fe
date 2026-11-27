@@ -95,3 +95,164 @@ body {
     0 4px 20px -12px color-mix(in srgb, var(--foreground) 16%, transparent),
     0 1px 3px -1px color-mix(in srgb, var(--foreground) 8%, transparent);
 }
+
+html {
+  scroll-padding-top: 5rem;
+}
+
+/* ---------- Nội dung bài học (Markdown) ---------- */
+.lesson-body {
+  margin-top: 2rem;
+  line-height: 1.75;
+}
+.lesson-body > * + * {
+  margin-top: 1rem;
+}
+.lesson-body h2 {
+  margin-top: 2.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.lesson-body h3 {
+  margin-top: 2rem;
+  font-size: 1.12rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.lesson-body h4 {
+  margin-top: 1.5rem;
+  font-weight: 650;
+}
+.lesson-body a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.lesson-body ul,
+.lesson-body ol {
+  padding-left: 1.4rem;
+}
+.lesson-body ul {
+  list-style: disc;
+}
+.lesson-body ol {
+  list-style: decimal;
+}
+.lesson-body li + li {
+  margin-top: 0.35rem;
+}
+.lesson-body li > ul,
+.lesson-body li > ol {
+  margin-top: 0.35rem;
+}
+.lesson-body strong {
+  font-weight: 650;
+}
+.lesson-body hr {
+  border-color: var(--border);
+  margin: 2rem 0;
+}
+/* Mã nằm trong dòng chữ */
+.lesson-body :not(pre) > code,
+.panel code {
+  border-radius: 0.3rem;
+  background: var(--subtle);
+  padding: 0.1rem 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+/* Ghi chú / lưu ý */
+.lesson-body blockquote {
+  border-left: 4px solid var(--primary);
+  border-radius: 0 0.6rem 0.6rem 0;
+  background: var(--primary-soft);
+  padding: 0.75rem 1rem;
+}
+.lesson-body blockquote > * + * {
+  margin-top: 0.5rem;
+}
+/* Bảng tách lệnh */
+.lesson-body .table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+.lesson-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.lesson-body th {
+  background: var(--subtle);
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lesson-body th,
+.lesson-body td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.8rem;
+  vertical-align: top;
+}
+.lesson-body tr:last-child td {
+  border-bottom: 0;
+}
+.lesson-body td:first-child {
+  white-space: nowrap;
+}
+.lesson-body td:first-child code {
+  color: var(--primary);
+  font-weight: 600;
+}
+/* Đáp án ẩn */
+.lesson-body details {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--card);
+  padding: 0 1rem;
+}
+.lesson-body details[open] {
+  padding-bottom: 1rem;
+}
+.lesson-body summary {
+  cursor: pointer;
+  padding: 0.65rem 0;
+  font-weight: 600;
+  color: var(--primary);
+}
+.lesson-body details > * + * {
+  margin-top: 0.75rem;
+}
+
+/* ---------- Khối terminal ---------- */
+.code-block {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: var(--terminal-bg);
+  color: var(--terminal-fg);
+}
+.code-block pre {
+  overflow-x: auto;
+  padding: 0.8rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+.code-block.is-output {
+  background: color-mix(in srgb, var(--terminal-bg) 86%, #4a5875);
+}
+.code-block pre.is-output {
+  color: color-mix(in srgb, var(--terminal-fg) 86%, transparent);
+}
+.code-block .prompt {
+  color: var(--terminal-prompt);
+  user-select: none;
+}
+.code-block .line-comment {
+  color: #8b96aa;
+}

@@ -14,7 +14,29 @@ pnpm install
 pnpm dev                      # http://localhost:3001
 ```
 
-Trang chủ có ô trạng thái: xanh là backend và database đều chạy.
+Bài học đọc thẳng từ file, nên không có backend vẫn xem được bài. Backend chỉ cần cho phần lưu tiến độ và điểm kiểm tra.
+
+## Các trang
+
+| Đường dẫn | Nội dung |
+|---|---|
+| `/` | Lộ trình 12 chặng, 50 bài, kèm tiến độ và nút học tiếp |
+| `/bai/<slug>` | Một bài: giải thích, bảng tách lệnh, thực hành có đáp án ẩn, câu hỏi kiểm tra, đánh dấu đã học |
+| `/tra-cuu` | Tìm lệnh đã được giải thích ở bài nào |
+| `/tien-do` | Mã học viên, khôi phục tiến độ từ máy khác, điểm từng bài |
+| `/nguon` | Các nguồn dùng để soạn bài và để học thêm |
+| `/lab/Dockerfile` | Dockerfile môi trường thực hành (Ubuntu 24.04, user `hocvien`) |
+
+## Thêm hoặc sửa bài
+
+- Lộ trình (thứ tự chặng, bài, mục thi LPIC-1, số video TITV) nằm ở `src/content/curriculum.ts`.
+- Nội dung bài nằm ở `content/lessons/<slug>.md`. Bài chưa có file thì lộ trình ghi "Đang viết".
+- Đầu file là frontmatter YAML: `summary`, `minutes`, `commands` (cho trang tra cứu), `quiz` (mỗi câu có `q`, `options`, `answer` tính từ 0, `explain`).
+- Thân bài là Markdown. Quy ước:
+  - Khối ` ```bash ` là lệnh (tự có dấu nhắc `$` và nút Chép), khối ` ```text ` là kết quả in ra.
+  - Mỗi lệnh có bảng `| Phần | Ý nghĩa |` tách từng phần.
+  - Đáp án thực hành bọc trong `<details><summary>Xem đáp án</summary> … </details>`.
+- `pnpm check` kiểm tra frontmatter, câu hỏi, link `/bai/...` và khối code chưa đóng. `pnpm build` tự chạy bước này.
 
 ## Lệnh
 
@@ -24,6 +46,7 @@ Trang chủ có ô trạng thái: xanh là backend và database đều chạy.
 | `pnpm build` | Build bản production |
 | `pnpm start` | Chạy bản đã build ở cổng 3001 |
 | `pnpm lint` | Kiểm tra code bằng ESLint |
+| `pnpm check` | Kiểm tra nội dung bài học |
 
 ## Biến môi trường
 
