@@ -80,15 +80,17 @@ cut -b 2 students.txt
 cut -b 1,3,5 students.txt
 ```
 
+Trong kết quả dưới, `␠` biểu diễn khoảng trắng ở cuối dòng để dễ quan sát; đây không phải ký tự được `cut` thêm vào.
+
 ```text
 g
 r
 e
 h
 Nue
-Ta 
+Ta␠
 L o
-Pa 
+Pa␠
 ```
 
 `-b 2` lấy byte thứ hai của mỗi dòng. `-b 1,3,5` ghép byte 1, 3, 5 lại; dấu cách cũng là một byte.
