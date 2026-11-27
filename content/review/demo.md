@@ -1,8 +1,10 @@
 ### Mục tiêu và nhịp trình bày
 
+**Phạm vi: chặng 1–7, bài 5–34.** Chặng cuối là Mạng; kịch bản dùng các thao tác thuộc phạm vi này cùng bước chuẩn bị dữ liệu và kiểm tra khôi phục.
+
 Bạn sẽ tạo một thư mục dự án nhỏ, thao tác file, lọc log, tìm dữ liệu, phân quyền, tạo link, sao lưu/khôi phục và đọc cấu hình máy. **Chạy các bước trong cùng một terminal, theo thứ tự.** Mỗi lần tập lại, chạy bước 0 để có bộ dữ liệu mới.
 
-Gợi ý 15–20 phút: chuẩn bị 2 phút → file 2 phút → lọc/tìm 4 phút → quyền/link 3 phút → sao lưu 2 phút → hệ thống/mạng 2 phút → giải thích và trả lời câu hỏi 2–5 phút. Thời lượng tuỳ tốc độ nói và gõ.
+Gợi ý 15–20 phút: chuẩn bị 1 phút → file 2 phút → lọc/tìm 3 phút → quyền/link 3 phút → sao lưu 2 phút → hệ thống/mạng 2 phút → giải thích và trả lời câu hỏi 2–7 phút. Thời lượng tuỳ tốc độ nói và gõ.
 
 ### Bước 0 · Chuẩn bị dữ liệu
 
@@ -18,6 +20,8 @@ pwd
 ```
 
 **Giải thích:** mktemp -d tạo thư mục riêng với hậu tố ngẫu nhiên; `$(...)` lấy đường dẫn kết quả gán vào DEMO_DIR. `&&` chỉ chạy bước kế khi bước trước thành công; dấu `\` nối dòng. Vì vậy lỗi tạo hoặc vào thư mục sẽ dừng cả phần ghi dữ liệu. Nháy kép giữ đường dẫn thành một đối số. `mkdir -p` tạo thư mục cha còn thiếu. `printf` tạo dữ liệu với `\n` là xuống dòng; `>` ghi nội dung file.
+
+`mktemp` là công cụ phụ để tạo chỗ tập riêng cho mỗi lượt demo, được giải thích ngay ở bước này. Phần kiến thức ôn theo khoá học bắt đầu từ bước 1.
 
 **Cần thấy:** pwd kết thúc bằng `hoc-linux-demo.` cùng hậu tố ngẫu nhiên. Nếu một lệnh chuẩn bị lỗi, dừng kiểm tra trước khi sang bước tiếp theo.
 
@@ -121,22 +125,34 @@ worker:demo:9000
 ### Bước 6 · Tạo bản nén và khôi phục có kiểm tra
 
 ```bash
-tar -czf du-an/backup/du-lieu.tar.gz -C du-an data
+tar -czf du-an/backup/du-lieu.tar.gz du-an/data
 tar -tzf du-an/backup/du-lieu.tar.gz
 mkdir khoi-phuc
 tar -xzf du-an/backup/du-lieu.tar.gz -C khoi-phuc
-cmp -s du-an/data/dich-vu.txt khoi-phuc/data/dich-vu.txt && printf 'Khoi phuc khop\n'
+printf 'Ban goc:\n'
+cat du-an/data/dich-vu.txt
+printf 'Ban khoi phuc:\n'
+cat khoi-phuc/du-an/data/dich-vu.txt
 ```
 
-Dòng cuối cần in:
+Hai phần cần hiện cùng bốn dòng dữ liệu:
 
 ```text
-Khoi phuc khop
+Ban goc:
+web:an:80
+api:binh:443
+web:chi:80
+worker:demo:9000
+Ban khoi phuc:
+web:an:80
+api:binh:443
+web:chi:80
+worker:demo:9000
 ```
 
-**Giải thích:** c tạo, z dùng gzip, f chọn archive, t xem danh sách, x giải nén. `-C du-an` đổi thư mục làm việc cho phần thu thập dữ liệu của tar; archive ở backup nhưng chỉ data được đóng gói. `-C khoi-phuc` chỉ đích giải nén đã tạo. Cmp -s so sánh hai file không in chi tiết; `&&` chỉ chạy lệnh báo khớp khi phép so sánh thành công.
+**Giải thích:** c tạo, z dùng gzip, f chọn archive, t xem danh sách, x giải nén. Chỉ `du-an/data` được đóng gói, nên archive trong backup không tự được đưa vào chính nó. `-C khoi-phuc` chỉ đích giải nén đã tạo; đường dẫn bên trong archive vẫn là `du-an/data`, nên file khôi phục nằm ở `khoi-phuc/du-an/data/dich-vu.txt`. Dùng cat để đọc cả hai file và đối chiếu từng dòng, gồm dòng worker vừa thêm qua hard link.
 
-**Nói:** “Em không chỉ tạo một file nén. Em liệt kê, khôi phục vào thư mục khác và so sánh để chứng minh bản khôi phục đúng.”
+**Nói:** “Em liệt kê nội dung archive, khôi phục vào thư mục khác rồi đọc lại file. Hai phần đều có đủ bốn dòng, kể cả dòng worker vừa thêm.”
 
 ### Bước 7 · Đọc tài nguyên và cấu hình mạng
 
@@ -160,7 +176,7 @@ Tóm tắt theo trình tự: **xác định môi trường → tổ chức file 
 
 Nếu cần minh hoạ vi: tại thư mục demo, mở `vi ghi-chu.txt`, bấm i, gõ một câu, Esc, `:wq`, Enter, rồi `cat ghi-chu.txt`. Phần này là tương tác bàn phím, không phải một khối lệnh dán hàng loạt.
 
-Nếu cần trình bày user/nhóm, trước hết dùng `id`, `id -gn`, `getent passwd "$(whoami)"`. Các thao tác tạo/xoá user cần VM lab và quyền quản trị; xem nhóm 8 ở phần tóm tắt và các bài 26–29. Không cần reboot, đổi target hay đổi IP của card đang dùng để hoàn thành kịch bản chính.
+Nếu cần trình bày user/nhóm, trước hết dùng `id`, `id -gn`, `getent passwd "$(whoami)"`. Các thao tác tạo/xoá user cần VM lab và quyền quản trị; xem chặng 6 ở phần tóm tắt và các bài 26–29. Không cần reboot, đổi target hay đổi IP của card đang dùng để hoàn thành kịch bản chính.
 
 ### Khi gặp lỗi giữa buổi demo
 
@@ -170,7 +186,7 @@ Nếu cần trình bày user/nhóm, trước hết dùng `id`, `id -gn`, `getent
 | Link/File exists khi tập lại một bước | Xem đối tượng đã có. Muốn chạy lại toàn bộ, bắt đầu bước 0 để tạo một thư mục mới |
 | Permission denied | Xem `id`, `ls -l`, `ls -ld` thư mục cha. Không thêm sudo hoặc 777 theo phản xạ |
 | Không thoát được vi | Bấm Esc, rồi `:q!` Enter nếu chấp nhận bỏ phần chưa lưu; `:wq` nếu muốn lưu |
-| Không có ip/cmp/tar | Chuẩn bị công cụ trước buổi trình bày; đó là phần mềm trên máy, không phải lỗi của dữ liệu mẫu |
+| Không có ip/tar | Chuẩn bị công cụ trước buổi trình bày; đó là phần mềm trên máy, không phải lỗi của dữ liệu mẫu |
 | Quên lệnh | Nói rõ mục tiêu, mở trợ giúp hoặc mục tóm tắt; giải thích cách tra cũng là một kỹ năng |
 
 Trước buổi demo, chạy trọn kịch bản một lần trên đúng máy sẽ dùng. Không đợi tới lúc trình bày mới kiểm tra công cụ hoặc quyền truy cập.

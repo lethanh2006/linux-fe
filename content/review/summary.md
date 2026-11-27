@@ -1,7 +1,9 @@
-Mỗi nhóm dưới đây có ba việc cần nắm: **nó giải quyết vấn đề gì, đọc lệnh thế nào, và kiểm tra kết quả ra sao**. Đọc ý chính trước; mở bài gốc khi có chỗ chưa hiểu. Các ví dụ dùng bộ dữ liệu ở [bước chuẩn bị demo](#kich-ban).
+Phạm vi ôn tập là **chặng 1 đến hết chặng 7** trong lộ trình hiện tại: từ bài 5 đến bài 34. Chặng 7 kết thúc ở phần cấu hình mạng và địa chỉ IP.
+
+Mỗi chặng có ba việc cần nắm: **nó giải quyết vấn đề gì, đọc lệnh thế nào, và kiểm tra kết quả ra sao**. Đọc ý chính trước; mở bài gốc khi có chỗ chưa hiểu. Các ví dụ dùng bộ dữ liệu ở [bước chuẩn bị demo](#kich-ban).
 
 <details>
-<summary>1. Nền tảng, terminal và đường dẫn · Bài 5–9</summary>
+<summary>Chặng 1 · Làm quen với Linux · Bài 5–9</summary>
 
 ### Cần hiểu và nói được
 
@@ -28,7 +30,7 @@ Tab giúp hoàn thành tên; Ctrl+C ngắt lệnh đang chạy; mũi tên lên g
 </details>
 
 <details>
-<summary>2. Tạo, chép, đổi tên và đọc file · Bài 10–12</summary>
+<summary>Chặng 2 · File và thư mục · Bài 10–12</summary>
 
 ### Cần hiểu và nói được
 
@@ -61,7 +63,7 @@ Thư mục tổ chức tên file. `cp` tạo bản sao; `mv` di chuyển hoặc 
 </details>
 
 <details>
-<summary>3. Chuyển hướng, pipe, grep và regex · Bài 13–15</summary>
+<summary>Chặng 3 · Luồng dữ liệu và tìm kiếm · Bài 13–17</summary>
 
 ### Cần hiểu và nói được
 
@@ -98,12 +100,7 @@ grep -E '^(web|api):' du-an/data/dich-vu.txt
 
 Đọc thêm: [luồng dữ liệu](/bai/chuyen-huong-va-pipe), [grep](/bai/lenh-grep), [regex](/bai/bieu-thuc-chinh-quy).
 
-</details>
-
-<details>
-<summary>4. Tìm file và tìm chương trình · Bài 16–17</summary>
-
-### Cần hiểu và nói được
+### Tìm file và tìm chương trình
 
 `grep` tìm **trong nội dung**; `find` tìm **đối tượng trong cây thư mục**. `which` hỏi chương trình trong PATH; `whereis` tìm một số vị trí liên quan như binary và man page. Đây là những câu hỏi khác nhau.
 
@@ -131,7 +128,7 @@ Muốn xoá theo kết quả tìm kiếm, trước hết chạy cùng điều ki
 </details>
 
 <details>
-<summary>5. Đóng gói, nén và soạn thảo vi · Bài 18–20</summary>
+<summary>Chặng 4 · Nén file, vi và cut · Bài 18–21</summary>
 
 ### Cần hiểu và nói được
 
@@ -160,12 +157,7 @@ Muốn xoá theo kết quả tìm kiếm, trước hết chạy cùng điều ki
 
 Đọc thêm: [tar/gzip](/bai/nen-va-luu-tru), [vi](/bai/trinh-soan-thao-vi), [thực hành vi](/bai/thuc-hanh-vi).
 
-</details>
-
-<details>
-<summary>6. Cắt cột bằng cut · Bài 21</summary>
-
-### Cần hiểu và nói được
+### Cắt cột bằng cut
 
 Với dòng `web:an:80`, dấu `:` tách ba trường. `cut -d ':' -f 1` lấy trường đầu, còn `-f 1,3` lấy trường đầu và thứ ba. `-f 1-3` là dải ba trường liên tiếp.
 
@@ -184,7 +176,7 @@ Pipeline lấy tên dịch vụ, sắp xếp rồi đếm các dòng trùng kề
 </details>
 
 <details>
-<summary>7. Ngày giờ, khởi động và thông tin hệ thống · Bài 22–25</summary>
+<summary>Chặng 5 · Hệ thống · Bài 22–25</summary>
 
 ### Cần hiểu và nói được
 
@@ -212,7 +204,7 @@ Boot đi khái quát từ firmware → bootloader → kernel/initramfs → init/
 </details>
 
 <details>
-<summary>8. Tài khoản, nhóm và quyền quản trị · Bài 26–29</summary>
+<summary>Chặng 6 · Người dùng, nhóm và phân quyền · Bài 26–32</summary>
 
 ### Cần hiểu và nói được
 
@@ -244,12 +236,7 @@ User được nhận diện bằng UID, nhóm bằng GID. Mỗi user có một n
 
 Đọc thêm: [user](/bai/quan-tri-nguoi-dung), [lệnh user](/bai/lenh-quan-ly-nguoi-dung), [nhóm](/bai/quan-tri-nhom), [lệnh nhóm](/bai/lenh-quan-tri-nhom).
 
-</details>
-
-<details>
-<summary>9. Quyền rwx và liên kết · Bài 30–32</summary>
-
-### Cần hiểu và nói được
+### Quyền rwx và liên kết
 
 Chuỗi `-rw-r-----` gồm loại file `-`, rồi ba cụm owner/group/others. `r=4`, `w=2`, `x=1`; vì vậy chuỗi trên tương ứng 640.
 
@@ -259,7 +246,7 @@ Chuỗi `-rw-r-----` gồm loại file `-`, rồi ba cụm owner/group/others. `
 | w | Sửa nội dung | Đổi các tên bên trong; thường cần thêm x |
 | x | Thực thi trực tiếp nếu các điều kiện khác phù hợp | Tra cứu/đi xuyên, cd vào |
 
-Xoá tên file là thay đổi thư mục cha; quyền ghi của riêng file không quyết định toàn bộ. Sticky bit, ACL và các cơ chế khác có thể thêm hạn chế. Không dùng 777 cho mọi thứ để hết lỗi.
+Với mô hình rwx cơ bản đang ôn, xoá tên file là thay đổi thư mục cha; quyền ghi của riêng file không quyết định toàn bộ. Kiểm tra cả đường dẫn khi gặp lỗi quyền. Không dùng 777 cho mọi thứ để hết lỗi.
 
 | Lệnh | Ý nghĩa |
 |---|---|
@@ -279,7 +266,7 @@ Xoá tên file là thay đổi thư mục cha; quyền ghi của riêng file kh�
 </details>
 
 <details>
-<summary>10. Card mạng, IP, gateway và DNS · Bài 33–34</summary>
+<summary>Chặng 7 · Mạng · Bài 33–34</summary>
 
 ### Cần hiểu và nói được
 
@@ -290,7 +277,7 @@ Xoá tên file là thay đổi thư mục cha; quyền ghi của riêng file kh�
 | Route | Đi tới mạng khác qua đâu? | `ip route` |
 | Phân giải tên | Tên được tra ra địa chỉ nào? | `getent hosts localhost` |
 
-UP không bảo đảm đã có IP, route hay DNS đúng. Có IP không có nghĩa dịch vụ web đang chạy. Ping thất bại không đủ kết luận máy đích tắt vì ICMP có thể bị chặn.
+UP không bảo đảm đã có IP, route hay DNS đúng. Các thông tin này cần được đọc riêng; một kết quả không thay thế việc kiểm tra những mục còn lại. Xác định tên card thật của máy trước khi giải thích cấu hình.
 
 `/etc/hosts` là ánh xạ cục bộ; DNS là cơ chế phân giải tên theo cấu hình hệ thống. `/etc/resolv.conf` có thể do dịch vụ quản lý; `127.0.0.53` thường là stub cục bộ của systemd-resolved. Dùng `resolvectl status` trên máy có dịch vụ đó để xem DNS theo giao diện.
 

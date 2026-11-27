@@ -1,4 +1,4 @@
-Tự nói câu trả lời trước khi mở đáp án. Mục tiêu là giải thích được **vì sao**, sau đó chọn một lệnh để chứng minh.
+Các câu hỏi dưới đây bám **chặng 1–7**. Tự nói câu trả lời trước khi mở đáp án. Mục tiêu là giải thích được **vì sao**, sau đó chọn một lệnh để chứng minh.
 
 <details>
 <summary>1. Kernel, shell và bản phân phối khác nhau thế nào?</summary>
@@ -45,7 +45,7 @@ Find bỏ phần lẻ khi tính khoảng ngày 24 giờ: 7,5 thành 7, chưa l�
 <details>
 <summary>7. Quyền 640 là gì? Muốn xoá file cần quyền nào?</summary>
 
-640 là owner đọc/ghi, group đọc, others không có quyền. Xoá một tên là thay đổi thư mục chứa tên, thường cần w và x trên thư mục cha; sticky bit và cơ chế bổ sung có thể hạn chế thêm. Không chỉ nhìn quyền w của bản thân file.
+640 là owner đọc/ghi, group đọc, others không có quyền. Với mô hình rwx cơ bản đang ôn, xoá một tên là thay đổi thư mục chứa tên, thường cần w và x trên thư mục cha. Kiểm tra cả đường dẫn, không chỉ nhìn quyền w của bản thân file.
 
 </details>
 
@@ -59,7 +59,7 @@ Hard link cùng dữ liệu nên không phải bản sao lưu độc lập chố
 <details>
 <summary>9. Làm sao chứng minh bản nén khôi phục được?</summary>
 
-Tạo archive từ dữ liệu lab, dùng tar -t xem danh sách, giải nén vào thư mục khác, rồi so sánh file bằng cmp hoặc diff. Chỉ có file .tar.gz chưa chứng minh quy trình khôi phục đúng.
+Tạo archive từ dữ liệu lab, dùng tar -t xem danh sách, giải nén vào thư mục khác, rồi dùng cat đọc bản gốc và bản khôi phục để đối chiếu đủ bốn dòng của bài demo. Chỉ có file .tar.gz chưa chứng minh quy trình khôi phục đúng.
 
 </details>
 
@@ -92,8 +92,8 @@ Set-default đổi target mặc định cho lần khởi động sau; isolate ch
 </details>
 
 <details>
-<summary>14. Có IP rồi vì sao vẫn chưa mở được website?</summary>
+<summary>14. Card ở trạng thái UP đã có IP, route và DNS đúng chưa?</summary>
 
-Còn phải xét trạng thái link, prefix/route/gateway, phân giải tên, cổng, dịch vụ và tường lửa. Ip address, ip route, getent trả lời các câu khác nhau. Thay IP bằng ip là cấu hình đang chạy; cấu hình lưu lâu dài thuộc Netplan/NetworkManager phù hợp với máy.
+Chưa. Trong phạm vi chặng 7, cần đọc riêng trạng thái link, IP/prefix, route/gateway và phân giải tên. Ip address, ip route, getent trả lời các câu khác nhau. Thay IP bằng ip là cấu hình đang chạy; cấu hình lưu lâu dài thuộc Netplan/NetworkManager phù hợp với máy.
 
 </details>

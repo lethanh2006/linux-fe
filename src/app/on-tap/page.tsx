@@ -7,12 +7,12 @@ import { getReviewGuides } from "@/lib/review";
 
 export const metadata: Metadata = {
   title: "Ôn nhanh & demo Linux",
-  description: "Tóm tắt chi tiết Linux bài 5–34, kịch bản demo 15–20 phút có lệnh và kết quả, câu hỏi vấn đáp và checklist để tập trình bày.",
+  description: "Ôn Linux từ chặng 1 đến hết chặng 7, bài 5–34: tóm tắt chi tiết, kịch bản demo 15–20 phút, câu hỏi vấn đáp và checklist để tập trình bày.",
 };
 
 const SECTIONS = [
   { href: "#lo-trinh-on", label: "Cách ôn trong 90 phút" },
-  { href: "#tom-tat", label: "Tóm tắt 30 bài" },
+  { href: "#tom-tat", label: "Tóm tắt chặng 1–7" },
   { href: "#kich-ban", label: "Kịch bản demo" },
   { href: "#cau-hoi", label: "Câu hỏi tập trả lời" },
   { href: "#san-sang", label: "Checklist trước buổi demo" },
@@ -41,10 +41,10 @@ export default function ReviewPage() {
 
       <main id="noi-dung-on-tap" className="min-w-0">
         <header>
-          <p className="text-sm font-semibold text-primary">Linux bài 5–34 · Học, tự gõ, rồi tập giải thích</p>
+          <p className="text-sm font-semibold text-primary">Chặng 1–7 · Linux bài 5–34</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Ôn nhanh để tự tin demo</h1>
           <p className="mt-3 max-w-3xl text-muted">
-            Nắm ý chính theo từng chủ đề, chạy một kịch bản xuyên suốt rồi tập trả lời vì sao lệnh cho ra kết quả đó. Khi còn vướng, mỗi nhóm có liên kết về bài học đầy đủ.
+            Ôn từ Làm quen với Linux đến hết chặng Mạng. Nắm ý chính, chạy một kịch bản xuyên suốt rồi tập trả lời vì sao lệnh cho ra kết quả đó. Mỗi chặng có liên kết về bài học đầy đủ.
           </p>
           <a href="#kich-ban" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
             Vào kịch bản demo 15–20 phút <ArrowRight className="size-4" aria-hidden />
@@ -56,7 +56,7 @@ export default function ReviewPage() {
           <p className="mt-2 text-sm text-muted">Dành thêm thời gian cho phần bạn chưa tự làm được. Đây là nhịp ôn gợi ý, không phải thời gian bắt buộc.</p>
           <ol className="mt-4 grid gap-3 sm:grid-cols-3">
             {[
-              { icon: BookOpen, time: "25 phút", title: "Nắm ý chính", text: "Mở 10 nhóm tóm tắt. Với mỗi nhóm, nói một câu nó giải quyết việc gì và chọn một lệnh minh hoạ." },
+              { icon: BookOpen, time: "25 phút", title: "Nắm ý chính", text: "Mở lần lượt 7 chặng tóm tắt. Với mỗi chặng, nói một câu nó giải quyết việc gì và chọn một lệnh minh hoạ." },
               { icon: TerminalSquare, time: "45 phút", title: "Tự gõ toàn bộ", text: "Chuẩn bị dữ liệu mới, chạy từng bước, đọc kết quả và tập câu giải thích ngay dưới bước đó." },
               { icon: CheckSquare, time: "20 phút", title: "Tập trình bày", text: "Chạy một lượt có bấm giờ, trả lời câu hỏi trước khi mở đáp án rồi đánh dấu checklist." },
             ].map((step) => (
@@ -71,8 +71,8 @@ export default function ReviewPage() {
         </section>
 
         <section id="tom-tat" aria-labelledby="summary-title" className="mt-12 scroll-mt-20">
-          <h2 id="summary-title" className="text-2xl font-bold">Tóm tắt chi tiết theo 10 chủ đề</h2>
-          <p className="mt-2 text-sm text-muted">Mở nhóm cần ôn. Các liên kết dẫn tới đủ 30 bài của khoá chính.</p>
+          <h2 id="summary-title" className="text-2xl font-bold">Tóm tắt chi tiết chặng 1–7</h2>
+          <p className="mt-2 text-sm text-muted">7 chặng, 30 bài. Mở chặng cần ôn; điểm kết thúc là bài 34 của chặng Mạng.</p>
           <Markdown source={guides.summary} />
         </section>
 

@@ -10,7 +10,7 @@ const ITEMS = [
   { id: "restore", text: "Tôi đã tạo archive, khôi phục và so sánh được dữ liệu." },
   { id: "system", text: "Tôi đọc được RAM, filesystem, IP, route và phân giải tên." },
   { id: "speak", text: "Tôi đã tập nói câu trả lời trước khi mở đáp án các câu hỏi." },
-  { id: "rehearsal", text: "Tôi đã chạy trọn kịch bản trên đúng máy sẽ demo, tự gõ và giải thích." },
+  { id: "rehearsal", text: "Tôi đã chạy trọn kịch bản chặng 1–7 trên đúng máy sẽ demo, tự gõ và giải thích." },
 ] as const;
 
 const STORAGE_KEY = "hoc-linux:demo-checklist:v1";
@@ -74,7 +74,7 @@ export function DemoChecklist() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id="checklist-title" className="text-xl font-semibold">Checklist trước buổi demo</h2>
-          <p className="mt-1 text-sm text-muted">Tự đánh dấu sau khi làm được · Lưu trên trình duyệt này</p>
+          <p className="mt-1 text-sm text-muted">Chặng 1–7 · Tự đánh dấu sau khi làm được · Lưu trên trình duyệt này</p>
         </div>
         <button
           type="button"

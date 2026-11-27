@@ -23,7 +23,7 @@ Bài học đọc thẳng từ file, nên không có backend vẫn xem được 
 | `/` | Lộ trình: phần 1 bám video TITV 5–34 (30 bài), phần 2 mở rộng theo LPIC-1; kèm tiến độ và nút học tiếp |
 | `/bai/<slug>` | Một bài: giải thích, bảng tách lệnh, thực hành có đáp án ẩn, câu hỏi kiểm tra, đánh dấu đã học |
 | `/tra-cuu` | Tìm lệnh đã được giải thích ở bài nào |
-| `/on-tap` | Tóm tắt 30 bài chính, kịch bản demo, câu hỏi vấn đáp và checklist tự kiểm tra |
+| `/on-tap` | Ôn chặng 1–7 (bài 5–34), kịch bản demo, câu hỏi vấn đáp và checklist tự kiểm tra |
 | `/tien-do` | Mã học viên, khôi phục tiến độ từ máy khác, điểm từng bài |
 | `/nguon` | Các nguồn dùng để soạn bài và để học thêm |
 
@@ -51,7 +51,7 @@ Bài học đọc thẳng từ file, nên không có backend vẫn xem được 
 
 ## Ôn tập & demo
 
-Mục `/on-tap` đọc ba tài liệu trong `content/review/`: `summary.md`, `demo.md`, `questions.md`. Checklist tập demo lưu riêng trong trình duyệt. `pnpm check` cũng kiểm tra link bài học, bảng, khối code và thẻ details của các tài liệu này.
+Mục `/on-tap` ôn đến hết chặng 7 của lộ trình hiện tại (Mạng, bài 34), đọc ba tài liệu trong `content/review/`: `summary.md`, `demo.md`, `questions.md`. Checklist tập demo lưu riêng trong trình duyệt. `pnpm check` cũng kiểm tra link bài học, bảng, khối code và thẻ details của các tài liệu này.
 
 ## Biến môi trường
 

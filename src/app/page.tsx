@@ -48,7 +48,7 @@ export default function Home() {
       <section aria-labelledby="review" className="panel mt-8 flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 id="review" className="font-semibold">Sắp cần demo những gì đã học?</h2>
-          <p className="mt-1 text-sm text-muted">Ôn 30 bài theo chủ đề, tự gõ kịch bản 15–20 phút và tập trả lời câu hỏi.</p>
+          <p className="mt-1 text-sm text-muted">Ôn đến hết chặng 7, tự gõ kịch bản 15–20 phút và tập trả lời câu hỏi.</p>
         </div>
         <Link href="/on-tap" className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           Mở mục ôn tập <ArrowRight className="size-4" aria-hidden />

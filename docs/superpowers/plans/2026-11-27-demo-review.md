@@ -9,7 +9,7 @@
 
 ## Global constraints
 
-- Cover Linux TITV videos5–34 with canonical lesson links.
+- Cover stages 1–7 only: Linux TITV videos 5–34, with canonical lesson links.
 - Reuse light/dark tokens and existing UI components.
 - Demo mutations stay inside a newly created practice directory.
 - Do not execute terminal commands from the web page or build process.
@@ -40,4 +40,8 @@
 - [x] Run lint, existing tests, content checks and production build.
 - [x] Check navigation, disclosure/copy controls, checklist and mobile layouts in browser.
 - [x] Request independent review, fix important findings and prepare Claude handoff.
-- [ ] Commit, push and verify deployment.
+- [x] Initial feature delivered in 3e0229c; direct push and deployment verified.
+
+## Scope clarification: through stage 7
+
+The user confirmed stages 1–7. The current curriculum ends stage 7 at video 34 (networking), so all 30 main lessons stay in scope. Reorganize the 10 topic groups into seven stage disclosures and make the boundary explicit in page metadata, homepage, rehearsal and checklist. Claude independently confirmed the boundary and identified stale references and optional material to simplify. Rehearsal recovery now compares both four-line files using cat, with tar paths verified in an isolated Ubuntu lab. Recheck scope links, build, browser and deployment for the follow-up.
