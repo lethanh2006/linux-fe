@@ -30,3 +30,9 @@ Trang chủ có ô trạng thái: xanh là backend và database đều chạy.
 | Biến | Ý nghĩa |
 |---|---|
 | `API_INTERNAL_URL` | URL backend, có `/api` ở cuối. Ở máy mình: `http://localhost:4001/api` |
+
+## Deploy
+
+Vercel project `linux-fe` → https://linux-fe.vercel.app (push lên `master` là tự deploy).
+
+Biến môi trường trên Vercel: `API_INTERNAL_URL=https://linux-be.vercel.app/api`.
