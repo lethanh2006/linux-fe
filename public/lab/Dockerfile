@@ -5,7 +5,7 @@
 #   docker run -it --name lab --hostname lab linux-lab
 FROM ubuntu:24.04
 
-ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Ho_Chi_Minh
+ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Ho_Chi_Minh LANG=C.UTF-8
 
 # Bản image gốc bị lược man page để nhẹ; "unminimize" trả lại đầy đủ.
 RUN apt-get update \
