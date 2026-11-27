@@ -9,14 +9,14 @@ type Source = { name: string; url: string; lang: string; what: string; when: str
 const GROUPS: { title: string; note: string; sources: Source[] }[] = [
   {
     title: "Khung bài và video",
-    note: "Lộ trình trên web bám theo hai nguồn này.",
+    note: "Phần 1 bám theo playlist TITV (video 5–34). Chuẩn LPIC-1 dùng để đối chiếu và soạn phần mở rộng.",
     sources: [
       {
         name: "Playlist “LPI1 – Tự học Linux cơ bản” (TITV)",
         url: PLAYLIST_URL,
         lang: "Tiếng Việt",
         what: "55 video từ cài đặt, lệnh cơ bản, phân quyền, mạng đến lập trình Bash.",
-        when: "Xem video ghi ở đầu mỗi bài trước khi đọc.",
+        when: "Xem video nhúng ở đầu mỗi bài phần 1 trước khi đọc.",
       },
       {
         name: "LPIC-1: các mục thi 101-500 và 102-500",
@@ -113,13 +113,6 @@ const GROUPS: { title: string; note: string; sources: Source[] }[] = [
         lang: "Tiếng Anh",
         what: "Dán một lệnh vào, trang tách từng phần và giải thích từ man page.",
         when: "Gặp lệnh lạ trên mạng, chưa hiểu từng phần.",
-      },
-      {
-        name: "Killercoda — Ubuntu playground",
-        url: "https://killercoda.com/playgrounds",
-        lang: "Tiếng Anh",
-        what: "Máy Ubuntu miễn phí chạy trên trình duyệt, có systemd.",
-        when: "Bài cần máy ảo mà bạn chưa cài được.",
       },
     ],
   },

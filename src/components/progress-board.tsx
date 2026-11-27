@@ -10,7 +10,7 @@ type ModuleRow = {
   slug: string;
   title: string;
   index: number;
-  lessons: { slug: string; title: string; number: number; ready: boolean }[];
+  lessons: { slug: string; title: string; code: string; ready: boolean }[];
 };
 
 export function ProgressBoard({ modules }: { modules: ModuleRow[] }) {
@@ -131,11 +131,11 @@ export function ProgressBoard({ modules }: { modules: ModuleRow[] }) {
                   <span className="min-w-0 flex-1">
                     {lesson.ready ? (
                       <Link href={`/bai/${lesson.slug}`} className="hover:text-primary hover:underline">
-                        {lesson.number}. {lesson.title}
+                        {lesson.code}. {lesson.title}
                       </Link>
                     ) : (
                       <span className="text-muted">
-                        {lesson.number}. {lesson.title} (đang viết)
+                        {lesson.code}. {lesson.title} (đang viết)
                       </span>
                     )}
                   </span>

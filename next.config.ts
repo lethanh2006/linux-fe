@@ -19,6 +19,16 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // Bài cũ đã gộp hoặc đổi tên khi chuyển sang lộ trình bám video TITV 5–34.
+  async redirects() {
+    return [
+      { source: "/bai/linux-la-gi", destination: "/bai/cau-truc-he-dieu-hanh", permanent: true },
+      { source: "/bai/moi-truong-thuc-hanh", destination: "/", permanent: true },
+      { source: "/bai/grep-va-regex", destination: "/bai/lenh-grep", permanent: true },
+      { source: "/bai/tim-kiem-file", destination: "/bai/lenh-find", permanent: true },
+      { source: "/bai/tai-khoan-va-nhom", destination: "/bai/quan-tri-nguoi-dung", permanent: true },
+    ];
+  },
   // Trình duyệt gọi /api/* cùng origin với web, Next.js chuyển tiếp sang backend → không cần CORS.
   async rewrites() {
     return [

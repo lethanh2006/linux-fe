@@ -1,76 +1,198 @@
 ---
-summary: Mỗi lệnh có ba luồng dữ liệu — đầu vào, đầu ra, lỗi. Bài này dạy ghi kết quả vào file (>, >>), tách riêng lỗi (2>), vứt bỏ kết quả (/dev/null), nối lệnh bằng đường ống (|), vừa xem vừa ghi (tee), và biến kết quả thành đối số (xargs). Đây là sức mạnh lớn nhất của dòng lệnh Linux.
-minutes: 45
-commands: [">", ">>", "2>", "2>&1", "&>", "<", "<<", "|", tee, xargs, /dev/null]
+summary: Đưa kết quả lệnh vào file bằng > và >>, lấy dữ liệu từ file bằng <, nối nhiều lệnh thành một dây chuyền bằng đường ống |. Kèm cách tách riêng thông báo lỗi, /dev/null và tee.
+minutes: 35
+commands: [">", ">>", "<", "|", "2>", "2>&1", tee, clear]
 quiz:
-  - q: "Khác nhau giữa `>` và `>>` là gì?"
-    options: ["Không khác", "> ghi đè file, >> ghi nối vào cuối file", "> ghi lỗi, >> ghi kết quả", ">> nhanh hơn"]
+  - q: "`hello.txt` đang có 2 dòng. Chạy `echo \"Hi\" > hello.txt`. File còn gì?"
+    options: ["Chỉ dòng Hi", "3 dòng: 2 dòng cũ và Hi", "2 dòng cũ, không đổi", "File bị xoá"]
+    answer: 0
+    explain: "`>` ghi đè: nội dung cũ mất, file chỉ còn `Hi`. Muốn thêm xuống cuối thì dùng `>>`."
+  - q: "`ls -l | wc -l` làm gì?"
+    options: ["Liệt kê file rồi xoá", "Đếm số dòng mà ls -l in ra", "Ghi danh sách file vào file wc", "Báo lỗi vì wc không nhận file"]
     answer: 1
-    explain: "`>` xoá sạch nội dung cũ rồi ghi. `>>` giữ nội dung cũ và ghi thêm vào cuối. Nhầm `>` thay cho `>>` là mất dữ liệu."
-  - q: "Lệnh `find / -name x > ketqua.txt` vẫn in đầy `Permission denied` ra màn hình. Vì sao?"
-    options: ["Vì find bị lỗi", "Vì thông báo lỗi đi qua luồng stderr (số 2), còn > chỉ chuyển luồng stdout (số 1)", "Vì file ketqua.txt chỉ đọc", "Vì thiếu sudo"]
+    explain: "Đường ống `|` đưa kết quả của `ls -l` làm dữ liệu vào cho `wc -l`, lệnh này đếm số dòng."
+  - q: "`sort < so.txt` khác `sort so.txt` ở chỗ nào?"
+    options: ["Kết quả khác nhau", "Lệnh đầu xoá so.txt", "Không khác về kết quả; cách đầu do shell mở file rồi đưa vào sort", "Lệnh đầu sắp giảm dần"]
+    answer: 2
+    explain: "Với `<`, shell mở file và đưa nội dung vào đầu vào chuẩn của `sort`. Với `sort so.txt`, `sort` tự mở file. Kết quả sắp xếp như nhau."
+  - q: "`ls /khongco > loi.txt` vẫn in lỗi ra màn hình và `loi.txt` rỗng. Vì sao?"
+    options: ["Vì > chỉ chuyển kết quả thường (stdout), lỗi đi đường stderr riêng", "Vì ls hỏng", "Vì thiếu quyền ghi", "Vì phải dùng >>"]
+    answer: 0
+    explain: "Lỗi đi đường số 2 (stderr). Muốn ghi lỗi vào file dùng `2> loi.txt`."
+  - q: Muốn vừa thấy kết quả trên màn hình vừa lưu vào file thì dùng lệnh nào?
+    options: ["cat", "tee", "wc", "sort"]
     answer: 1
-    explain: "`>` là viết tắt của `1>`, chỉ chuyển stdout. Lỗi đi qua stderr. Muốn chuyển cả lỗi thì thêm `2>file`, hoặc `2>/dev/null` để vứt bỏ."
-  - q: "Cách nào ghi CẢ kết quả lẫn lỗi vào cùng file log.txt?"
-    options: ["lệnh 2>&1 > log.txt", "lệnh > log.txt 2>&1", "lệnh 2> log.txt", "lệnh | log.txt"]
-    answer: 1
-    explain: "Shell xử lý chuyển hướng từ trái sang phải. `> log.txt` trỏ stdout vào file trước, rồi `2>&1` trỏ stderr vào cùng chỗ với stdout. Viết ngược thứ tự thì stderr vẫn ra màn hình. Cách ngắn hơn trong bash: `&> log.txt`."
-  - q: "Dấu `|` làm gì?"
-    options: ["Ghi vào file", "Đưa stdout của lệnh trước làm stdin của lệnh sau", "Chạy hai lệnh song song không liên quan", "Hoặc logic"]
-    answer: 1
-    explain: "Đường ống nối đầu ra của lệnh trái với đầu vào của lệnh phải, không cần file trung gian. Ví dụ `ls /etc | wc -l` đếm số mục trong /etc."
-  - q: Muốn vừa xem kết quả trên màn hình vừa lưu vào file, dùng lệnh nào ở cuối đường ống?
-    options: ["cat", "tee", "xargs", "less"]
-    answer: 1
-    explain: "`tee file` chép dữ liệu nhận được ra hai hướng: màn hình (stdout) và file. Thêm `-a` để ghi nối thay vì ghi đè."
-  - q: "`find . -name \"*.tmp\" | rm` không xoá được gì. Cần sửa thế nào?"
-    options: ["find . -name \"*.tmp\" | rm -f", "find . -name \"*.tmp\" | xargs rm", "find . -name \"*.tmp\" > rm", "rm < find . -name \"*.tmp\""]
-    answer: 1
-    explain: "`rm` không đọc tên file từ stdin, nó chỉ nhận đối số. `xargs` đọc danh sách từ stdin và đặt chúng làm đối số cho `rm`."
+    explain: "`lệnh | tee file` in ra màn hình đồng thời ghi vào file."
 ---
 
-## Ba luồng dữ liệu
+> Bài này đi theo video TITV bài 13.
 
-Mỗi chương trình khi chạy được mở sẵn ba "ống":
-
-| Số | Tên | Mặc định nối với | Ví dụ |
-|---|---|---|---|
-| 0 | **stdin** (đầu vào chuẩn) | Bàn phím | Chữ bạn gõ cho `read`, `cat` không có đối số |
-| 1 | **stdout** (đầu ra chuẩn) | Màn hình | Danh sách file của `ls` |
-| 2 | **stderr** (lỗi chuẩn) | Màn hình | `ls: cannot access '/khongco': No such file or directory` |
-
-stdout và stderr cùng hiện trên màn hình nên trông như một. Nhưng chúng là **hai đường riêng**, và có thể chuyển hướng riêng từng đường.
-
-## Chuyển hướng đầu ra: > và >>
+Mặc định, lệnh lấy dữ liệu từ **bàn phím** và in kết quả ra **màn hình**. Bài này học cách đổi hướng hai dòng chảy đó: in vào file, đọc từ file, hoặc đưa thẳng sang lệnh khác.
 
 ```bash
-echo "dong 1" > f.txt
-echo "dong 2" > f.txt
-cat f.txt
-echo "dong 3" >> f.txt
-cat f.txt
+mkdir -p ~/thuchanh/bai13 && cd ~/thuchanh/bai13
 ```
 
-| Ký hiệu | Ý nghĩa |
+## > : xuất ra file, ghi đè
+
+```bash
+echo "Hello" > hello.txt
+cat hello.txt
+echo "Xin chao" > hello.txt
+cat hello.txt
+```
+
+| Phần | Ý nghĩa |
 |---|---|
-| `> file` | Ghi stdout vào file. File chưa có thì tạo, **có rồi thì xoá sạch nội dung cũ** |
-| `>> file` | Ghi stdout **nối** vào cuối file |
+| `echo "Hello"` | Bình thường in `Hello` ra màn hình |
+| `> hello.txt` | Thay vì in ra màn hình, ghi vào `hello.txt`. Chưa có thì tạo, **có rồi thì xoá sạch nội dung cũ** |
 
 ```text
-dong 2
-dong 2
-dong 3
+Hello
+Xin chao
 ```
 
-Lần ghi thứ hai bằng `>` đã xoá mất `dong 1`.
+Lần ghi thứ hai xoá mất `Hello`. Dùng `>` với file quan trọng phải cẩn thận.
 
-> **Chống ghi đè nhầm:** `set -o noclobber` khiến `>` từ chối ghi vào file đã có (`cannot overwrite existing file`). Khi thật sự muốn ghi đè thì dùng `>|`.
-
-## Chuyển hướng lỗi: 2>
+## >> : ghi thêm xuống cuối
 
 ```bash
-ls /etc/hostname /khongco > out.txt
-cat out.txt
+echo "Xin chao nua" >> hello.txt
+cat hello.txt
+```
+
+```text
+Xin chao
+Xin chao nua
+```
+
+`>>` giữ nội dung cũ và thêm vào cuối. File chưa có thì tạo mới.
+
+Mọi lệnh in ra màn hình đều chuyển vào file được, không riêng `echo`. Ví dụ lưu cây thư mục của hai bài trước vào một file:
+
+```bash
+tree ~/thuchanh/bai11 > cay.txt
+tree ~/thuchanh/bai12 >> cay.txt
+cat cay.txt
+```
+
+```text
+/home/hocvien/thuchanh/bai11
+├── backup
+│   └── file4.doc
+└── documents
+
+3 directories, 1 file
+/home/hocvien/thuchanh/bai12
+├── test.sha256
+├── test.txt
+└── test.txt.gz
+
+1 directory, 3 files
+```
+
+## < : lấy dữ liệu từ file
+
+`<` đưa nội dung file vào làm dữ liệu nhập cho lệnh, thay cho bàn phím. Ví dụ sắp xếp các số trong file:
+
+```bash
+printf '3\n1\n3\n0\n' > so.txt
+sort < so.txt
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `printf '3\n1\n3\n0\n' > so.txt` | Tạo file 4 dòng: 3, 1, 3, 0 (`\n` là xuống dòng) |
+| `sort` | Sắp xếp các dòng nhận được |
+| `< so.txt` | Lấy dữ liệu từ `so.txt` |
+
+```text
+0
+1
+3
+3
+```
+
+`sort so.txt` cho cùng kết quả: `sort` tự mở file khi có tên file ở đối số. `<` có ích với lệnh chỉ đọc từ bàn phím. Lưu ý `echo` không đọc dữ liệu nhập, nên `echo < file` không in gì.
+
+Màn hình đầy chữ thì gõ `clear` (hoặc `Ctrl+L`) cho sạch.
+
+## | : đường ống
+
+Đường ống `|` nối **kết quả của lệnh bên trái** vào **dữ liệu nhập của lệnh bên phải**. Không cần file trung gian.
+
+```bash
+ls -l
+ls -l | wc -l
+```
+
+```text
+total 16
+-rw-r--r-- 1 hocvien hocvien 231 Nov 27 19:28 cay.txt
+-rw-r--r-- 1 hocvien hocvien  22 Nov 27 19:28 hello.txt
+-rw-r--r-- 1 hocvien hocvien  17 Nov 27 19:28 moi.txt
+-rw-r--r-- 1 hocvien hocvien   8 Nov 27 19:28 so.txt
+5
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `ls -l` | Liệt kê dạng dài, in 5 dòng (kể cả dòng `total`) |
+| <code>&#124;</code> | Đưa 5 dòng đó sang lệnh sau |
+| `wc -l` | Đếm số dòng nhận được |
+
+Nối được nhiều lệnh liên tiếp. Mỗi lệnh làm một việc nhỏ, nối lại thành việc lớn:
+
+```bash
+cat so.txt | sort
+cat /etc/passwd | head -3 | tail -1
+```
+
+```text
+0
+1
+3
+3
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+```
+
+`head -3 | tail -1` lấy 3 dòng đầu, rồi lấy dòng cuối trong ba dòng đó: chính là dòng thứ 3. Từ bài sau, đường ống xuất hiện liên tục: `grep` (bài 14), `cut` (bài 21).
+
+## Mở rộng (chuẩn LPIC-1)
+
+Chuẩn LPIC-1 mục 103.4 yêu cầu hiểu ba luồng dữ liệu và cách tách lỗi.
+
+### Ba luồng dữ liệu
+
+| Số | Tên | Mặc định nối với |
+|---|---|---|
+| 0 | **stdin**, đầu vào chuẩn | Bàn phím |
+| 1 | **stdout**, đầu ra chuẩn | Màn hình |
+| 2 | **stderr**, lỗi chuẩn | Màn hình |
+
+Kết quả thường và thông báo lỗi cùng hiện trên màn hình nên trông như một, nhưng chúng đi **hai đường riêng**. `>` chỉ chuyển đường số 1:
+
+```bash
+ls /khongco > loi.txt
+cat loi.txt
+```
+
+```text
+ls: cannot access '/khongco': No such file or directory
+```
+
+Lỗi vẫn hiện ra màn hình, còn `loi.txt` rỗng. Muốn chuyển lỗi, ghi số 2 trước dấu `>`:
+
+| Cách viết | Ý nghĩa |
+|---|---|
+| `lệnh 2> loi.txt` | Ghi lỗi vào file, kết quả thường vẫn ra màn hình |
+| `lệnh > ra.txt 2>&1` | Ghi cả kết quả lẫn lỗi vào `ra.txt`. `2>&1` là "đưa đường 2 vào cùng chỗ với đường 1" |
+| `lệnh &> ra.txt` | Cách viết tắt của dòng trên (bash) |
+| `lệnh 2> /dev/null` | Vứt bỏ lỗi. `/dev/null` là "thùng rác": ghi gì vào cũng mất |
+
+```bash
+ls /etc/hostname /khongco > ketqua.txt 2>&1
+cat ketqua.txt
 ```
 
 ```text
@@ -78,287 +200,121 @@ ls: cannot access '/khongco': No such file or directory
 /etc/hostname
 ```
 
-Dòng lỗi **vẫn hiện ra màn hình**, vì `>` chỉ chuyển stdout. File `out.txt` chỉ có `/etc/hostname`.
+Thứ tự viết quan trọng: `> file 2>&1` đúng, còn `2>&1 > file` thì lỗi vẫn ra màn hình.
 
-| Cách viết | stdout đi đâu | stderr đi đâu |
-|---|---|---|
-| `lệnh > out.txt` | `out.txt` | Màn hình |
-| `lệnh 2> err.txt` | Màn hình | `err.txt` |
-| `lệnh > out.txt 2> err.txt` | `out.txt` | `err.txt` |
-| `lệnh > all.txt 2>&1` | `all.txt` | `all.txt` (cùng chỗ với stdout) |
-| `lệnh &> all.txt` | `all.txt` | `all.txt` (cách viết ngắn của bash) |
-| `lệnh 2>/dev/null` | Màn hình | Vứt bỏ |
-| `lệnh > /dev/null 2>&1` | Vứt bỏ | Vứt bỏ (chạy im lặng, chỉ quan tâm mã thoát) |
-
-Đọc `2>&1`:
-
-| Phần | Ý nghĩa |
-|---|---|
-| `2>` | Chuyển hướng luồng số 2 (stderr) |
-| `&1` | Tới **nơi luồng số 1 đang trỏ**. Có dấu `&` để phân biệt với file tên là `1` |
-
-**Thứ tự quan trọng.** Shell đọc chuyển hướng từ trái sang phải:
+### tee: vừa xem vừa ghi
 
 ```bash
-ls /etc/hostname /khongco 2>&1 > wrong.txt
+echo "luu ca hai" | tee ghi.txt
 ```
 
 ```text
-ls: cannot access '/khongco': No such file or directory
+luu ca hai
 ```
 
-Ở đây `2>&1` chạy trước, lúc đó stdout vẫn đang trỏ ra màn hình, nên stderr cũng trỏ ra màn hình. Sau đó `> wrong.txt` mới đổi riêng stdout sang file. Viết đúng là `> file 2>&1`.
+`tee` nhận dữ liệu, in ra màn hình **và** ghi vào file (như chữ T: một vào, hai ra). `tee -a` ghi thêm thay vì ghi đè. `tee` còn giải bẫy `sudo` ở bài 8: `echo "127.0.0.1 web" | sudo tee -a /etc/hosts`.
 
-### /dev/null: thùng rác
-
-`/dev/null` là một file đặc biệt: ghi gì vào cũng biến mất, đọc ra thì rỗng. Dùng để vứt bỏ những kết quả không cần:
+### Heredoc: đưa nhiều dòng vào lệnh
 
 ```bash
-find / -name "ssh_config" 2>/dev/null
-```
-
-## Chuyển hướng đầu vào: <, <<, <<<
-
-```bash
-wc -l < /etc/passwd
-wc -l /etc/passwd
-```
-
-```text
-21
-21 /etc/passwd
-```
-
-| Cách viết | Ý nghĩa |
-|---|---|
-| `wc -l < file` | Shell mở file và đưa nội dung vào **stdin** của `wc`. `wc` không biết tên file nên chỉ in con số |
-| `wc -l file` | `wc` tự mở file theo đối số, nên in kèm tên file |
-
-**Heredoc** (`<<`) đưa nhiều dòng chữ vào stdin. Rất hay dùng để tạo file cấu hình trong script:
-
-```bash
-cat <<EOF > cfg.txt
+cat <<EOF > cauhinh.txt
 host=localhost
 port=5432
 EOF
-cat cfg.txt
 ```
 
-| Phần | Ý nghĩa |
-|---|---|
-| `<<EOF` | Đọc các dòng tiếp theo làm stdin, đến khi gặp dòng chỉ có chữ `EOF`. Có thể dùng chữ khác thay `EOF` |
-| `> cfg.txt` | Ghi stdout của `cat` vào file |
-| `EOF` (dòng cuối) | Kết thúc heredoc. Phải đứng một mình, không có dấu cách phía trước |
+`<<EOF` đọc các dòng tiếp theo làm dữ liệu nhập, tới dòng chỉ có chữ `EOF` thì dừng. Hay dùng trong script để tạo file cấu hình.
 
-Trong heredoc, biến như `$HOME` vẫn được thay. Viết `<<'EOF'` (có nháy) thì giữ nguyên mọi chữ.
+### xargs và $(...)
 
-**Here string** (`<<<`) đưa một chuỗi vào stdin: `wc -w <<< "mot hai ba"` in ra `3`.
-
-## Đường ống: |
-
-Đường ống nối **stdout** của lệnh bên trái vào **stdin** của lệnh bên phải. Mỗi lệnh làm một việc nhỏ, nối lại thành việc lớn. Đây là triết lý cốt lõi của Unix.
+Một số lệnh như `rm`, `mkdir` không đọc dữ liệu nhập, chỉ nhận đối số. `xargs` biến dữ liệu nhập thành đối số:
 
 ```bash
-ls /etc | wc -l
-cat /etc/passwd | head -3 | tail -1
-```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `ls /etc` | Liệt kê `/etc`, kết quả đưa vào ống |
-| `\| wc -l` | `wc -l` đếm số dòng nhận được |
-| `head -3 \| tail -1` | Lấy 3 dòng đầu, rồi lấy dòng cuối trong số đó, tức dòng thứ 3 |
-
-```text
-126
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
-```
-
-Ví dụ thực tế (các lệnh lọc học ở hai bài tiếp theo):
-
-```bash
-# 5 tiến trình tốn RAM nhất
-ps aux --sort=-%mem | head -6
-# Các IP truy cập nhiều nhất trong log nginx
-cut -d' ' -f1 /var/log/nginx/access.log | sort | uniq -c | sort -rn | head
-```
-
-Đường ống chỉ chuyển **stdout**. Lỗi (stderr) vẫn ra màn hình. Muốn đưa cả lỗi vào ống thì viết `lệnh 2>&1 | lệnh2` (bash có cách viết tắt `|&`).
-
-### Mã thoát của đường ống
-
-Mã thoát (`$?`) của đường ống là mã của **lệnh cuối cùng**:
-
-```bash
-false | true
-echo $?
-set -o pipefail
-false | true
-echo $?
+ls x/*.tmp | xargs rm -v
 ```
 
 ```text
-0
-1
-```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `false` / `true` | Hai lệnh không làm gì, chỉ trả mã thoát 1 / 0 |
-| `set -o pipefail` | Bật chế độ: đường ống thất bại nếu **bất kỳ** lệnh nào thất bại. Nên bật trong script |
-
-## tee: vừa xem vừa ghi
-
-```bash
-ls /etc | head -3 | tee list.txt
-echo "them" | tee -a list.txt > /dev/null
-```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `tee list.txt` | Nhận stdin, ghi ra **cả** màn hình **lẫn** file `list.txt` (như chữ T: một vào, hai ra) |
-| `-a` | Ghi nối thay vì ghi đè |
-| `> /dev/null` | Không cần in ra màn hình, chỉ cần ghi file |
-
-`tee` còn giải quyết bẫy `sudo` với chuyển hướng (đã gặp ở [bài 5](/bai/sudo-va-root)):
-
-```bash
-echo "127.0.0.1 web.local" | sudo tee -a /etc/hosts
-```
-
-`sudo echo ... >> /etc/hosts` không được vì `>>` do shell của user thường thực hiện. Còn `sudo tee` chạy bằng root nên ghi được.
-
-## xargs: biến stdin thành đối số
-
-Nhiều lệnh như `rm`, `ls`, `mkdir` **không đọc stdin**, chỉ nhận đối số. `xargs` đọc danh sách từ stdin rồi đặt vào làm đối số:
-
-```bash
-find x -name "*.tmp" | xargs ls -l
-find x -name "*.tmp" | xargs rm -v
-```
-
-```text
--rw-r--r-- 1 hocvien hocvien 0 Nov 27 15:08 x/a.tmp
--rw-r--r-- 1 hocvien hocvien 0 Nov 27 15:08 x/b.tmp
 removed 'x/a.tmp'
 removed 'x/b.tmp'
 ```
 
-| Tuỳ chọn | Ý nghĩa | Ví dụ |
-|---|---|---|
-| (mặc định) | Gom mọi mục vào một lần chạy | `... \| xargs rm` thành `rm a b c` |
-| `-n 1` | Mỗi lần chạy chỉ lấy 1 mục | `echo a b c \| xargs -n 1 echo hello` in 3 dòng |
-| `-I {}` | Đặt mục vào đúng chỗ `{}` | `... \| xargs -I {} cp {} /backup/` |
-| `-0` | Các mục cách nhau bằng ký tự NUL. Đi cùng `find -print0` để xử lý đúng tên file có dấu cách | `find . -name "*.log" -print0 \| xargs -0 rm` |
-
-## Thay lệnh bằng kết quả: $(...)
-
-Không phải chuyển hướng, nhưng hay đi cùng: `$(lệnh)` chạy lệnh rồi thay bằng kết quả của nó.
+`$(lệnh)` chạy lệnh rồi thay bằng kết quả của nó:
 
 ```bash
 echo "Co $(ls /etc | wc -l) muc trong /etc"
 ```
 
 ```text
-Co 126 muc trong /etc
+Co 127 muc trong /etc
 ```
 
 ## Thực hành
 
-1. Ghi danh sách file trong `/etc` vào `~/etc.txt`, rồi **nối** thêm danh sách `/var` vào cùng file. File có bao nhiêu dòng?
+1. Ghi ba dòng `cam`, `tao`, `buoi` vào `traicay.txt` (mỗi lệnh `echo` một dòng). Kiểm tra file có đủ ba dòng.
 
    <details>
    <summary>Xem đáp án</summary>
 
    ```bash
-   ls /etc > ~/etc.txt
-   ls /var >> ~/etc.txt
-   wc -l ~/etc.txt
+   echo "cam" > traicay.txt
+   echo "tao" >> traicay.txt
+   echo "buoi" >> traicay.txt
+   cat traicay.txt
+   ```
+
+   Dòng đầu dùng `>` để tạo file mới, hai dòng sau dùng `>>` để thêm.
+
+   </details>
+
+2. In nội dung `traicay.txt` đã sắp xếp theo thứ tự chữ cái, theo hai cách.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   sort < traicay.txt
+   cat traicay.txt | sort
+   ```
+
+   Kết quả: `buoi`, `cam`, `tao`.
+
+   </details>
+
+3. Đếm xem `/etc` có bao nhiêu file và thư mục con, rồi lưu con số vào `dem.txt`.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   ls /etc | wc -l > dem.txt
+   cat dem.txt
    ```
 
    </details>
 
-2. Chạy `find /etc -name "*.conf"` bằng user thường: kết quả đúng vào `~/conf.txt`, thông báo lỗi vào `~/conf-loi.txt`. Mỗi file có bao nhiêu dòng?
+4. Chạy `ls /etc/hostname /khongco`, cho kết quả vào `ok.txt` và lỗi vào `loi.txt`.
 
    <details>
    <summary>Xem đáp án</summary>
 
    ```bash
-   find /etc -name "*.conf" > ~/conf.txt 2> ~/conf-loi.txt
-   wc -l ~/conf.txt ~/conf-loi.txt
+   ls /etc/hostname /khongco > ok.txt 2> loi.txt
+   cat ok.txt
+   cat loi.txt
    ```
-
-   </details>
-
-3. Kiểm tra im lặng xem user `www-data` có tồn tại không: không in gì ra màn hình, chỉ in "có" hoặc "không".
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   id www-data > /dev/null 2>&1 && echo "có" || echo "không"
-   ```
-
-   `id` in thông tin user hoặc báo lỗi. Ta vứt cả hai, chỉ dùng mã thoát để quyết định in gì.
-
-   </details>
-
-4. Tạo file `~/app.env` có 3 dòng `APP_PORT=3000`, `APP_ENV=production`, `APP_HOME=` + đường dẫn home thật, bằng **một** heredoc.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   cat <<EOF > ~/app.env
-   APP_PORT=3000
-   APP_ENV=production
-   APP_HOME=$HOME
-   EOF
-   cat ~/app.env
-   ```
-
-   Dòng cuối thành `APP_HOME=/home/hocvien`, vì heredoc không có nháy nên `$HOME` được thay.
-
-   </details>
-
-5. Đếm xem `/etc` có bao nhiêu **thư mục con** (chỉ cấp đầu), bằng `find` và đường ống.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   find /etc -mindepth 1 -maxdepth 1 -type d | wc -l
-   ```
-
-   `-mindepth 1` để không đếm chính `/etc`.
-
-   </details>
-
-6. Tạo 5 file `~/x/so1.txt` … `~/x/so5.txt` bằng `seq` và `xargs`.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   mkdir -p ~/x
-   seq 1 5 | xargs -I {} touch ~/x/so{}.txt
-   ls ~/x
-   ```
-
-   `seq 1 5` in các số từ 1 đến 5, mỗi số một dòng.
 
    </details>
 
 ## Tóm tắt
 
-| Việc | Cách viết |
+| Ký hiệu | Ý nghĩa |
 |---|---|
-| Ghi đè / ghi nối kết quả vào file | `> file` / `>> file` |
-| Ghi lỗi vào file | `2> file` |
-| Cả kết quả lẫn lỗi vào một file | `> file 2>&1` hoặc `&> file` |
-| Vứt bỏ lỗi / vứt bỏ hết | `2>/dev/null` / `> /dev/null 2>&1` |
-| Lấy đầu vào từ file / nhiều dòng | `< file` / `<<EOF ... EOF` |
-| Nối lệnh | `lệnh1 \| lệnh2` |
-| Vừa xem vừa ghi file | `\| tee file` (`-a` để nối) |
-| Danh sách thành đối số | `\| xargs lệnh` |
-| Chèn kết quả lệnh vào câu | `$(lệnh)` |
+| `>` | Ghi kết quả vào file, ghi đè |
+| `>>` | Ghi thêm xuống cuối file |
+| `<` | Lấy dữ liệu nhập từ file |
+| <code>&#124;</code> | Kết quả lệnh trước thành dữ liệu nhập của lệnh sau |
+| `2>` | Ghi thông báo lỗi vào file |
+| `> file 2>&1` | Ghi cả kết quả lẫn lỗi |
+| `/dev/null` | Thùng rác |
+| `tee file` | Vừa in ra màn hình vừa ghi file |
+| `clear` | Xoá màn hình |

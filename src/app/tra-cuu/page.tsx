@@ -11,7 +11,7 @@ export default function CommandsPage() {
       entry.front!.commands.map((command) => ({
         command,
         slug: entry.slug,
-        lesson: `Bài ${entry.number}. ${entry.title}`,
+        lesson: `${entry.label}. ${entry.title}`,
       })),
     )
     .sort((a, b) => a.command.localeCompare(b.command));

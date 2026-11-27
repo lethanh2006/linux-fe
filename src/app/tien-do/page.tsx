@@ -9,7 +9,7 @@ export default function ProgressPage() {
     slug: mod.slug,
     title: mod.title,
     index: mod.index,
-    lessons: mod.lessons.map(({ slug, title, number, ready }) => ({ slug, title, number, ready })),
+    lessons: mod.lessons.map(({ slug, title, code, ready }) => ({ slug, title, code, ready })),
   }));
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 sm:px-6">

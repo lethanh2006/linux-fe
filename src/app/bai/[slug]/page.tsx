@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, Clock, MonitorPlay, Server, TerminalSquare } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, MonitorPlay } from "lucide-react";
 import { MarkDoneButton } from "@/components/lesson-done";
 import { Markdown } from "@/components/markdown";
 import { Quiz } from "@/components/quiz";
 import { OBJECTIVES } from "@/content/curriculum";
-import { VIDEOS, videoUrl } from "@/content/videos";
+import { VIDEOS, videoEmbedUrl, videoUrl } from "@/content/videos";
 import { getEntries, getLesson, getModules, getNeighbours } from "@/lib/content";
 
 export function generateStaticParams() {
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: PageProps<"/bai/[slug]">): Pr
   const { slug } = await params;
   const lesson = getLesson(slug);
   if (!lesson) return {};
-  return { title: `Bài ${lesson.number}. ${lesson.title}`, description: lesson.front.summary };
+  return { title: `${lesson.label}. ${lesson.title}`, description: lesson.front.summary };
 }
 
 export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
@@ -47,12 +47,12 @@ export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
                     aria-current={item.slug === slug ? "page" : undefined}
                     className="flex gap-2 rounded-md px-2 py-1.5 text-muted transition-colors hover:bg-subtle hover:text-foreground aria-[current=page]:bg-primary-soft aria-[current=page]:font-medium aria-[current=page]:text-primary"
                   >
-                    <span className="font-mono">{item.number}.</span>
+                    <span className="font-mono">{item.code}.</span>
                     <span>{item.title}</span>
                   </Link>
                 ) : (
                   <span className="flex gap-2 px-2 py-1.5 text-muted opacity-60">
-                    <span className="font-mono">{item.number}.</span>
+                    <span className="font-mono">{item.code}.</span>
                     <span>{item.title} (đang viết)</span>
                   </span>
                 )}
@@ -71,7 +71,7 @@ export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
               </Link>
             </p>
             <h1 className="mt-1 text-2xl font-bold tracking-tight text-balance sm:text-3xl">
-              Bài {lesson.number}. {lesson.title}
+              {lesson.label}. {lesson.title}
             </h1>
             <p className="mt-3 text-muted">{lesson.front.summary}</p>
 
@@ -80,23 +80,6 @@ export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
                 <dt className="sr-only">Thời gian</dt>
                 <Clock className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
                 <dd>Khoảng {lesson.front.minutes} phút đọc và làm</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="sr-only">Chỗ thực hành</dt>
-                {lesson.lab === "docker" ? (
-                  <TerminalSquare className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
-                ) : (
-                  <Server className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
-                )}
-                <dd>
-                  {lesson.lab === "docker" ? (
-                    <>
-                      Thực hành trong container Ubuntu (<Link className="text-primary hover:underline" href="/bai/moi-truong-thuc-hanh">cách dựng</Link>)
-                    </>
-                  ) : (
-                    "Cần máy ảo, WSL hoặc VPS (container không đủ)"
-                  )}
-                </dd>
               </div>
               <div className="flex gap-2 sm:col-span-2">
                 <dt className="sr-only">Mục thi</dt>
@@ -123,6 +106,20 @@ export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
                 </div>
               )}
             </dl>
+
+            {lesson.part === 1 && (
+              <div className="mt-5 aspect-video overflow-hidden rounded-xl border border-border bg-subtle">
+                <iframe
+                  src={videoEmbedUrl(lesson.videos[0])}
+                  title={`Video TITV bài ${lesson.videos[0]}: ${VIDEOS[lesson.videos[0]].title}`}
+                  loading="lazy"
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  className="size-full"
+                />
+              </div>
+            )}
           </header>
 
           <Markdown source={lesson.body} />
@@ -132,13 +129,13 @@ export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
 
         <div className="mt-8 flex flex-col gap-6 border-t border-border pt-6">
           <MarkDoneButton slug={lesson.slug} />
-          <nav aria-label="Bài trước và bài sau" className="grid gap-3 sm:grid-cols-2">
+          <nav aria-label="Bài trước và bài sau" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {prev ? (
               <Link href={`/bai/${prev.slug}`} className="panel flex items-center gap-3 p-4 transition-colors hover:border-border-strong">
                 <ArrowLeft className="size-4 shrink-0 text-muted" aria-hidden />
                 <span className="min-w-0">
                   <span className="block text-xs text-muted">Bài trước</span>
-                  <span className="block truncate font-medium">{prev.number}. {prev.title}</span>
+                  <span className="block truncate font-medium">{prev.code}. {prev.title}</span>
                 </span>
               </Link>
             ) : (
@@ -148,7 +145,7 @@ export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
               <Link href={`/bai/${next.slug}`} className="panel flex items-center justify-end gap-3 p-4 text-right transition-colors hover:border-border-strong">
                 <span className="min-w-0">
                   <span className="block text-xs text-muted">Bài sau</span>
-                  <span className="block truncate font-medium">{next.number}. {next.title}</span>
+                  <span className="block truncate font-medium">{next.code}. {next.title}</span>
                 </span>
                 <ArrowRight className="size-4 shrink-0 text-muted" aria-hidden />
               </Link>

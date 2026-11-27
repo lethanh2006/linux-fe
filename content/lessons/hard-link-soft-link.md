@@ -1,287 +1,140 @@
 ---
-summary: Hiểu inode — nơi Linux thật sự lưu thông tin file — rồi phân biệt hard link (thêm một tên cho cùng dữ liệu) và symbolic link (đường tắt trỏ tới một đường dẫn). Biết khi nào dùng loại nào và các lỗi hay gặp như link gãy.
-minutes: 30
-commands: [ln, ln -s, ls -i, readlink, stat]
+summary: "Thực hành ln và ln -s để thấy hard link dùng chung inode còn symbolic link giữ một đường dẫn. Kiểm tra điều gì xảy ra khi sửa, di chuyển hoặc xoá tên gốc."
+minutes: 35
+commands: ["ln", "ln -s", "ls -li", "readlink", "stat"]
 quiz:
-  - q: Tạo hard link cung.txt cho goc.txt, rồi xoá goc.txt. Đọc cung.txt thì sao?
-    options: ["Báo lỗi không tìm thấy", "Vẫn đọc được nội dung cũ", "Ra file rỗng", "Tự tạo lại goc.txt"]
+  - q: "Hai hard link của cùng một file có đặc điểm gì?"
+    options: ["Cùng inode trên cùng filesystem", "Luôn có inode khác nhau", "Mỗi tên có bản sao dữ liệu độc lập", "Luôn trỏ bằng đường dẫn tuyệt đối"]
+    answer: 0
+    explain: "Hard link là nhiều tên thư mục tham chiếu cùng inode; sửa nội dung qua một tên sẽ thấy qua tên kia."
+  - q: "Xoá file đích của một symbolic link thường gây ra điều gì?"
+    options: ["Link thành hard link", "Dữ liệu tự sao chép sang link", "Link vẫn chứa đường dẫn nhưng không còn tìm thấy đích", "Link tự chuyển sang file khác"]
+    answer: 2
+    explain: "Symbolic link giữ một đường dẫn. Nếu đường dẫn đó không còn dẫn tới đích tồn tại, link bị treo."
+  - q: "Đường dẫn tương đối nằm trong symlink được hiểu từ đâu?"
+    options: ["Thư mục hiện hành của người vừa chạy cat", "Luôn từ /", "Từ home của root", "Từ thư mục chứa chính symlink"]
+    answer: 3
+    explain: "Điều này giải thích vì sao di chuyển symlink sang thư mục khác có thể làm nó hỏng."
+  - q: "Hard link có phải bản sao lưu độc lập để chống sửa nhầm nội dung không?"
+    options: ["Có, vì có tên khác", "Không, vì các tên cùng trỏ một dữ liệu", "Có, nếu tên có đuôi .bak", "Chỉ khi dùng ln -s"]
     answer: 1
-    explain: Hai tên trỏ cùng một inode (cùng dữ liệu). Xoá một tên chỉ giảm số liên kết. Dữ liệu chỉ thật sự bị xoá khi không còn tên nào trỏ tới.
-  - q: Tạo symbolic link mem.txt trỏ tới goc.txt, rồi xoá goc.txt. Đọc mem.txt thì sao?
-    options: ["Vẫn đọc được", "Báo No such file or directory, vì link bị gãy", "Ra nội dung của mem.txt", "Link tự xoá theo"]
-    answer: 1
-    explain: Symbolic link chỉ lưu đường dẫn `goc.txt`. Đường dẫn đó không còn nên link gãy (dangling). Tạo lại file tên `goc.txt` thì link chạy lại.
-  - q: Muốn tạo đường tắt tới một thư mục, hoặc tới file nằm trên ổ đĩa khác, dùng loại link nào?
-    options: ["Hard link", "Symbolic link (ln -s)", "Loại nào cũng được", "Không làm được"]
-    answer: 1
-    explain: "Hard link không làm được với thư mục (`hard link not allowed for directory`) và không vượt qua filesystem khác (`Invalid cross-device link`). Symbolic link thì làm được cả hai."
-  - q: "Trong `ls -li`, hai file có cùng số ở cột đầu tiên nghĩa là gì?"
-    options: ["Cùng dung lượng", "Cùng inode, tức là hai hard link của cùng một file", "Cùng chủ sở hữu", "Tạo cùng lúc"]
-    answer: 1
-    explain: "`-i` in số inode. Cùng inode thì cùng một file trên ổ đĩa, chỉ khác tên."
-  - q: "Lệnh nào đúng thứ tự để tạo link `/usr/local/bin/app` trỏ tới `/opt/app/bin/app`?"
-    options: ["ln -s /usr/local/bin/app /opt/app/bin/app", "ln -s /opt/app/bin/app /usr/local/bin/app", "ln /usr/local/bin/app -s /opt/app/bin/app", "link /opt/app/bin/app"]
-    answer: 1
-    explain: "Giống `cp`: `ln -s ĐÍCH-THẬT TÊN-LINK`. Cái đã có đứng trước, cái mới tạo đứng sau."
+    explain: "Sửa hoặc ghi đè nội dung cùng inode tác động tới mọi hard link. Cần bản sao độc lập/phiên bản sao lưu cho mục tiêu này."
 ---
 
-## Inode: file thật sự nằm ở đâu
+> Bám video TITV bài 32. Toàn bộ thí nghiệm đặt trong một thư mục riêng để việc xoá tên file không ảnh hưởng tài liệu thật.
 
-Trên ổ đĩa, mỗi file có một **inode**: một bản ghi chứa mọi thông tin của file (quyền, chủ, dung lượng, thời gian, vị trí dữ liệu trên đĩa) **trừ tên**. Mỗi inode có một số hiệu.
+## Tên file và inode
 
-**Tên file** nằm trong thư mục. Thư mục thực chất là một bảng ghi "tên này → inode số mấy".
+Một thư mục ánh xạ tên file tới inode trên một filesystem. Inode lưu thông tin như chủ sở hữu, quyền, kích cỡ và tham chiếu dữ liệu. Tên file không phải bản thân dữ liệu.
 
 ```bash
-cd ~
-echo "noi dung goc" > goc.txt
+mkdir -p ~/thuc-hanh/bai32
+cd ~/thuc-hanh/bai32
+printf 'Du lieu ban dau\n' > goc.txt
 ls -li goc.txt
 ```
 
-| Phần | Ý nghĩa |
-|---|---|
-| `-l` | Dạng dài |
-| `-i` | In thêm số **i**node ở cột đầu |
+`-l` hiển thị chi tiết, `-i` thêm số inode. Giá trị inode khác nhau giữa các máy; hai file có cùng số inode chỉ có ý nghĩa khi xét cùng filesystem.
 
-```text
-24121577 -rw-r--r-- 1 hocvien hocvien 13 Nov 27 15:07 goc.txt
-```
-
-| Cột | Ý nghĩa |
-|---|---|
-| `24121577` | Số inode |
-| `1` (sau quyền) | Số tên (hard link) đang trỏ tới inode này |
-
-## Hard link: thêm một tên cho cùng dữ liệu
+## Hard link: nhiều tên, một inode
 
 ```bash
-ln goc.txt cung.txt
-ls -li goc.txt cung.txt
-```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `ln` | Tạo liên kết (**l**i**n**k). Không có tuỳ chọn là hard link |
-| `goc.txt` | File đã có |
-| `cung.txt` | Tên mới cần tạo |
-
-```text
-24121577 -rw-r--r-- 2 hocvien hocvien 13 Nov 27 15:07 cung.txt
-24121577 -rw-r--r-- 2 hocvien hocvien 13 Nov 27 15:07 goc.txt
-```
-
-Hai tên **cùng số inode** `24121577`, số liên kết tăng lên `2`. Không có cái nào là "gốc" hay "bản sao": cả hai đều là tên ngang hàng của cùng một file.
-
-- Sửa qua tên này, tên kia thấy ngay (vì là cùng dữ liệu).
-- Xoá một tên, số liên kết giảm về 1, dữ liệu **vẫn còn**. Dữ liệu chỉ bị xoá thật khi số liên kết về 0.
-
-```bash
-echo "them dong" >> cung.txt
+ln goc.txt ten-khac.txt
+ls -li goc.txt ten-khac.txt
+printf 'Noi dung moi\n' >> ten-khac.txt
 cat goc.txt
-rm goc.txt
-cat cung.txt
-```
-
-```text
-noi dung goc
-them dong
-noi dung goc
-them dong
-```
-
-Giới hạn của hard link:
-
-```text
-ln: thumuc: hard link not allowed for directory
-ln: failed to create hard link 'v' => '/proc/version': Invalid cross-device link
-```
-
-| Lỗi | Lý do |
-|---|---|
-| `hard link not allowed for directory` | Không được tạo hard link cho thư mục (để tránh tạo vòng lặp trong cây thư mục) |
-| `Invalid cross-device link` | Số inode chỉ có nghĩa trong một filesystem. Không tạo hard link sang ổ đĩa hay phân vùng khác được |
-
-## Symbolic link: đường tắt
-
-**Symbolic link** (symlink, soft link) là một file đặc biệt, nội dung chỉ là **một đường dẫn** tới file khác. Giống shortcut trên Windows.
-
-```bash
-echo "noi dung goc" > goc.txt
-ln -s goc.txt mem.txt
-ls -li goc.txt mem.txt
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
-| `ln -s` | Tạo symbolic link (**s**ymbolic) |
-| `goc.txt` | Đích mà link trỏ tới |
-| `mem.txt` | Tên của link |
+| `ln` | Tạo hard link theo mặc định |
+| `goc.txt` | Tên đang tồn tại của file |
+| `ten-khac.txt` | Tên mới cần tạo |
+| `>>` | Thêm vào cuối dữ liệu, không tạo bản sao độc lập |
+
+Kết quả `cat goc.txt`:
 
 ```text
-24121577 -rw-r--r-- 2 hocvien hocvien 13 Nov 27 15:07 goc.txt
-24121563 lrwxrwxrwx 1 hocvien hocvien  7 Nov 27 15:07 mem.txt -> goc.txt
+Du lieu ban dau
+Noi dung moi
 ```
 
-| Dấu hiệu | Ý nghĩa |
-|---|---|
-| Inode khác (`24121563`) | Symlink là một file riêng |
-| Ký tự đầu `l` | Loại file là link |
-| `rwxrwxrwx` | Quyền của symlink luôn như vậy và không có tác dụng. Quyền thật lấy theo file đích |
-| `7` | Dung lượng = độ dài chuỗi `goc.txt` (7 ký tự) |
-| `-> goc.txt` | Đích mà link trỏ tới |
-
-### Link gãy
-
-Xoá file đích, symlink vẫn còn nhưng trỏ vào khoảng không:
+Trong `ls -li`, hai tên có cùng inode và số hard link tăng. Không có tên nào là “bản chính” được ưu tiên hơn về dữ liệu.
 
 ```bash
 rm goc.txt
-cat mem.txt
+cat ten-khac.txt
 ```
 
-```text
-cat: mem.txt: No such file or directory
-```
+Nội dung vẫn còn qua tên kia. Dữ liệu chỉ có thể được giải phóng khi không còn hard link và không còn tiến trình giữ file mở. Hard link thông thường không tạo được cho thư mục và không vượt qua ranh giới filesystem.
 
-Tạo lại file có đúng tên đó, link chạy lại ngay. Tìm link gãy: `find . -xtype l`.
+Hard link giúp có nhiều tên cho cùng dữ liệu, nhưng **không phải bản sao lưu độc lập** chống sửa nhầm. Sửa nội dung qua một tên sẽ thay đổi dữ liệu nhìn qua tên khác.
 
-### Link tới thư mục và sang ổ khác
-
-Symlink không có giới hạn như hard link:
+## Symbolic link: lưu một đường dẫn
 
 ```bash
-ln -s /var/log nhatky
-ls -l nhatky
-cd nhatky
-pwd
-pwd -P
+ln -s ten-khac.txt loi-tat.txt
+ls -l loi-tat.txt
+readlink loi-tat.txt
+cat loi-tat.txt
 ```
 
-```text
-lrwxrwxrwx 1 hocvien hocvien 8 Nov 27 15:07 nhatky -> /var/log
-/home/hocvien/nhatky
-/var/log
-```
-
-`pwd` in đường dẫn bạn đã đi qua (qua link). `pwd -P` in đường dẫn thật (**P**hysical).
-
-### Bẫy đường dẫn tương đối
-
-Đích của symlink được tính **từ thư mục chứa link**, không phải từ chỗ bạn đứng lúc tạo:
-
-```bash
-mkdir -p a
-ln -s goc.txt a/sai.txt
-ln -s ../goc.txt a/dung.txt
-```
-
-`a/sai.txt` trỏ tới `a/goc.txt` (không có) nên gãy. `a/dung.txt` trỏ tới `../goc.txt` tính từ `a/`, tức `~/goc.txt`. Muốn chắc chắn thì dùng đường dẫn tuyệt đối: `ln -s /home/hocvien/goc.txt a/x.txt`.
-
-### Xem và đổi đích
-
-```bash
-readlink mem.txt
-readlink -f mem.txt
-ln -sfn /etc nhatky
-```
-
-| Lệnh | Làm gì |
+| Phần | Ý nghĩa |
 |---|---|
-| `readlink mem.txt` | In đích ghi trong link (`goc.txt`) |
-| `readlink -f mem.txt` | In đường dẫn tuyệt đối cuối cùng, đi qua mọi tầng link (`/home/hocvien/goc.txt`) |
-| `ln -sfn /etc nhatky` | Đổi link `nhatky` sang trỏ tới `/etc`. `-f` thay link cũ, `-n` coi link tới thư mục là chính cái link (không chui vào trong) |
+| `ln -s` | Tạo symbolic link |
+| `ten-khac.txt` | Đường dẫn đích được lưu trong link |
+| `loi-tat.txt` | Tên symlink mới |
+| `readlink` | Đọc đường dẫn đang được lưu trong symlink |
 
-## So sánh
+Kết quả `readlink loi-tat.txt`:
 
-| | Hard link (`ln`) | Symbolic link (`ln -s`) |
+```text
+ten-khac.txt
+```
+
+Symlink có inode riêng, dùng được cho thư mục và có thể trỏ sang filesystem khác. Đích thậm chí có thể chưa tồn tại lúc tạo link.
+
+Đích tương đối được tính từ **thư mục chứa symlink**, không phải thư mục hiện hành của người đang đọc. Ví dụ, link `thu-muc/link` chứa `../du-lieu.txt` sẽ đi lên từ `thu-muc` rồi tìm `du-lieu.txt`.
+
+```bash
+rm ten-khac.txt
+cat loi-tat.txt
+```
+
+Với ví dụ trên, đích cuối cùng đã bị xoá; `cat` báo không tìm thấy file. Symlink vẫn tồn tại và vẫn lưu chuỗi `ten-khac.txt`. Xoá chính symlink bằng `rm loi-tat.txt` không xoá file đích.
+
+## So sánh nhanh
+
+| Đặc điểm | Hard link | Symbolic link |
 |---|---|---|
-| Bản chất | Thêm một tên cho cùng inode | File riêng chứa một đường dẫn |
-| Inode | Giống file gốc | Khác |
-| Xoá file gốc | Vẫn đọc được dữ liệu | Link gãy |
-| Trỏ tới thư mục | Không | Có |
-| Sang filesystem khác | Không | Có |
-| Nhìn trong `ls -l` | Như file thường, số liên kết > 1 | Ký tự `l`, có `-> đích` |
-
-## Symlink trong thực tế
-
-Bạn sẽ gặp symlink khắp nơi:
-
-| Ở đâu | Ví dụ |
-|---|---|
-| Hệ thống | `/bin -> usr/bin`, `/lib -> usr/lib` |
-| nginx trên Ubuntu | `/etc/nginx/sites-enabled/web -> /etc/nginx/sites-available/web`: bật một site bằng cách tạo link, tắt bằng cách xoá link |
-| Chuyển phiên bản phần mềm | `/opt/app/current -> /opt/app/v2.3`: triển khai bản mới chỉ cần đổi link, lỗi thì trỏ lại bản cũ |
-| Lệnh có nhiều tên | `/usr/bin/vi -> /etc/alternatives/vi -> /usr/bin/vim.basic` |
+| Inode | Cùng inode với tên nguồn | Inode riêng |
+| Qua filesystem khác | Không | Có |
+| Trỏ tới thư mục | Không dùng thông thường | Có |
+| Đích không còn | Tên còn lại vẫn truy cập dữ liệu | Link có thể bị treo |
+| Chống sửa nhầm nội dung | Không | Không |
 
 ## Thực hành
 
-1. Tạo file `du-lieu.txt`, tạo một hard link `du-lieu-2.txt`. Kiểm tra số inode và số liên kết bằng `stat`.
+Trong thư mục mới `~/thuc-hanh/bai32-tu-lam`, tạo `ban-goc.txt`, hard link `cung-du-lieu.txt`, symlink `tham-chieu.txt`. Xoá `ban-goc.txt` rồi dự đoán tên nào còn đọc được. Giải thích trước khi chạy `cat`.
 
-   <details>
-   <summary>Xem đáp án</summary>
+<details>
+<summary>Xem đáp án</summary>
 
-   ```bash
-   echo "abc" > du-lieu.txt
-   ln du-lieu.txt du-lieu-2.txt
-   stat -c "%n inode=%i links=%h" du-lieu.txt du-lieu-2.txt
-   ```
+```bash
+mkdir -p ~/thuc-hanh/bai32-tu-lam
+cd ~/thuc-hanh/bai32-tu-lam
+printf 'Mau lien ket\n' > ban-goc.txt
+ln ban-goc.txt cung-du-lieu.txt
+ln -s ban-goc.txt tham-chieu.txt
+rm ban-goc.txt
+cat cung-du-lieu.txt
+readlink tham-chieu.txt
+```
 
-   `stat -c` in theo mẫu: `%n` tên, `%i` inode, `%h` số liên kết. Hai dòng cùng inode, `links=2`.
+Hard link đọc được `Mau lien ket`. Symlink vẫn lưu `ban-goc.txt`, nhưng tên đích này đã mất nên đọc qua `tham-chieu.txt` sẽ lỗi. Muốn symlink hoạt động lại có thể tạo lại đích hoặc tạo link mới trỏ tới tên đang còn.
 
-   </details>
-
-2. Tạo symlink `~/cauhinh` trỏ tới `/etc`, liệt kê nội dung qua link đó. Rồi cho biết đích thật của link.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   ln -s /etc ~/cauhinh
-   ls ~/cauhinh/ | head
-   readlink -f ~/cauhinh
-   ```
-
-   </details>
-
-3. Mô phỏng cách triển khai "đổi phiên bản bằng symlink": tạo `~/app/v1/index.html` (nội dung `v1`) và `~/app/v2/index.html` (nội dung `v2`). Tạo link `~/app/current` trỏ tới `v1`, đọc `current/index.html`. Đổi link sang `v2`, đọc lại.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   mkdir -p ~/app/v1 ~/app/v2
-   echo v1 > ~/app/v1/index.html
-   echo v2 > ~/app/v2/index.html
-   cd ~/app
-   ln -s v1 current
-   cat current/index.html
-   ln -sfn v2 current
-   cat current/index.html
-   ls -l current
-   ```
-
-   Lần đầu in `v1`, sau khi đổi in `v2`. Thiếu `-n`, lệnh thứ hai sẽ tạo link `v2` **bên trong** thư mục `v1` (đi qua link cũ) thay vì thay link.
-
-   </details>
-
-4. Tìm mọi symlink nằm ngay trong `/` và mọi symlink bị gãy trong home.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   find / -maxdepth 1 -type l
-   find ~ -xtype l
-   ```
-
-   </details>
+</details>
 
 ## Tóm tắt
 
-| Việc | Lệnh |
-|---|---|
-| Xem số inode | `ls -li` |
-| Tạo hard link | `ln file-có-sẵn tên-mới` |
-| Tạo symbolic link | `ln -s đích tên-link` |
-| Đổi đích của link | `ln -sfn đích-mới tên-link` |
-| Xem đích | `readlink -f tên-link` |
-| Tìm link / link gãy | `find nơi -type l` / `find nơi -xtype l` |
+Dùng `ln` để thêm tên cho cùng inode, dùng `ln -s` để lưu đường dẫn tham chiếu. Khi phân tích link hỏng, kiểm tra đích và cách đường dẫn tương đối được giải quyết.

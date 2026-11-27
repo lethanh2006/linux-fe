@@ -1,310 +1,286 @@
 ---
-summary: Đọc file mà không cần trình soạn thảo — in cả file (cat), cuộn từng trang (less), xem đầu và cuối file (head, tail), theo dõi log đang ghi (tail -f), đếm dòng (wc), đánh số dòng (nl), kiểm tra file có bị thay đổi không (sha256sum), đọc file nén (zcat).
-minutes: 35
-commands: [cat, less, head, tail, tail -f, wc, nl, tac, sha256sum, md5sum, zcat]
+summary: Năm lệnh xem nội dung file. cat in cả file, more và less xem từng trang, head lấy phần đầu, tail lấy phần cuối. Kèm wc đếm dòng, tail -f theo dõi nhật ký và sha256sum kiểm tra file.
+minutes: 25
+commands: [cat, more, less, head, tail, wc, tail -f]
 quiz:
-  - q: Muốn xem 20 dòng cuối của file log thì gõ gì?
-    options: ["head -n 20 app.log", "tail -n 20 app.log", "cat -20 app.log", "less -20 app.log"]
+  - q: "`tail test.txt` (không có tuỳ chọn) in ra mấy dòng?"
+    options: ["5 dòng cuối", "1 dòng cuối", "10 dòng cuối", "Cả file"]
+    answer: 2
+    explain: "`head` và `tail` mặc định lấy 10 dòng. Muốn số khác thì dùng `-n N` hoặc viết tắt `-N`."
+  - q: Lệnh nào xem file dài và đi lùi lên trên được bằng phím mũi tên?
+    options: ["cat", "less", "more", "head"]
     answer: 1
-    explain: "`tail` lấy phần cuối file, `-n 20` là 20 dòng. `head` lấy phần đầu."
-  - q: Lệnh nào theo dõi file log, in thêm dòng mới ngay khi chương trình ghi vào?
-    options: ["cat -f app.log", "tail -f app.log", "less app.log", "wc -l app.log"]
-    answer: 1
-    explain: "`tail -f` (follow) không thoát sau khi in, mà chờ và in tiếp mỗi khi file có dòng mới. Bấm Ctrl+C để dừng."
-  - q: Trong less, phím nào để tìm từ "error"?
-    options: [":error", "/error rồi Enter", "Ctrl+F error", "find error"]
-    answer: 1
-    explain: "Gõ `/` rồi từ khoá, bấm Enter. `n` nhảy tới kết quả kế tiếp, `N` về kết quả trước, `q` để thoát."
-  - q: "`wc -l app.log` in ra `5 app.log`. Số 5 là gì?"
-    options: ["Số từ", "Số dòng", "Số byte", "Số lỗi"]
-    answer: 1
-    explain: "`-l` đếm số dòng (lines). `-w` đếm từ, `-c` đếm byte. Không có tuỳ chọn thì in cả ba."
-  - q: Tải một file cài đặt về, làm sao chắc chắn file không bị hỏng hay bị sửa?
-    options: ["So kích thước file", "Tính sha256sum và so với mã nhà cung cấp công bố", "Mở bằng cat xem thử", "Đổi tên file"]
-    answer: 1
-    explain: Chỉ cần đổi một byte là mã băm SHA-256 thay đổi hoàn toàn. So mã tính được với mã trên trang tải về là biết file còn nguyên vẹn.
+    explain: "`less` cho cuộn lên xuống tự do. `more` chủ yếu đi tới; `cat` in hết một lèo."
+  - q: Đang xem file bằng `less`, bấm phím nào để thoát?
+    options: ["q", "Esc", "Ctrl+X", ":wq"]
+    answer: 0
+    explain: "`q` (quit) thoát `less`, `more` và `man`."
+  - q: Muốn xem 3 dòng đầu của `nhatky.txt` thì gõ gì?
+    options: ["tail -3 nhatky.txt", "head nhatky.txt", "cat -3 nhatky.txt", "head -n 3 nhatky.txt"]
+    answer: 3
+    explain: "`head -n 3` (hoặc `head -3`) lấy 3 dòng đầu."
+  - q: Lệnh nào giữ file nhật ký mở và in thêm mỗi khi có dòng mới?
+    options: ["tail -f nhatky.txt", "cat -f nhatky.txt", "head -f nhatky.txt", "less -n nhatky.txt"]
+    answer: 0
+    explain: "`tail -f` (follow) in 10 dòng cuối rồi chờ, in tiếp dòng mới. Bấm `Ctrl+C` để dừng."
 ---
 
-Tạo một file mẫu để làm theo:
+> Bài này đi theo video TITV bài 12.
+
+## Tạo file để thực hành
+
+Cần một file nhiều dòng. Bạn có thể mở trình soạn thảo (Text Editor) gõ tay 20 dòng, hoặc chạy hai lệnh dưới đây. Cách hai lệnh này chạy sẽ rõ ở các bài sau.
 
 ```bash
-cd ~
-printf "dong 1: khoi dong\ndong 2: ket noi database\ndong 3: loi timeout\ndong 4: thu lai\ndong 5: thanh cong\n" > app.log
+mkdir -p ~/thuchanh/bai12 && cd ~/thuchanh/bai12
+printf 'dong %s\n' {1..10} > test.txt
+printf '%sx\n' {1..10} >> test.txt
 ```
 
-| Phần | Ý nghĩa |
+File `test.txt` có 20 dòng: `dong 1` tới `dong 10`, rồi `1x` tới `10x`.
+
+## Năm lệnh xem file
+
+| Lệnh | Làm gì |
 |---|---|
-| `printf "...\n..."` | In chuỗi ra, `\n` là xuống dòng |
-| `> app.log` | Ghi kết quả vào file `app.log` thay vì in ra màn hình |
+| `cat file` | In **toàn bộ** file ra màn hình một lèo |
+| `more file` | Xem từng trang, chỉ đi tới |
+| `less file` | Xem từng trang, đi tới đi lui tự do, tìm kiếm được |
+| `head [-n N] file` | In N dòng **đầu**, mặc định 10 |
+| `tail [-n N] file` | In N dòng **cuối**, mặc định 10 |
 
 ## cat: in cả file
 
 ```bash
-cat app.log
-cat -n app.log
+cat test.txt
 ```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `cat` | In nội dung file ra màn hình. Tên đầy đủ là con**cat**enate (nối), vì nó nối nhiều file: `cat a.txt b.txt` |
-| `-n` | Đánh số mọi dòng (**n**umber) |
 
 ```text
-     1	dong 1: khoi dong
-     2	dong 2: ket noi database
-     3	dong 3: loi timeout
-     4	dong 4: thu lai
-     5	dong 5: thanh cong
+dong 1
+dong 2
+dong 3
+dong 4
+dong 5
+dong 6
+dong 7
+dong 8
+dong 9
+dong 10
+1x
+2x
+3x
+4x
+5x
+6x
+7x
+8x
+9x
+10x
 ```
 
-`cat` hợp với file **ngắn**. File dài hàng nghìn dòng thì chữ trôi vèo qua màn hình, nên dùng `less`. Đừng `cat` file chương trình (ELF): màn hình sẽ đầy ký tự rác, có khi làm rối cả terminal (gõ `reset` để sửa).
+`cat` (con**cat**enate, nối) hợp với file ngắn. File dài hàng nghìn dòng thì chữ trôi qua mất, chỉ thấy đoạn cuối; khi đó dùng `less`.
 
-`tac` (chữ `cat` viết ngược) in file từ dòng cuối lên dòng đầu.
-
-## less: đọc file dài
+## more và less: xem từng trang
 
 ```bash
-less /etc/services
+more test.txt
+less test.txt
 ```
 
-`less` mở file theo từng trang, không tải cả file vào bộ nhớ, nên mở được cả file log vài GB.
+Cả hai hiện vừa một màn hình rồi chờ bạn bấm phím:
 
-| Phím | Làm gì |
-|---|---|
-| `Space` / `b` | Xuống / lên một trang |
-| `↓` `↑` hoặc `j` `k` | Xuống / lên một dòng |
-| `g` / `G` | Về đầu file / xuống cuối file |
-| `/từ` rồi `Enter` | Tìm xuôi. `n` kết quả sau, `N` kết quả trước |
-| `?từ` rồi `Enter` | Tìm ngược lên trên |
-| `-N` rồi `Enter` | Bật/tắt số dòng |
-| `F` | Theo dõi file như `tail -f` (Ctrl+C để thôi theo dõi) |
-| `q` | Thoát |
+| Phím | `more` | `less` |
+|---|---|---|
+| `Space` | Trang sau | Trang sau |
+| `Enter` | Một dòng nữa | Một dòng nữa |
+| `↑` `↓`, `PgUp` `PgDn` | Không | Cuộn lên xuống tự do |
+| `b` | Lùi một trang | Lùi một trang |
+| `/từ` rồi `Enter` | Tìm | Tìm; `n` kết quả sau, `N` kết quả trước |
+| `g` / `G` | Không | Về đầu / xuống cuối file |
+| `q` | Thoát | Thoát |
 
-`man` cũng dùng `less` để hiển thị, nên các phím trên dùng được trong trang man. Lệnh `more` cũ hơn và ít tính năng hơn `less`.
+`more` có từ lâu, gần như chỉ đi tới. `less` ra đời sau, đi lùi được, nên thường dùng `less`. Nhớ câu "less is more": `less` làm được hết việc của `more`. Trang `man` cũng hiện bằng `less`, nên các phím giống nhau.
+
+Nếu file ngắn hơn một màn hình, `more` in hết rồi thoát ngay.
 
 ## head: xem phần đầu
 
 ```bash
-head -n 2 app.log
-head -3 /etc/passwd
+head test.txt
+head -n 5 test.txt
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
 | `head` | In phần đầu file, mặc định 10 dòng |
-| `-n 2` | Lấy 2 dòng. Viết tắt `-2` cũng được |
+| `-n 5` | Lấy 5 dòng. Viết tắt được thành `-5` |
 
 ```text
-dong 1: khoi dong
-dong 2: ket noi database
-root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
+dong 1
+dong 2
+dong 3
+dong 4
+dong 5
 ```
 
-`head -c 100 file` lấy 100 **byte** đầu thay vì dòng.
-
-## tail: xem phần cuối và theo dõi log
+## tail: xem phần cuối
 
 ```bash
-tail -n 2 app.log
-tail -n +4 app.log
+tail -n 5 test.txt
+tail -2 test.txt
+```
+
+```text
+6x
+7x
+8x
+9x
+10x
+9x
+10x
+```
+
+`tail` hay dùng để xem nhật ký: dòng mới luôn được ghi xuống cuối file, nên vài dòng cuối là chuyện vừa xảy ra.
+
+> Python cũng có `head()`, `tail()` trong thư viện pandas để xem vài dòng đầu, cuối của bảng dữ liệu. Ý tưởng giống hệt.
+
+## Mở rộng (chuẩn LPIC-1)
+
+Chuẩn LPIC-1 mục 103.2 còn có các lệnh sau.
+
+### tail -f: theo dõi nhật ký đang được ghi
+
+```bash
+tail -f test.txt
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
-| `tail` | In phần cuối file, mặc định 10 dòng |
-| `-n 2` | 2 dòng cuối |
-| `-n +4` | Từ dòng thứ 4 đến hết file (có dấu `+`) |
+| `-f` | **f**ollow: in 10 dòng cuối rồi **không thoát**, chờ và in tiếp mỗi dòng mới ghi vào |
 
-```text
-dong 4: thu lai
-dong 5: thanh cong
-```
+Thử: mở hai terminal. Terminal 1 chạy `tail -f ~/thuchanh/bai12/test.txt`. Terminal 2 gõ `echo "dong moi" >> ~/thuchanh/bai12/test.txt`. Terminal 1 lập tức hiện thêm dòng mới. Bấm `Ctrl+C` để dừng. Đây là cách xem nhật ký của một chương trình đang chạy.
 
-### tail -f: xem log đang được ghi
+Lấy từ dòng thứ N tới hết file: `tail -n +18 test.txt` in dòng 18, 19, 20.
 
-Đây là lệnh dùng nhiều nhất khi gỡ lỗi server: mở log, rồi thao tác trên web để xem log chạy theo thời gian thực.
+### wc: đếm dòng, từ, byte
 
 ```bash
-tail -f app.log
-```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `-f` | **f**ollow: in 10 dòng cuối rồi **không thoát**, chờ và in tiếp mỗi dòng mới được ghi vào |
-| `-F` | Như `-f` nhưng vẫn theo dõi nếu file bị xoá rồi tạo lại (khi log được xoay vòng hằng ngày) |
-
-Thử: mở **hai** terminal vào container (terminal thứ hai gõ `docker exec -it lab bash`). Terminal 1 chạy `tail -f ~/app.log`. Terminal 2 gõ:
-
-```bash
-echo "dong 6: co request moi" >> ~/app.log
-```
-
-Terminal 1 lập tức hiện thêm dòng mới. Bấm `Ctrl+C` để dừng `tail`.
-
-Kết hợp hay dùng: `tail -n 100 -f /var/log/nginx/error.log` để xem 100 dòng cuối rồi theo dõi tiếp.
-
-## wc: đếm dòng, từ, byte
-
-```bash
-wc app.log
-wc -l app.log
+wc test.txt
 wc -l /etc/passwd /etc/group
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
-| `wc` | Đếm (**w**ord **c**ount) |
-| (không tuỳ chọn) | In số dòng, số từ, số byte |
-| `-l` | Chỉ đếm dòng (**l**ines) |
-| `-w` | Chỉ đếm từ (**w**ords) |
-| `-c` | Chỉ đếm byte |
+| `wc` | Đếm (**w**ord **c**ount). Không tuỳ chọn thì in số dòng, số từ, số byte |
+| `-l` | Chỉ đếm dòng (**l**ines). `-w` đếm từ, `-c` đếm byte |
 
 ```text
- 5 21 98 app.log
-5 app.log
-  21 /etc/passwd
-  45 /etc/group
-  66 total
+ 20  30 102 test.txt
+  22 /etc/passwd
+  46 /etc/group
+  68 total
 ```
 
-`wc -l /etc/passwd` cho biết máy có bao nhiêu tài khoản (mỗi dòng một tài khoản). `wc` hay đứng cuối đường ống để đếm kết quả, ví dụ `ls | wc -l` đếm số file (đường ống học ở [bài 13](/bai/chuyen-huong-va-pipe)).
-
-## nl: đánh số dòng
+### Đánh số dòng: cat -n, nl
 
 ```bash
-printf "a\n\nb\n" > nl.txt
-nl nl.txt
+cat -n test.txt | head -3
 ```
 
 ```text
-     1	a
-       
-     2	b
+     1	dong 1
+     2	dong 2
+     3	dong 3
 ```
 
-Khác `cat -n`: `nl` mặc định **bỏ qua dòng trống**, không đánh số chúng. `cat -n` đánh số cả dòng trống.
+`nl test.txt` cũng đánh số, nhưng bỏ qua dòng trống.
 
-## sha256sum: kiểm tra file có bị thay đổi không
+### sha256sum: file có bị thay đổi không
 
-Mã băm (hash) là một chuỗi tính từ nội dung file. Chỉ cần sửa một byte là chuỗi thay đổi hoàn toàn. Dùng để kiểm tra file tải về còn nguyên vẹn, hoặc file cấu hình có bị ai sửa không.
+Mã băm (hash) là chuỗi tính từ nội dung file; sửa một byte là chuỗi đổi hẳn. Dùng để kiểm tra file tải về còn nguyên vẹn.
 
 ```bash
-sha256sum app.log
-sha256sum app.log > app.log.sha256
-sha256sum -c app.log.sha256
+sha256sum test.txt > test.sha256
+sha256sum -c test.sha256
+echo "dong them" >> test.txt
+sha256sum -c test.sha256
 ```
 
-| Phần | Ý nghĩa |
-|---|---|
-| `sha256sum app.log` | Tính mã SHA-256 của file |
-| `> app.log.sha256` | Lưu mã vào file |
-| `-c app.log.sha256` | Tính lại và so với mã đã lưu (**c**heck) |
-
 ```text
-0fe1ea809798bc8c28435cfdc78d3445fcfb99c98a1f915fd2f4e886cf58ea8e  app.log
-app.log: OK
-```
-
-Sửa file rồi kiểm tra lại:
-
-```text
-app.log: FAILED
+test.txt: OK
+test.txt: FAILED
 sha256sum: WARNING: 1 computed checksum did NOT match
 ```
 
-`md5sum` làm việc tương tự nhưng thuật toán MD5 đã cũ, không còn an toàn để chống giả mạo. Nên dùng `sha256sum` (hoặc `sha512sum`).
+`md5sum` làm việc tương tự nhưng MD5 đã cũ, không còn an toàn để chống giả mạo.
 
-## zcat, bzcat, xzcat: đọc file nén
+### Đọc file nén không cần giải nén
 
-Log cũ thường được nén lại (đuôi `.gz`). Không cần giải nén ra mới đọc được:
-
-```bash
-gzip -k app.log
-zcat app.log.gz | head -2
-```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `gzip -k app.log` | Nén file thành `app.log.gz`, giữ (**k**eep) file gốc |
-| `zcat` | Giải nén ra màn hình (như `cat` cho file `.gz`), file nén vẫn giữ nguyên |
-| `\| head -2` | Chỉ lấy 2 dòng đầu |
-
-Tương tự: `bzcat` cho `.bz2`, `xzcat` cho `.xz`, `zless` để cuộn file `.gz` như `less`. Nén và giải nén học kỹ ở bài [Nén và lưu trữ](/bai/nen-va-luu-tru).
+`zcat file.gz` in nội dung file nén `.gz` (bài 18 học nén). Tương tự có `bzcat` cho `.bz2`, `xzcat` cho `.xz`, `zless` để cuộn như `less`.
 
 ## Thực hành
 
-1. File `/etc/services` có bao nhiêu dòng? Xem 5 dòng đầu và 5 dòng cuối.
+1. Xem 3 dòng đầu và 3 dòng cuối của `/etc/passwd`.
 
    <details>
    <summary>Xem đáp án</summary>
 
    ```bash
-   wc -l /etc/services
-   head -n 5 /etc/services
-   tail -n 5 /etc/services
+   head -3 /etc/passwd
+   tail -3 /etc/passwd
    ```
 
-   </details>
-
-2. Mở `/etc/services` bằng `less`, tìm dòng có chữ `ssh`. SSH dùng cổng mấy?
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   Trong `less` gõ `/ssh` rồi `Enter`. Dòng tìm được là `ssh 22/tcp # SSH Remote Login Protocol`: SSH dùng cổng **22**. Bấm `q` để thoát.
+   Dòng đầu luôn là của `root`. Mấy dòng cuối thường là tài khoản người dùng tạo sau.
 
    </details>
 
-3. In dòng thứ 3 của `app.log` bằng cách kết hợp `head` và `tail`.
+2. Mở `/etc/services` bằng `less`, tìm chữ `ssh`, nhảy xuống cuối file, rồi thoát.
 
    <details>
    <summary>Xem đáp án</summary>
 
    ```bash
-   head -n 3 app.log | tail -n 1
+   less /etc/services
    ```
 
-   `head -n 3` lấy 3 dòng đầu, rồi `tail -n 1` lấy dòng cuối trong 3 dòng đó. Dấu `|` chuyển kết quả của lệnh trước làm đầu vào cho lệnh sau.
+   Gõ `/ssh` rồi `Enter`, bấm `n` để tới kết quả sau. Bấm `G` xuống cuối file, `q` để thoát.
 
    </details>
 
-4. Mở hai terminal. Một bên chạy `tail -f ~/app.log`, bên kia ghi thêm 3 dòng vào file. Quan sát rồi dừng `tail`.
-
-   <details>
-   <summary>Xem cách làm</summary>
-
-   Terminal 2: `docker exec -it lab bash`, rồi:
-
-   ```bash
-   for i in 1 2 3; do echo "request $i" >> ~/app.log; sleep 1; done
-   ```
-
-   Terminal 1 hiện từng dòng cách nhau 1 giây. Bấm `Ctrl+C` ở terminal 1 để dừng.
-
-   </details>
-
-5. Lưu mã SHA-256 của `/etc/passwd` vào `~/passwd.sha256`. Kiểm tra lại ngay (phải OK). Bài [Lệnh quản lý người dùng](/bai/lenh-quan-ly-nguoi-dung) sẽ tạo user mới, lúc đó kiểm tra lại sẽ thấy FAILED.
+3. File `/etc/passwd` có bao nhiêu dòng?
 
    <details>
    <summary>Xem đáp án</summary>
 
    ```bash
-   sha256sum /etc/passwd > ~/passwd.sha256
-   sha256sum -c ~/passwd.sha256
+   wc -l /etc/passwd
    ```
+
+   Mỗi dòng là một tài khoản, nên đây cũng là số tài khoản trên máy (bài 26).
+
+   </details>
+
+4. Chỉ in dòng thứ 11 tới 13 của `test.txt` (là `1x`, `2x`, `3x`).
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   head -13 test.txt | tail -3
+   ```
+
+   `head -13` lấy 13 dòng đầu, rồi `tail -3` lấy 3 dòng cuối của phần đó. Dấu `|` nối hai lệnh, học ở bài 13.
 
    </details>
 
 ## Tóm tắt
 
-| Việc | Lệnh |
+| Lệnh | Làm gì |
 |---|---|
-| In cả file ngắn, có số dòng | `cat -n file` |
-| Đọc file dài, tìm kiếm | `less file`, trong đó `/từ`, `q` |
-| N dòng đầu / cuối | `head -n N file` / `tail -n N file` |
-| Theo dõi log | `tail -f file` (Ctrl+C để dừng) |
-| Đếm dòng | `wc -l file` |
-| Kiểm tra file nguyên vẹn | `sha256sum file`, `sha256sum -c file.sha256` |
-| Đọc file `.gz` | `zcat file.gz`, `zless file.gz` |
+| `cat file` | In cả file |
+| `more file` | Xem từng trang, chỉ đi tới |
+| `less file` | Xem từng trang, đi lui được, `/` để tìm, `q` để thoát |
+| `head -n N file` | N dòng đầu (mặc định 10) |
+| `tail -n N file` | N dòng cuối (mặc định 10) |
+| `tail -f file` | Theo dõi dòng mới ghi vào |
+| `wc -l file` | Đếm số dòng |

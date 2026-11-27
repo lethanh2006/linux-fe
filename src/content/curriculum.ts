@@ -1,32 +1,35 @@
 /**
- * Lộ trình học: 12 chặng, đi từ dễ đến khó.
+ * Lộ trình học, chia hai phần.
  *
- * Khung theo các mục thi LPIC-1 (101-500 và 102-500) của Linux Professional Institute,
- * sắp lại theo thứ tự dễ học. Mỗi bài trỏ tới video tương ứng trong playlist TITV
- * (số bài trong playlist) và tới mục thi LPIC-1 mà bài đó phủ.
+ * Phần 1 (khoá chính) bám đúng playlist TITV "LPI1 - Tự học Linux cơ bản", từ video 5 đến video 34:
+ * mỗi video một bài, cùng thứ tự, mã bài trùng số video.
+ * Phần 2 (mở rộng) phủ phần còn lại của chuẩn LPIC-1 và phần lập trình Bash (video 44–55).
  *
  * Nội dung bài nằm ở content/lessons/<slug>.md. Bài chưa có file thì lộ trình ghi "đang viết".
  */
-
-export type Lab = "docker" | "vm";
 
 export type LessonOutline = {
   slug: string;
   title: string;
   /** Mã mục thi, ví dụ "103.1". "LE 1.1" là mục của Linux Essentials. */
   objectives: string[];
-  /** Số bài trong playlist TITV. */
+  /** Số video trong playlist TITV. Bài phần 1 có đúng một video. */
   videos: number[];
-  /** docker: làm được trong container Ubuntu. vm: cần máy ảo, WSL hoặc VPS (có systemd, ổ đĩa, mạng thật). */
-  lab: Lab;
 };
 
 export type ModuleOutline = {
   slug: string;
   title: string;
   description: string;
+  /** 1: khoá chính theo video TITV 5–34. 2: mở rộng. */
+  part: 1 | 2;
   lessons: LessonOutline[];
 };
+
+export const PARTS = {
+  1: { title: "Phần 1. Khoá chính", description: "Bám theo video TITV bài 5 đến bài 34: mỗi video một bài, đúng thứ tự, mã bài trùng số video." },
+  2: { title: "Phần 2. Mở rộng", description: "Học sau khi xong phần 1: cài phần mềm, ổ đĩa, lập trình Bash, dịch vụ, mạng và bảo mật theo chuẩn LPIC-1." },
+} as const;
 
 export const OBJECTIVES: Record<string, string> = {
   "LE 1.1": "Sự phát triển của Linux và các hệ điều hành phổ biến",
@@ -76,137 +79,166 @@ export const OBJECTIVES: Record<string, string> = {
 
 export const CURRICULUM: ModuleOutline[] = [
   {
-    slug: "nhap-mon",
-    title: "Nhập môn",
-    description: "Linux là gì, dựng chỗ thực hành, gõ lệnh đầu tiên và đi lại trong cây thư mục.",
+    slug: "lam-quen",
+    title: "Làm quen với Linux",
+    description: "Linux gồm những phần nào, cây thư mục, terminal, cú pháp lệnh, sudo và cách đi lại giữa các thư mục.",
+    part: 1,
     lessons: [
-      { slug: "linux-la-gi", title: "Linux là gì: kernel, shell và bản phân phối", objectives: ["LE 1.1"], videos: [1, 2, 5], lab: "docker" },
-      { slug: "moi-truong-thuc-hanh", title: "Dựng chỗ thực hành: Docker, WSL, máy ảo", objectives: ["102.6"], videos: [3, 4], lab: "docker" },
-      { slug: "terminal-va-cu-phap", title: "Terminal, cú pháp lệnh và cách tự tra cứu", objectives: ["103.1"], videos: [7], lab: "docker" },
-      { slug: "cay-thu-muc", title: "Cây thư mục, đường dẫn, pwd, cd, ls", objectives: ["104.7", "103.1"], videos: [6, 9], lab: "docker" },
-      { slug: "sudo-va-root", title: "Tài khoản root và lệnh sudo", objectives: ["110.1"], videos: [8], lab: "docker" },
+      { slug: "cau-truc-he-dieu-hanh", title: "Cấu trúc của hệ điều hành Linux: kernel, shell, ứng dụng", objectives: ["LE 1.1"], videos: [5] },
+      { slug: "cay-thu-muc", title: "Cấu trúc cây thư mục, loại file và đường dẫn", objectives: ["104.7"], videos: [6] },
+      { slug: "terminal-va-cu-phap", title: "Terminal, cú pháp câu lệnh và lệnh man", objectives: ["103.1"], videos: [7] },
+      { slug: "sudo-va-root", title: "Lệnh sudo và mật khẩu tài khoản root", objectives: ["110.1"], videos: [8] },
+      { slug: "pwd-va-cd", title: "Thư mục hiện hành: lệnh pwd và cd", objectives: ["103.1"], videos: [9] },
     ],
   },
   {
-    slug: "lam-viec-voi-file",
-    title: "Làm việc với file",
-    description: "Tạo, chép, xoá, xem, sửa, tìm và nén file — việc làm hằng ngày trên server.",
+    slug: "file-va-thu-muc",
+    title: "File và thư mục",
+    description: "Tạo, chép, di chuyển, xoá file và thư mục; chọn nhiều file bằng ký tự đại diện; xem nội dung file.",
+    part: 1,
     lessons: [
-      { slug: "quan-ly-file-thu-muc", title: "Tạo, chép, đổi tên, xoá file và thư mục", objectives: ["103.3"], videos: [10], lab: "docker" },
-      { slug: "ky-tu-dai-dien", title: "Ký tự đại diện: *, ?, [ ], { }", objectives: ["103.3"], videos: [11], lab: "docker" },
-      { slug: "xem-noi-dung-file", title: "Xem nội dung file: cat, less, head, tail, wc", objectives: ["103.2"], videos: [12], lab: "docker" },
-      { slug: "trinh-soan-thao-vi", title: "Soạn thảo file bằng vi / vim (và nano)", objectives: ["103.8"], videos: [19, 20], lab: "docker" },
-      { slug: "tim-kiem-file", title: "Tìm file: find, locate, which, whereis, type", objectives: ["104.7"], videos: [16, 17], lab: "docker" },
-      { slug: "nen-va-luu-tru", title: "Nén và đóng gói: tar, gzip, bzip2, xz, zip", objectives: ["103.3"], videos: [18], lab: "docker" },
-      { slug: "hard-link-soft-link", title: "Hard link và symbolic link", objectives: ["104.6"], videos: [32], lab: "docker" },
+      { slug: "quan-ly-file-thu-muc", title: "Các lệnh quản lý file và thư mục", objectives: ["103.3"], videos: [10] },
+      { slug: "ky-tu-dai-dien", title: "Ký tự đại diện * và ?", objectives: ["103.3"], videos: [11] },
+      { slug: "xem-noi-dung-file", title: "Xem nội dung file: cat, more, less, head, tail", objectives: ["103.2"], videos: [12] },
     ],
   },
   {
-    slug: "xu-ly-van-ban",
-    title: "Luồng dữ liệu và xử lý văn bản",
-    description: "Nối lệnh bằng đường ống, chuyển hướng kết quả, lọc và tìm trong văn bản.",
+    slug: "luong-du-lieu-tim-kiem",
+    title: "Luồng dữ liệu và tìm kiếm",
+    description: "Chuyển hướng kết quả, nối lệnh bằng đường ống, tìm chữ bằng grep và regex, tìm file bằng find, tìm lệnh bằng whereis và which.",
+    part: 1,
     lessons: [
-      { slug: "chuyen-huong-va-pipe", title: "Chuyển hướng nhập xuất và đường ống (pipe)", objectives: ["103.4"], videos: [13], lab: "docker" },
-      { slug: "loc-van-ban", title: "Lọc văn bản: cut, sort, uniq, tr, sed, awk", objectives: ["103.2"], videos: [21], lab: "docker" },
-      { slug: "grep-va-regex", title: "Tìm trong văn bản: grep và biểu thức chính quy", objectives: ["103.7"], videos: [14, 15], lab: "docker" },
+      { slug: "chuyen-huong-va-pipe", title: "Định hướng nhập xuất và đường ống (pipe)", objectives: ["103.4"], videos: [13] },
+      { slug: "lenh-grep", title: "Tìm kiếm trong file bằng grep", objectives: ["103.7"], videos: [14] },
+      { slug: "bieu-thuc-chinh-quy", title: "Biểu thức chính quy (regex)", objectives: ["103.7"], videos: [15] },
+      { slug: "lenh-find", title: "Tìm file bằng lệnh find", objectives: ["104.7"], videos: [16] },
+      { slug: "whereis-va-which", title: "Tìm lệnh bằng whereis và which", objectives: ["104.7"], videos: [17] },
+    ],
+  },
+  {
+    slug: "nen-vi-cut",
+    title: "Nén file, trình soạn thảo vi, lệnh cut",
+    description: "Nén và giải nén bằng gzip, tar; sửa file bằng vi; cắt cột dữ liệu bằng cut.",
+    part: 1,
+    lessons: [
+      { slug: "nen-va-luu-tru", title: "Nén và giải nén: gzip, gunzip, tar", objectives: ["103.3"], videos: [18] },
+      { slug: "trinh-soan-thao-vi", title: "Trình soạn thảo vi: chế độ và nhóm lệnh", objectives: ["103.8"], videos: [19] },
+      { slug: "thuc-hanh-vi", title: "Thực hành trình soạn thảo vi", objectives: ["103.8"], videos: [20] },
+      { slug: "lenh-cut", title: "Cắt dữ liệu bằng lệnh cut", objectives: ["103.2"], videos: [21] },
+    ],
+  },
+  {
+    slug: "he-thong",
+    title: "Hệ thống",
+    description: "Ngày giờ, tắt và khởi động lại máy, quá trình khởi động, xem thông tin phần cứng và hệ thống.",
+    part: 1,
+    lessons: [
+      { slug: "ngay-gio-he-thong", title: "Các lệnh về ngày giờ: date, timedatectl", objectives: ["108.1"], videos: [22] },
+      { slug: "tat-va-khoi-dong-lai", title: "Tắt và khởi động lại máy: shutdown, reboot", objectives: ["101.3"], videos: [23] },
+      { slug: "khoi-dong-he-thong", title: "Quá trình khởi động Linux và run level", objectives: ["101.2", "101.3"], videos: [24] },
+      { slug: "thong-tin-he-thong", title: "Các lệnh xem thông tin hệ thống", objectives: ["101.1"], videos: [25] },
     ],
   },
   {
     slug: "nguoi-dung-phan-quyen",
-    title: "Người dùng và phân quyền",
-    description: "Ai được đăng nhập, ai được đọc, sửa, chạy file nào — nền tảng bảo mật của Linux.",
+    title: "Người dùng, nhóm và phân quyền",
+    description: "Tài khoản và nhóm, các file /etc/passwd, /etc/shadow, /etc/group, quyền rwx và link.",
+    part: 1,
     lessons: [
-      { slug: "tai-khoan-va-nhom", title: "Tài khoản, nhóm và các file /etc/passwd, /etc/shadow, /etc/group", objectives: ["107.1"], videos: [26, 28], lab: "docker" },
-      { slug: "lenh-quan-ly-nguoi-dung", title: "Lệnh quản lý người dùng và nhóm", objectives: ["107.1"], videos: [27, 29], lab: "docker" },
-      { slug: "phan-quyen-file", title: "Phân quyền file: rwx, chmod, chown, umask", objectives: ["104.5"], videos: [30, 31], lab: "docker" },
-      { slug: "quyen-dac-biet", title: "Quyền đặc biệt: SUID, SGID, sticky bit", objectives: ["104.5"], videos: [], lab: "docker" },
-    ],
-  },
-  {
-    slug: "tien-trinh-dich-vu",
-    title: "Tiến trình, dịch vụ và nhật ký",
-    description: "Chương trình đang chạy, cách hệ thống khởi động, quản lý dịch vụ, đọc log và hẹn giờ chạy việc.",
-    lessons: [
-      { slug: "tien-trinh", title: "Tiến trình: ps, top, kill, chạy nền, độ ưu tiên", objectives: ["103.5", "103.6"], videos: [], lab: "docker" },
-      { slug: "khoi-dong-he-thong", title: "Quá trình khởi động, target, tắt và khởi động lại", objectives: ["101.2", "101.3"], videos: [23, 24], lab: "vm" },
-      { slug: "systemd-dich-vu", title: "Quản lý dịch vụ bằng systemctl và viết unit file", objectives: ["101.3"], videos: [], lab: "vm" },
-      { slug: "nhat-ky-he-thong", title: "Nhật ký hệ thống: journalctl và /var/log", objectives: ["108.2"], videos: [], lab: "vm" },
-      { slug: "lap-lich-cong-viec", title: "Hẹn giờ chạy việc: cron, at, systemd timer", objectives: ["107.2"], videos: [], lab: "vm" },
-    ],
-  },
-  {
-    slug: "cai-dat-phan-mem",
-    title: "Cài đặt phần mềm",
-    description: "Cài, gỡ, cập nhật phần mềm trên họ Debian/Ubuntu và họ Red Hat.",
-    lessons: [
-      { slug: "apt-va-dpkg", title: "Quản lý gói trên Ubuntu/Debian: apt và dpkg", objectives: ["102.4"], videos: [35, 37, 39], lab: "docker" },
-      { slug: "dnf-va-rpm", title: "Quản lý gói trên Red Hat/Rocky: dnf và rpm", objectives: ["102.5"], videos: [], lab: "docker" },
-      { slug: "thu-vien-dung-chung", title: "Thư viện dùng chung: ldd, ldconfig", objectives: ["102.3"], videos: [], lab: "docker" },
-    ],
-  },
-  {
-    slug: "phan-cung-o-dia",
-    title: "Phần cứng, ổ đĩa và filesystem",
-    description: "Xem phần cứng, chia phân vùng, tạo filesystem, gắn ổ và kiểm tra dung lượng.",
-    lessons: [
-      { slug: "thong-tin-he-thong", title: "Xem thông tin hệ thống và phần cứng", objectives: ["101.1"], videos: [25], lab: "docker" },
-      { slug: "phan-vung-va-filesystem", title: "Phân vùng, filesystem, swap và LVM", objectives: ["102.1", "104.1"], videos: [43], lab: "vm" },
-      { slug: "mount-va-fstab", title: "Gắn ổ: mount, umount, /etc/fstab", objectives: ["104.3"], videos: [], lab: "vm" },
-      { slug: "dung-luong-va-sua-loi", title: "Dung lượng và sửa lỗi filesystem: df, du, fsck", objectives: ["104.2"], videos: [], lab: "docker" },
-      { slug: "trinh-nap-khoi-dong", title: "Trình nạp khởi động GRUB 2", objectives: ["102.2"], videos: [], lab: "vm" },
-    ],
-  },
-  {
-    slug: "shell-script",
-    title: "Shell và lập trình Bash",
-    description: "Biến môi trường, alias, rồi viết script Bash: nhập xuất, điều kiện, vòng lặp, mảng, hàm, gỡ lỗi.",
-    lessons: [
-      { slug: "moi-truong-shell", title: "Môi trường shell: biến, PATH, alias, .bashrc", objectives: ["105.1"], videos: [], lab: "docker" },
-      { slug: "bash-script-dau-tien", title: "Script Bash đầu tiên: shebang, echo, read", objectives: ["105.2"], videos: [44, 45], lab: "docker" },
-      { slug: "bash-tinh-toan-tham-so", title: "Tính toán và truyền tham số cho script", objectives: ["105.2"], videos: [46, 47], lab: "docker" },
-      { slug: "bash-dieu-kien", title: "Câu lệnh điều kiện: if, test, case, mã thoát", objectives: ["105.2"], videos: [48], lab: "docker" },
-      { slug: "bash-vong-lap", title: "Vòng lặp: for, while, until", objectives: ["105.2"], videos: [49], lab: "docker" },
-      { slug: "bash-mang-va-ham", title: "Mảng và hàm trong Bash", objectives: ["105.2"], videos: [50, 51], lab: "docker" },
-      { slug: "bash-thuc-hanh-va-go-loi", title: "Bài tập Bash tổng hợp và cách gỡ lỗi script", objectives: ["105.2"], videos: [52, 53, 54, 55], lab: "docker" },
-    ],
-  },
-  {
-    slug: "quan-tri-he-thong",
-    title: "Quản trị hệ thống",
-    description: "Giờ hệ thống, ngôn ngữ và múi giờ, cùng những phần ít gặp trên server nhưng có trong chuẩn LPIC-1.",
-    lessons: [
-      { slug: "ngay-gio-he-thong", title: "Ngày giờ hệ thống: date, timedatectl, NTP", objectives: ["108.1"], videos: [22], lab: "docker" },
-      { slug: "ngon-ngu-mui-gio", title: "Ngôn ngữ, bảng mã và múi giờ", objectives: ["107.3"], videos: [36], lab: "docker" },
-      { slug: "do-hoa-may-in-mail", title: "Biết qua: giao diện đồ hoạ, máy in, mail", objectives: ["106.1", "106.2", "106.3", "108.3", "108.4"], videos: [], lab: "docker" },
+      { slug: "quan-tri-nguoi-dung", title: "Quản trị người dùng: /etc/passwd và /etc/shadow", objectives: ["107.1"], videos: [26] },
+      { slug: "lenh-quan-ly-nguoi-dung", title: "Lệnh quản trị người dùng: useradd, usermod, userdel, chage", objectives: ["107.1"], videos: [27] },
+      { slug: "quan-tri-nhom", title: "Quản trị nhóm: /etc/group", objectives: ["107.1"], videos: [28] },
+      { slug: "lenh-quan-tri-nhom", title: "Lệnh quản trị nhóm: groupadd, groupmod, groupdel", objectives: ["107.1"], videos: [29] },
+      { slug: "phan-quyen-file", title: "Phân quyền trên file và thư mục", objectives: ["104.5"], videos: [30] },
+      { slug: "lenh-phan-quyen", title: "Lệnh đổi quyền, chủ, nhóm: chmod, chown, chgrp", objectives: ["104.5"], videos: [31] },
+      { slug: "hard-link-soft-link", title: "Hard link và soft link (symbolic link)", objectives: ["104.6"], videos: [32] },
     ],
   },
   {
     slug: "mang",
     title: "Mạng",
-    description: "IP, cổng, cấu hình mạng, kiểm tra kết nối và DNS.",
+    description: "File hosts, DNS, tên card mạng, xem và bật tắt card, đặt địa chỉ IP tạm thời và lâu dài.",
+    part: 1,
     lessons: [
-      { slug: "mang-can-ban", title: "Mạng căn bản: IP, subnet, cổng, TCP/UDP", objectives: ["109.1"], videos: [], lab: "docker" },
-      { slug: "cau-hinh-mang", title: "Cấu hình mạng: ip, hostname, netplan, nmcli", objectives: ["109.2"], videos: [33, 34], lab: "vm" },
-      { slug: "kiem-tra-mang", title: "Kiểm tra sự cố mạng: ping, ss, curl, traceroute", objectives: ["109.3"], videos: [], lab: "docker" },
-      { slug: "dns-phia-may-khach", title: "DNS phía máy khách: /etc/hosts, resolv.conf, dig", objectives: ["109.4"], videos: [], lab: "docker" },
+      { slug: "cau-hinh-mang", title: "Cấu hình mạng: hosts, DNS, card mạng, gateway", objectives: ["109.2", "109.4"], videos: [33] },
+      { slug: "cau-hinh-dia-chi-ip", title: "Cấu hình địa chỉ IP: tạm thời, netplan, nmtui", objectives: ["109.2"], videos: [34] },
     ],
   },
   {
-    slug: "bao-mat",
-    title: "Bảo mật",
-    description: "Kiểm tra tài khoản và cổng mở, khoá bớt dịch vụ, dùng SSH key và mã hoá dữ liệu.",
+    slug: "phan-mem-o-dia",
+    title: "Phần mềm và ổ đĩa",
+    description: "Cài gỡ phần mềm trên Ubuntu và Red Hat, thư viện dùng chung, phân vùng, filesystem, gắn ổ và GRUB.",
+    part: 2,
     lessons: [
-      { slug: "kiem-tra-bao-mat", title: "Kiểm tra bảo mật: người đăng nhập, cổng mở, sudoers", objectives: ["110.1"], videos: [], lab: "docker" },
-      { slug: "bao-mat-may-chu", title: "Bảo mật máy chủ: tắt dịch vụ thừa, tường lửa", objectives: ["110.2"], videos: [], lab: "vm" },
-      { slug: "ssh-va-ma-hoa", title: "SSH key, scp và mã hoá bằng GPG", objectives: ["110.3"], videos: [], lab: "docker" },
+      { slug: "apt-va-dpkg", title: "Quản lý gói trên Ubuntu/Debian: apt và dpkg", objectives: ["102.4"], videos: [35, 37, 39] },
+      { slug: "dnf-va-rpm", title: "Quản lý gói trên Red Hat/Rocky: dnf và rpm", objectives: ["102.5"], videos: [] },
+      { slug: "thu-vien-dung-chung", title: "Thư viện dùng chung: ldd, ldconfig", objectives: ["102.3"], videos: [] },
+      { slug: "phan-vung-va-filesystem", title: "Phân vùng, filesystem, swap và LVM", objectives: ["102.1", "104.1"], videos: [43] },
+      { slug: "mount-va-fstab", title: "Gắn ổ: mount, umount, /etc/fstab", objectives: ["104.3"], videos: [] },
+      { slug: "dung-luong-va-sua-loi", title: "Dung lượng và sửa lỗi filesystem: df, du, fsck", objectives: ["104.2"], videos: [] },
+      { slug: "trinh-nap-khoi-dong", title: "Trình nạp khởi động GRUB 2", objectives: ["102.2"], videos: [] },
+    ],
+  },
+  {
+    slug: "shell-script",
+    title: "Shell và lập trình Bash",
+    description: "Biến môi trường, alias, rồi viết script Bash: nhập xuất, tính toán, điều kiện, vòng lặp, mảng, hàm, gỡ lỗi.",
+    part: 2,
+    lessons: [
+      { slug: "moi-truong-shell", title: "Môi trường shell: biến, PATH, alias, .bashrc", objectives: ["105.1"], videos: [] },
+      { slug: "bash-script-dau-tien", title: "Script Bash đầu tiên: shebang, echo, read", objectives: ["105.2"], videos: [44, 45] },
+      { slug: "bash-tinh-toan-tham-so", title: "Tính toán và truyền tham số cho script", objectives: ["105.2"], videos: [46, 47] },
+      { slug: "bash-dieu-kien", title: "Câu lệnh điều kiện: if, test, case, mã thoát", objectives: ["105.2"], videos: [48] },
+      { slug: "bash-vong-lap", title: "Vòng lặp: for, while, until", objectives: ["105.2"], videos: [49] },
+      { slug: "bash-mang-va-ham", title: "Mảng và hàm trong Bash", objectives: ["105.2"], videos: [50, 51] },
+      { slug: "bash-thuc-hanh-va-go-loi", title: "Bài tập Bash tổng hợp và cách gỡ lỗi script", objectives: ["105.2"], videos: [52, 53, 54, 55] },
+    ],
+  },
+  {
+    slug: "tien-trinh-dich-vu",
+    title: "Tiến trình, dịch vụ và nhật ký",
+    description: "Chương trình đang chạy, quản lý dịch vụ bằng systemd, đọc nhật ký và hẹn giờ chạy việc.",
+    part: 2,
+    lessons: [
+      { slug: "tien-trinh", title: "Tiến trình: ps, top, kill, chạy nền, độ ưu tiên", objectives: ["103.5", "103.6"], videos: [] },
+      { slug: "systemd-dich-vu", title: "Quản lý dịch vụ bằng systemctl và viết unit file", objectives: ["101.3"], videos: [] },
+      { slug: "nhat-ky-he-thong", title: "Nhật ký hệ thống: journalctl và /var/log", objectives: ["108.2"], videos: [] },
+      { slug: "lap-lich-cong-viec", title: "Hẹn giờ chạy việc: cron, at, systemd timer", objectives: ["107.2"], videos: [] },
+    ],
+  },
+  {
+    slug: "van-ban-he-thong",
+    title: "Văn bản và hệ thống nâng cao",
+    description: "Các bộ lọc văn bản còn lại, quyền đặc biệt, ngôn ngữ và múi giờ, cùng những phần ít gặp trên server.",
+    part: 2,
+    lessons: [
+      { slug: "loc-van-ban", title: "Lọc văn bản: sort, uniq, tr, sed, awk", objectives: ["103.2"], videos: [] },
+      { slug: "quyen-dac-biet", title: "Quyền đặc biệt: SUID, SGID, sticky bit", objectives: ["104.5"], videos: [] },
+      { slug: "ngon-ngu-mui-gio", title: "Ngôn ngữ, bảng mã và múi giờ", objectives: ["107.3"], videos: [36] },
+      { slug: "do-hoa-may-in-mail", title: "Biết qua: giao diện đồ hoạ, máy in, mail", objectives: ["106.1", "106.2", "106.3", "108.3", "108.4"], videos: [] },
+    ],
+  },
+  {
+    slug: "mang-bao-mat",
+    title: "Mạng và bảo mật",
+    description: "IP và cổng, kiểm tra kết nối, DNS, kiểm tra và khoá chặt máy chủ, SSH key và mã hoá.",
+    part: 2,
+    lessons: [
+      { slug: "mang-can-ban", title: "Mạng căn bản: IP, subnet, cổng, TCP/UDP", objectives: ["109.1"], videos: [] },
+      { slug: "kiem-tra-mang", title: "Kiểm tra sự cố mạng: ping, ss, curl, traceroute", objectives: ["109.3"], videos: [] },
+      { slug: "dns-phia-may-khach", title: "DNS phía máy khách: /etc/hosts, resolv.conf, dig", objectives: ["109.4"], videos: [] },
+      { slug: "kiem-tra-bao-mat", title: "Kiểm tra bảo mật: người đăng nhập, cổng mở, sudoers", objectives: ["110.1"], videos: [] },
+      { slug: "bao-mat-may-chu", title: "Bảo mật máy chủ: tắt dịch vụ thừa, tường lửa", objectives: ["110.2"], videos: [] },
+      { slug: "ssh-va-ma-hoa", title: "SSH key, scp và mã hoá bằng GPG", objectives: ["110.3"], videos: [] },
     ],
   },
   {
     slug: "du-an",
     title: "Dự án tổng hợp",
     description: "Ghép mọi thứ đã học: dựng một máy chủ web từ máy trắng đến khi chạy ổn định.",
+    part: 2,
     lessons: [
-      { slug: "du-an-may-chu-web", title: "Dự án: dựng máy chủ web từ đầu", objectives: ["110.2", "101.3", "107.2"], videos: [], lab: "vm" },
+      { slug: "du-an-may-chu-web", title: "Dự án: dựng máy chủ web từ đầu", objectives: ["110.2", "101.3", "107.2"], videos: [] },
     ],
   },
 ];

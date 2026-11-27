@@ -1,388 +1,119 @@
 ---
-summary: Đọc bộ quyền rwx của chủ, nhóm và người khác; hiểu quyền trên file khác quyền trên thư mục ra sao; đổi quyền bằng chmod (dạng chữ và dạng số), đổi chủ bằng chown, chgrp; và quyền mặc định khi tạo file (umask).
-minutes: 50
-commands: [chmod, chown, chgrp, umask, stat, ls -l]
+summary: "Đọc chuỗi quyền rwx, phân biệt owner/group/others và hiểu quyền trên thư mục khác quyền trên file. Tính được các mức quyền 640, 644, 750 và 755."
+minutes: 35
+commands: ["ls -l", "ls -ld", "stat"]
 quiz:
-  - q: "File có quyền `-rw-r-----`. Ai đọc được file này?"
-    options: ["Chỉ chủ file", "Chủ file và các thành viên nhóm sở hữu file", "Mọi người", "Không ai"]
-    answer: 1
-    explain: "Chia 3 nhóm: chủ `rw-` (đọc, ghi), nhóm `r--` (đọc), người khác `---` (không gì). Dạng số là 640."
-  - q: "`chmod 755 deploy.sh` cho ra bộ quyền nào?"
-    options: ["rwxr-xr-x", "rw-r--r--", "rwxrwxrwx", "rwx------"]
-    answer: 0
-    explain: "7 = 4+2+1 = rwx cho chủ, 5 = 4+1 = r-x cho nhóm và cho người khác. 755 là quyền điển hình của script và thư mục."
-  - q: "Thư mục có quyền `r--` (có r, không có x) với bạn. Bạn làm được gì?"
-    options: ["Vào thư mục và đọc file bên trong", "Chỉ xem được danh sách tên file, không vào được, không đọc được file", "Tạo file mới", "Không làm được gì kể cả xem tên"]
-    answer: 1
-    explain: "Với thư mục, `r` là được liệt kê tên, `x` là được đi vào và truy cập file bên trong, `w` là được tạo, xoá, đổi tên file. Có r mà không có x thì chỉ thấy tên."
-  - q: "Muốn xoá một file, bạn cần quyền gì?"
-    options: ["Quyền w trên chính file đó", "Quyền w (và x) trên thư mục chứa file", "Quyền r trên file", "Phải là chủ file"]
-    answer: 1
-    explain: Xoá file là sửa danh sách tên trong thư mục, nên cần quyền ghi trên thư mục. Quyền của chính file không liên quan. Đây là lý do có sticky bit ở bài sau.
-  - q: "umask là 022. File mới tạo bằng touch có quyền gì?"
-    options: ["777", "755", "644", "022"]
+  - q: "Trong -rw-r-----, nhóm sở hữu có quyền gì?"
+    options: ["Đọc và ghi", "Chạy", "Chỉ đọc", "Không có quyền"]
     answer: 2
-    explain: "File mới bắt đầu từ 666 (không bao giờ tự có x), bỏ đi các bit trong umask 022, còn 644 (rw-r--r--). Thư mục bắt đầu từ 777 nên còn 755."
-  - q: User thường có đổi chủ file của mình sang user khác bằng chown được không?
-    options: ["Được", "Không, chỉ root mới đổi chủ được", "Được nếu file rỗng", "Được nếu dùng -R"]
+    explain: "Sau ký tự loại file, ba cụm là rw- cho owner, r-- cho group và --- cho others."
+  - q: "Trên thư mục, quyền x chủ yếu cho phép gì?"
+    options: ["Đi xuyên/tra cứu tên bên trong thư mục và cd vào khi có đủ quyền liên quan", "Xoá toàn bộ ổ đĩa", "Đọc mọi nội dung file bên trong", "Chạy mọi file bất chấp quyền file"]
+    answer: 0
+    explain: "x trên thư mục là quyền search/traverse. Liệt kê tên cần r; đọc nội dung file còn cần quyền của chính file và đường dẫn."
+  - q: "Mã quyền 640 tương ứng gì?"
+    options: ["rwxr-----", "rw-r-----", "rw-r--r--", "rwxr-x---"]
     answer: 1
-    explain: "`chown` sang user khác cần quyền root (`Operation not permitted` nếu không có). User thường chỉ được `chgrp` file của mình sang một nhóm mà chính họ là thành viên."
+    explain: "6=4+2 là rw-, 4 là r--, 0 là ---."
+  - q: "Trong trường hợp thông thường không có sticky bit hay hạn chế bổ sung, muốn xoá một tên file cần quyền gì?"
+    options: ["Chỉ quyền ghi của file", "Chỉ là chủ file", "Quyền đọc của file", "Quyền w và x trên thư mục chứa tên file đó"]
+    answer: 3
+    explain: "Xoá tên là thay đổi thư mục. Quyền file khác quyền trên thư mục; sticky bit và cơ chế bổ sung có thể hạn chế thao tác."
 ---
 
-## Ba nhóm người, ba loại quyền
+> Bám video TITV bài 30. Ta đọc và hiểu quyền trước; bài 31 mới dùng chmod, chown, chgrp để thay đổi.
 
-Mỗi file và thư mục có **một chủ** (user) và **một nhóm**. Quyền được chia cho ba nhóm người:
+## Ba nhóm đối tượng
 
-| Ký hiệu | Ai | Ghi chú |
+Mỗi file có một chủ sở hữu (owner) và một nhóm sở hữu (group). Các quyền cơ bản được chia cho ba lớp:
+
+| Lớp | Ký hiệu | Áp dụng cho |
 |---|---|---|
-| `u` (user) | Chủ file | Người tạo file, trừ khi đổi bằng `chown` |
-| `g` (group) | Thành viên nhóm sở hữu file | |
-| `o` (others) | Mọi người còn lại | |
-| `a` (all) | Cả ba nhóm trên | Chỉ dùng trong lệnh `chmod` |
+| Owner | `u` | User sở hữu file |
+| Group | `g` | Người thuộc nhóm sở hữu của file |
+| Others | `o` | Những người còn lại |
 
-Mỗi nhóm người có ba quyền:
+Hệ thống chọn lớp phù hợp với người truy cập, không cộng quyền của cả ba lớp lại. ACL, quyền quản trị và các cơ chế bảo mật khác có thể bổ sung quy tắc; bài này tập trung vào quyền Unix cơ bản.
 
-| Quyền | Chữ | Số | Với file | Với thư mục |
-|---|---|---|---|---|
-| Đọc | `r` | 4 | Xem nội dung | Liệt kê tên các file bên trong (`ls`) |
-| Ghi | `w` | 2 | Sửa nội dung | **Tạo, xoá, đổi tên** file bên trong |
-| Chạy | `x` | 1 | Chạy như chương trình hoặc script | **Đi vào** (`cd`) và truy cập file bên trong |
-
-Kiểm tra quyền theo thứ tự: nếu bạn là chủ thì dùng quyền `u`, nếu không thì xét nhóm, nếu cũng không thì dùng quyền `o`. Chỉ một bộ được áp dụng. **root bỏ qua** mọi kiểm tra quyền đọc và ghi.
-
-## Đọc quyền trong ls -l
+## Đọc ls -l
 
 ```bash
-cd ~
-echo "echo xin chao" > chao.sh
-ls -l chao.sh
-```
-
-```text
--rw-r--r-- 1 hocvien hocvien 14 Nov 27 15:15 chao.sh
-```
-
-Tách chuỗi `-rw-r--r--`:
-
-| Vị trí | Giá trị | Ý nghĩa |
-|---|---|---|
-| 1 | `-` | Loại: file thường (`d` thư mục, `l` link) |
-| 2–4 | `rw-` | Chủ (`hocvien`): đọc, ghi, không chạy |
-| 5–7 | `r--` | Nhóm (`hocvien`): chỉ đọc |
-| 8–10 | `r--` | Người khác: chỉ đọc |
-
-Chưa có quyền `x` nên chưa chạy được:
-
-```bash
-./chao.sh
-```
-
-```text
-bash: ./chao.sh: Permission denied
-```
-
-Xem quyền dạng số bằng `stat`:
-
-```bash
-stat -c "%a %A %n" chao.sh
-```
-
-```text
-644 -rw-r--r-- chao.sh
-```
-
-## chmod dạng chữ
-
-```bash
-chmod u+x chao.sh
-ls -l chao.sh
-./chao.sh
-```
-
-```text
--rwxr--r-- 1 hocvien hocvien 14 Nov 27 15:15 chao.sh
-xin chao
-```
-
-Cú pháp `chmod [ai][phép][quyền] file`:
-
-| Phần | Giá trị | Ý nghĩa |
-|---|---|---|
-| Ai | `u`, `g`, `o`, `a` | Chủ, nhóm, người khác, tất cả. Bỏ trống nghĩa là `a` |
-| Phép | `+` | Thêm quyền |
-| | `-` | Bớt quyền |
-| | `=` | Đặt đúng bằng (xoá các quyền khác) |
-| Quyền | `r`, `w`, `x` | Đọc, ghi, chạy |
-
-| Lệnh | Kết quả từ `-rwxr--r--` |
-|---|---|
-| `chmod g+w,o-r chao.sh` | `-rwxrw----` (nhiều thay đổi cách nhau bằng dấu phẩy) |
-| `chmod a=r chao.sh` | `-r--r--r--` |
-| `chmod u=rwx,go=rx chao.sh` | `-rwxr-xr-x` |
-| `chmod +x chao.sh` | Thêm x cho cả ba nhóm |
-
-## chmod dạng số
-
-Mỗi nhóm người là **tổng** các số: r=4, w=2, x=1.
-
-| Số | Quyền | Số | Quyền |
-|---|---|---|---|
-| 7 | `rwx` (4+2+1) | 3 | `-wx` (2+1) |
-| 6 | `rw-` (4+2) | 2 | `-w-` |
-| 5 | `r-x` (4+1) | 1 | `--x` |
-| 4 | `r--` | 0 | `---` |
-
-Ba chữ số lần lượt cho chủ, nhóm, người khác:
-
-| Lệnh | Quyền | Dùng cho |
-|---|---|---|
-| `chmod 644 file` | `rw-r--r--` | File thường: chủ sửa, mọi người đọc |
-| `chmod 755 file` | `rwxr-xr-x` | Script, chương trình, thư mục |
-| `chmod 600 file` | `rw-------` | File bí mật: SSH key, file `.env`, mật khẩu |
-| `chmod 700 thư-mục` | `rwx------` | Thư mục riêng tư như `~/.ssh` |
-| `chmod 640 file` | `rw-r-----` | Cấu hình có mật khẩu, nhóm dịch vụ cần đọc |
-| `chmod 777 file` | `rwxrwxrwx` | **Gần như không bao giờ nên dùng**: ai cũng sửa được |
-
-> Khi gặp `Permission denied`, đừng `chmod 777` cho xong. Hãy tìm xem **ai** cần quyền **gì**, rồi cấp đúng chừng đó. 777 trên thư mục web là cách quen thuộc để bị chèn mã độc.
-
-## Quyền trên thư mục
-
-Đây là chỗ hay hiểu nhầm. Thử với thư mục `thumuc` chứa file `a.txt`:
-
-```bash
-mkdir thumuc && echo bimat > thumuc/a.txt
-chmod 644 thumuc
-ls thumuc
-cat thumuc/a.txt
-```
-
-```text
-a.txt
-cat: thumuc/a.txt: Permission denied
-```
-
-Có `r` mà không có `x`: thấy tên file nhưng **không vào được** để đọc.
-
-Còn trường hợp có `x` mà không có `r`, phải thử bằng **user khác** (chủ thư mục vẫn có `rwx` nên không thấy khác biệt). Cho user `binh` thử đọc thư mục của `hocvien` khi người khác có quyền `--x` (711):
-
-```bash
-sudo useradd -m binh
-chmod 755 ~
-chmod 711 thumuc
-sudo -u binh ls /home/hocvien/thumuc
-sudo -u binh cat /home/hocvien/thumuc/a.txt
-```
-
-```text
-ls: cannot open directory '/home/hocvien/thumuc': Permission denied
-bimat
+ls -l /etc/hostname
+ls -ld /tmp
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
-| `chmod 755 ~` | Cho người khác đi qua được thư mục home của `hocvien` (mặc định Ubuntu đặt home là 750) |
-| `sudo -u binh` | Chạy lệnh dưới danh nghĩa user `binh` |
-| Kết quả | `binh` không liệt kê được, nhưng **biết tên** thì vẫn đọc được file |
+| `ls -l` | Hiện thông tin dạng dài, gồm quyền, owner và group |
+| `-d` | Xem chính thư mục, không liệt kê nội dung của nó |
+| `/etc/hostname` | File cần quan sát |
+| `/tmp` | Thư mục cần quan sát |
 
-```bash
-chmod 555 thumuc
-touch thumuc/b
-rm thumuc/a.txt
-chmod 755 thumuc
-```
+Ví dụ chuỗi quyền của một file:
 
 ```text
-touch: cannot touch 'thumuc/b': Permission denied
-rm: cannot remove 'thumuc/a.txt': Permission denied
+-rw-r-----
 ```
 
-Không có `w` trên thư mục: không tạo, không xoá được file bên trong, dù bạn có quyền ghi trên chính file đó.
+Tách thành `-` + `rw-` + `r--` + `---`. Ký tự đầu chỉ loại file: `-` là file thường, `d` là thư mục, `l` là symbolic link. Các loại khác gồm `c`, `b`, `p`, `s` cho thiết bị ký tự, thiết bị khối, pipe và socket. Chín ký tự sau là ba cụm quyền.
 
-| Quyền thư mục | Làm được gì |
+## Quyền của file và của thư mục
+
+| Quyền | File thường | Thư mục |
+|---|---|---|
+| `r` – read | Đọc nội dung | Liệt kê tên bên trong |
+| `w` – write | Sửa nội dung | Thay đổi các tên bên trong: tạo, xoá, đổi tên; thường cần thêm `x` |
+| `x` – execute | Cho phép thực thi trực tiếp, nếu định dạng và các điều kiện khác phù hợp | Tra cứu tên, đi xuyên thư mục, `cd` vào |
+
+Biết một tên file và có `x` trên thư mục có thể cho phép truy cập tên đó dù không có `r` để liệt kê cả thư mục. Muốn đọc file vẫn phải có quyền đọc file cùng quyền đi qua các thư mục của đường dẫn.
+
+Một file chỉ đọc vẫn có thể bị xoá tên nếu người dùng có quyền phù hợp trên thư mục cha. Ngược lại, được ghi nội dung file chưa đủ để đổi tên file trong một thư mục không cho thay đổi. Đây là điểm dễ nhầm nhất của bài.
+
+Riêng `/tmp` thường có sticky bit, hiện thành `t` ở cuối chuỗi quyền. Nó bổ sung hạn chế xoá/đổi tên trong thư mục dùng chung; không lấy `/tmp` làm ví dụ duy nhất để suy ra quy tắc của mọi thư mục.
+
+## Đổi rwx sang số
+
+`r = 4`, `w = 2`, `x = 1`. Cộng các quyền trong từng lớp rồi ghép ba chữ số.
+
+| Số | Quyền |
 |---|---|
-| `r--` | Chỉ thấy tên file |
-| `--x` | Vào được, đọc được file nếu biết tên, không liệt kê được |
-| `r-x` | Vào, liệt kê, đọc file. Kiểu thông thường cho người đọc |
-| `rwx` | Thêm quyền tạo, xoá, đổi tên file |
+| `7` | `rwx` |
+| `6` | `rw-` |
+| `5` | `r-x` |
+| `4` | `r--` |
+| `0` | `---` |
 
-Để web server đọc được `/var/www/site/index.html`, nó cần `x` trên **mọi** thư mục dọc đường (`/var`, `/var/www`, `/var/www/site`) và `r` trên file.
-
-## Đổi quyền hàng loạt: -R và X
+Ví dụ `640` là owner đọc/ghi, group chỉ đọc, others không có quyền. `755` là owner đủ quyền, group và others đọc/thực thi. `644` thường dùng cho file dữ liệu; `755` có thể phù hợp cho thư mục cần cho người khác đi qua. Không dùng một mức quyền cho mọi tình huống.
 
 ```bash
-chmod -R u=rwX,go=rX web
+stat -c '%a %A %n' /etc/hostname
 ```
 
 | Phần | Ý nghĩa |
 |---|---|
-| `-R` | Áp cho thư mục và mọi thứ bên trong (**R**ecursive) |
-| `u=rwX` | Chủ: đọc, ghi, và `X` |
-| `go=rX` | Nhóm và người khác: đọc và `X` |
-| `X` (viết hoa) | Chỉ thêm `x` cho **thư mục** (và file vốn đã có x), không thêm cho file thường |
+| `stat` | Xem thuộc tính file |
+| `-c` | Chọn định dạng đầu ra |
+| `%a` | Quyền dạng số |
+| `%A` | Quyền dạng ký hiệu |
+| `%n` | Tên file |
 
-Kết quả: thư mục thành 755, file thường thành 644. Cách khác hay gặp là dùng `find`:
-
-```bash
-find web -type d -exec chmod 755 {} +
-find web -type f -exec chmod 644 {} +
-```
-
-> `chmod -R 755` trên cả thư mục sẽ biến mọi file thành "chạy được". Không gây lỗi ngay, nhưng là quyền thừa.
-
-## chown và chgrp: đổi chủ, đổi nhóm
-
-```bash
-sudo chown root chao.sh
-sudo chown hocvien:www-data chao.sh
-sudo chown :hocvien chao.sh
-ls -l chao.sh
-```
-
-| Lệnh | Làm gì |
-|---|---|
-| `chown root file` | Đổi chủ thành `root` |
-| `chown hocvien:www-data file` | Đổi chủ thành `hocvien` **và** nhóm thành `www-data` |
-| `chown :hocvien file` | Chỉ đổi nhóm |
-| `chown -R www-data:www-data web` | Đổi cho cả thư mục và mọi thứ bên trong |
-| `chgrp sudo file` | Chỉ đổi nhóm (như `chown :sudo`) |
-
-```text
--rw------- 1 root hocvien 14 Nov 27 15:15 chao.sh
--rw------- 1 hocvien www-data 14 Nov 27 15:15 chao.sh
--rw------- 1 hocvien hocvien 14 Nov 27 15:15 chao.sh
-```
-
-Giới hạn với user thường:
-
-```text
-chown: changing ownership of 'chao.sh': Operation not permitted
-chgrp: changing group of 'chao.sh': Operation not permitted
-```
-
-- Đổi **chủ** luôn cần root.
-- Đổi **nhóm** thì chủ file làm được, nhưng chỉ sang nhóm mà chính mình là thành viên (`chgrp sudo` được vì `hocvien` thuộc nhóm `sudo`, `chgrp www-data` thì không).
-
-Ví dụ thực tế: mã nguồn web phải để web server đọc được:
-
-```bash
-sudo chown -R www-data:www-data /var/www/site
-```
-
-## umask: quyền mặc định khi tạo file
-
-File mới không tự nhiên có quyền 644. Hệ thống lấy quyền gốc rồi **bỏ bớt** các bit ghi trong **umask**:
-
-| | Quyền gốc | umask 022 | Kết quả |
-|---|---|---|---|
-| File | 666 (`rw-rw-rw-`, không bao giờ tự có x) | bỏ `w` của nhóm và người khác | **644** `rw-r--r--` |
-| Thư mục | 777 (`rwxrwxrwx`) | bỏ `w` của nhóm và người khác | **755** `rwxr-xr-x` |
-
-```bash
-umask
-umask -S
-umask 077
-touch u3 && mkdir u4
-ls -ld u3 u4
-umask 022
-```
-
-```text
-0022
-u=rwx,g=rx,o=rx
--rw------- 1 hocvien hocvien    0 Nov 27 15:15 u3
-drwx------ 2 hocvien hocvien 4096 Nov 27 15:15 u4
-```
-
-| Lệnh | Làm gì |
-|---|---|
-| `umask` | Xem umask dạng số |
-| `umask -S` | Xem dạng chữ: quyền **được giữ lại** |
-| `umask 077` | Từ giờ file mới chỉ chủ đọc ghi được (600), thư mục 700. Chỉ có hiệu lực trong shell hiện tại |
-
-Muốn giữ lâu dài, ghi `umask 027` vào `~/.bashrc`. Mặc định toàn hệ thống nằm ở `/etc/login.defs` (dòng `UMASK`).
+Số thực tế phụ thuộc cấu hình máy. Để xem bài tập với quyền xác định, sang bài 31 tạo file trong thư mục riêng rồi dùng chmod.
 
 ## Thực hành
 
-1. Tạo script `~/xinchao.sh` in ra "Xin chào", cho phép chủ chạy, nhóm và người khác chỉ đọc. Dùng cả hai cách: chữ và số.
+1. Giải thích `drwxr-x---`.
+2. Đổi `rw-r--r--` sang số.
+3. Giải thích vì sao quyền ghi file không đồng nghĩa được xoá file đó.
 
-   <details>
-   <summary>Xem đáp án</summary>
+<details>
+<summary>Xem đáp án</summary>
 
-   ```bash
-   echo 'echo "Xin chào"' > ~/xinchao.sh
-   chmod u+x ~/xinchao.sh
-   chmod 744 ~/xinchao.sh
-   ls -l ~/xinchao.sh
-   ~/xinchao.sh
-   ```
+1. `d` là thư mục. Owner có `rwx`, nhóm có `r-x`, others không có quyền. Owner và thành viên nhóm có thể đi vào; chỉ owner có quyền thay đổi tên bên trong theo các quyền cơ bản này.
+2. `644`: `rw-` bằng 6, `r--` bằng 4, `r--` bằng 4.
+3. Sửa nội dung tác động tới file. Xoá tên tác động tới thư mục chứa nó, thường cần `w` và `x` ở thư mục đó; sticky bit và các cơ chế bổ sung còn có thể hạn chế.
 
-   Hai cách cho cùng kết quả `-rwxr--r--`.
-
-   </details>
-
-2. Tạo file `~/.env` chứa `DB_PASSWORD=bimat`, đặt quyền sao cho chỉ chủ đọc ghi được. Kiểm tra bằng `stat`.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   echo "DB_PASSWORD=bimat" > ~/.env
-   chmod 600 ~/.env
-   stat -c "%a %A %n" ~/.env
-   ```
-
-   </details>
-
-3. Đổi các quyền sau ra số: `rwxr-x---`, `rw-rw-r--`, `r--------`. Và đổi các số sau ra chữ: 750, 664, 711.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   `rwxr-x---` = 750, `rw-rw-r--` = 664, `r--------` = 400. 750 = `rwxr-x---`, 664 = `rw-rw-r--`, 711 = `rwx--x--x`.
-
-   </details>
-
-4. Tạo thư mục `~/site` có `index.html` và `css/style.css`. Giao cả thư mục cho `www-data`, rồi đặt quyền chuẩn: thư mục 755, file 644, bằng một lệnh `chmod`.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   mkdir -p ~/site/css
-   touch ~/site/index.html ~/site/css/style.css
-   sudo chown -R www-data:www-data ~/site
-   sudo chmod -R u=rwX,go=rX ~/site
-   ls -lR ~/site
-   ```
-
-   Sau `chown`, chủ là `www-data` nên `hocvien` phải dùng `sudo` cho `chmod`.
-
-   </details>
-
-5. Đặt `umask 027` rồi tạo một file và một thư mục. Đoán trước quyền rồi kiểm tra.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   umask 027
-   touch f && mkdir d
-   ls -ld f d
-   umask 022
-   ```
-
-   File: 666 bỏ 027 còn 640 (`rw-r-----`). Thư mục: 777 bỏ 027 còn 750 (`rwxr-x---`).
-
-   </details>
+</details>
 
 ## Tóm tắt
 
-| Việc | Lệnh |
-|---|---|
-| Xem quyền | `ls -l`, `stat -c "%a %A %n" file` |
-| Thêm / bớt / đặt quyền | `chmod u+x`, `chmod go-w`, `chmod u=rw,go=r` |
-| Đặt quyền bằng số | `chmod 644 file`, `chmod 755 script`, `chmod 600 bí-mật` |
-| Thư mục 755, file 644 hàng loạt | `chmod -R u=rwX,go=rX thư-mục` |
-| Đổi chủ và nhóm | `sudo chown user:nhóm file` (`-R` cho thư mục) |
-| Đổi nhóm | `chgrp nhóm file` |
-| Quyền mặc định | `umask`, `umask 027` |
+Đọc ký tự loại file rồi ba cụm owner/group/others. Quyền `rwx` trên thư mục mang ý nghĩa khác trên file. Tính số theo `4 + 2 + 1`, và luôn xét cả đường dẫn khi giải thích lỗi Permission denied.

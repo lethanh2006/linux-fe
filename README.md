@@ -20,12 +20,11 @@ Bài học đọc thẳng từ file, nên không có backend vẫn xem được 
 
 | Đường dẫn | Nội dung |
 |---|---|
-| `/` | Lộ trình 12 chặng, 50 bài, kèm tiến độ và nút học tiếp |
+| `/` | Lộ trình: phần 1 bám video TITV 5–34 (30 bài), phần 2 mở rộng theo LPIC-1; kèm tiến độ và nút học tiếp |
 | `/bai/<slug>` | Một bài: giải thích, bảng tách lệnh, thực hành có đáp án ẩn, câu hỏi kiểm tra, đánh dấu đã học |
 | `/tra-cuu` | Tìm lệnh đã được giải thích ở bài nào |
 | `/tien-do` | Mã học viên, khôi phục tiến độ từ máy khác, điểm từng bài |
 | `/nguon` | Các nguồn dùng để soạn bài và để học thêm |
-| `/lab/Dockerfile` | Dockerfile môi trường thực hành (Ubuntu 24.04, user `hocvien`) |
 
 ## Thêm hoặc sửa bài
 

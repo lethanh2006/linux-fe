@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | Học Linux",
   },
   description:
-    "Học Linux bài bản theo khung LPIC-1: 50 bài từ cơ bản đến quản trị, giải nghĩa từng phần của lệnh, thực hành có đáp án và câu hỏi kiểm tra.",
+    "Học Linux theo 30 video TITV bài 5–34: giải thích từng phần của lệnh, ví dụ, thực hành có đáp án và câu hỏi kiểm tra; kèm các bài mở rộng theo LPIC-1.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

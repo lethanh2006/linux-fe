@@ -30,6 +30,11 @@ export type LessonEntry = LessonOutline & {
   moduleIndex: number;
   /** Số thứ tự bài trên toàn lộ trình, bắt đầu từ 1. */
   number: number;
+  part: 1 | 2;
+  /** Mã ngắn hiện trong danh sách: số video TITV ở phần 1 ("5"), "MR1" ở phần 2. */
+  code: string;
+  /** Tên đầy đủ của mã: "Bài 5" hoặc "Mở rộng 1". */
+  label: string;
   /** false khi bài chưa viết. */
   ready: boolean;
   front: LessonFront | null;
@@ -50,15 +55,22 @@ function readLessonFile(slug: string) {
 
 function buildEntries(): LessonEntry[] {
   let number = 0;
+  let extra = 0;
   return CURRICULUM.flatMap((mod, moduleIndex) =>
     mod.lessons.map((outline) => {
       number += 1;
+      if (mod.part === 2) extra += 1;
+      const code = mod.part === 1 ? String(outline.videos[0]) : `MR${extra}`;
+      const label = mod.part === 1 ? `Bài ${outline.videos[0]}` : `Mở rộng ${extra}`;
       const file = readLessonFile(outline.slug);
       return {
         ...outline,
         module: { slug: mod.slug, title: mod.title },
         moduleIndex,
         number,
+        part: mod.part,
+        code,
+        label,
         ready: file !== null,
         front: file?.front ?? null,
       };

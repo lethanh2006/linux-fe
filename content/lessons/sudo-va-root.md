@@ -1,35 +1,37 @@
 ---
-summary: root là tài khoản có toàn quyền trên máy. Bài này giải thích vì sao không nên làm việc bằng root, cách dùng sudo để chạy từng lệnh với quyền root, khác nhau giữa sudo và su, và ai được phép dùng sudo.
+summary: root là tài khoản toàn quyền. Người dùng thường mượn quyền root cho từng lệnh bằng sudo. Bài này thực hành sudo với apt update, apt upgrade, đổi mật khẩu bằng passwd và đặt mật khẩu cho root.
 minutes: 30
-commands: [sudo, sudo -i, sudo -u, sudo -l, su, whoami, id, visudo, passwd]
+commands: [sudo, apt update, apt upgrade, passwd, su, sudo -i]
 quiz:
-  - q: User root có UID bằng bao nhiêu?
-    options: ["1", "0", "1000", "65534"]
+  - q: Lần đầu gõ `sudo`, máy hỏi mật khẩu của ai?
+    options: ["Mật khẩu của root", "Mật khẩu của chính bạn", "Mật khẩu Wi-Fi", "Không hỏi gì"]
     answer: 1
-    explain: Kernel nhận ra quyền quản trị qua UID 0, không phải qua cái tên "root". User thường trên Ubuntu bắt đầu từ UID 1000.
-  - q: Khi gõ `sudo apt update`, bạn phải nhập mật khẩu của ai?
-    options: ["Mật khẩu của root", "Mật khẩu của chính bạn", "Không cần mật khẩu", "Mật khẩu của nhóm sudo"]
+    explain: "`sudo` hỏi mật khẩu của **chính bạn** để xác nhận bạn đang ngồi trước máy. Ai được dùng sudo thì ghi trong `/etc/sudoers`."
+  - q: "`sudo apt update` làm gì?"
+    options: ["Cài bản mới của mọi phần mềm", "Cập nhật kernel", "Tải danh sách gói mới nhất từ kho, chưa cài gì", "Khởi động lại máy"]
+    answer: 2
+    explain: "`apt update` chỉ làm mới danh sách gói. `apt upgrade` mới tải và cài bản mới."
+  - q: Gõ mật khẩu sau `sudo`, màn hình không hiện gì. Vì sao?
+    options: ["Bàn phím hỏng", "Linux cố ý không hiện để người đứng cạnh không đếm được số ký tự", "Phải gõ mật khẩu root", "Lệnh bị treo"]
     answer: 1
-    explain: "`sudo` hỏi mật khẩu của **chính bạn** để chắc người đang gõ đúng là bạn, rồi kiểm tra file sudoers xem bạn có được phép không. `su` mới hỏi mật khẩu của user đích (thường là root)."
-  - q: Trên Ubuntu, thêm user vào nhóm nào để user đó dùng được sudo?
-    options: ["wheel", "sudo", "root", "admin-users"]
+    explain: Khi gõ mật khẩu trong terminal, màn hình không hiện gì, kể cả dấu `*`. Cứ gõ rồi bấm Enter.
+  - q: "Lệnh nào đặt mật khẩu cho người dùng `an` mà không cần biết mật khẩu cũ?"
+    options: ["passwd an", "sudo passwd an", "su an", "sudo -i an"]
     answer: 1
-    explain: "File `/etc/sudoers` của Ubuntu có dòng `%sudo ALL=(ALL:ALL) ALL`, nghĩa là mọi thành viên nhóm `sudo` được chạy mọi lệnh. Họ Red Hat dùng nhóm `wheel`."
-  - q: Vì sao phải sửa /etc/sudoers bằng visudo thay vì mở bằng vim hay nano?
-    options: ["Vì file đó bị mã hoá", "visudo kiểm tra cú pháp trước khi lưu, tránh lỗi làm mất quyền sudo", "Vì vim không mở được file trong /etc", "visudo chạy nhanh hơn"]
+    explain: "Root (qua `sudo`) đặt được mật khẩu cho bất kỳ ai mà không hỏi mật khẩu cũ. `passwd an` khi không phải root sẽ bị từ chối."
+  - q: "Vì sao `sudo echo 'x' >> /etc/hosts` vẫn báo Permission denied?"
+    options: ["Vì echo không chạy được bằng sudo", "Vì phần >> do shell của bạn (người dùng thường) làm, sudo chỉ áp lên echo", "Vì /etc/hosts không tồn tại", "Vì phải dùng su"]
     answer: 1
-    explain: Nếu file sudoers sai cú pháp, sudo sẽ từ chối chạy, và bạn có thể mất luôn cách để sửa lại. `visudo` kiểm tra cú pháp trước khi lưu, báo lỗi để bạn sửa.
-  - q: Lệnh nào mở một shell root đầy đủ (môi trường của root, đứng ở /root)?
-    options: ["sudo ls", "sudo -i", "sudo -l", "whoami"]
-    answer: 1
-    explain: "`sudo -i` mở shell đăng nhập của root. Dùng xong nhớ gõ `exit`. `sudo -l` chỉ liệt kê các lệnh bạn được phép chạy."
+    explain: "Cách đúng: `echo 'x' | sudo tee -a /etc/hosts`. `tee` chạy bằng sudo nên ghi được file."
 ---
 
-## root: tài khoản toàn quyền
+> Bài này đi theo video TITV bài 8.
 
-Mỗi máy Linux có một tài khoản đặc biệt tên **root**, mang số hiệu user (UID) bằng **0**. root được làm mọi thứ: đọc mọi file, xoá mọi file, cài phần mềm, tắt máy, đổi mật khẩu người khác. Kernel không kiểm tra quyền với root.
+## root và sudo
 
-User thường như `hocvien` chỉ có quyền trên file của mình. Thử đọc file chứa mật khẩu đã mã hoá:
+Mỗi máy Linux có một tài khoản đặc biệt tên **root**: được làm mọi thứ, đọc và xoá mọi file, cài phần mềm, đổi mật khẩu người khác. Người dùng thường như `hocvien` chỉ có quyền trên file của mình.
+
+Thử đọc file chứa mật khẩu đã mã hoá của mọi người dùng:
 
 ```bash
 cat /etc/shadow
@@ -39,40 +41,7 @@ cat /etc/shadow
 cat: /etc/shadow: Permission denied
 ```
 
-Vì sao **không nên** làm việc hằng ngày bằng root:
-
-- Gõ nhầm một lệnh có thể phá cả máy. Ví dụ `rm -rf / tmp/x` (thừa một dấu cách) sẽ xoá từ gốc `/`.
-- Nếu chương trình bạn chạy có lỗ hổng, kẻ tấn công nhận ngay toàn quyền.
-- Không biết ai đã làm gì, vì mọi người đều dùng chung tài khoản root.
-
-Cách làm đúng: đăng nhập bằng user thường, chỉ "mượn" quyền root cho **từng lệnh cần thiết** bằng `sudo`.
-
-Phân biệt bằng dấu nhắc:
-
-| Dấu nhắc | Bạn là |
-|---|---|
-| `hocvien@lab:~$` | User thường (`$`) |
-| `root@lab:~#` | root (`#`) |
-
-## whoami và id: mình là ai
-
-```bash
-whoami
-id
-```
-
-```text
-hocvien
-uid=1001(hocvien) gid=1001(hocvien) groups=1001(hocvien),27(sudo)
-```
-
-| Phần kết quả `id` | Ý nghĩa |
-|---|---|
-| `uid=1001(hocvien)` | Số hiệu user và tên user |
-| `gid=1001(hocvien)` | Nhóm chính của user. Ubuntu tạo cho mỗi user một nhóm cùng tên |
-| `groups=...,27(sudo)` | Các nhóm user thuộc về. Có nhóm `sudo` nghĩa là user được dùng `sudo` |
-
-## sudo: chạy một lệnh với quyền root
+Không nên đăng nhập hẳn bằng root để làm việc hằng ngày: gõ nhầm một lệnh có thể xoá cả hệ thống. Cách làm đúng là dùng tài khoản thường, chỉ **mượn quyền root cho từng lệnh** bằng `sudo`.
 
 ```bash
 sudo cat /etc/shadow
@@ -80,10 +49,8 @@ sudo cat /etc/shadow
 
 | Phần | Ý nghĩa |
 |---|---|
-| `sudo` | Chạy lệnh phía sau với quyền user khác, mặc định là root (**s**ubstitute **u**ser **do**) |
+| `sudo` | Chạy lệnh phía sau bằng quyền root (**s**uper**u**ser **do**) |
 | `cat /etc/shadow` | Lệnh cần chạy |
-
-Lần đầu, `sudo` hỏi **mật khẩu của chính bạn** (trong container lab là `hocvien`). Khi gõ mật khẩu, màn hình không hiện gì, kể cả dấu `*`. Cứ gõ rồi bấm Enter. Sau đó khoảng 15 phút `sudo` không hỏi lại.
 
 ```text
 [sudo] password for hocvien:
@@ -92,17 +59,145 @@ daemon:*:20767:0:99999:7:::
 ...
 ```
 
-Kiểm tra lệnh thật sự chạy bằng ai:
+Ba điều cần biết về `sudo`:
+
+- Nó hỏi **mật khẩu của chính bạn**, không phải mật khẩu root.
+- Khi gõ mật khẩu, màn hình **không hiện gì**, kể cả dấu `*`. Cứ gõ rồi bấm `Enter`.
+- Gõ đúng một lần, khoảng 15 phút sau `sudo` không hỏi lại.
+
+Không phải ai cũng được dùng `sudo`. Danh sách người được dùng ghi trong file `/etc/sudoers`. Trên Ubuntu, tài khoản tạo lúc cài máy được thêm sẵn vào nhóm `sudo` nên dùng được ngay.
+
+Việc hay cần `sudo`:
+
+| Việc | Ví dụ |
+|---|---|
+| Cài, gỡ, cập nhật phần mềm | `sudo apt install tree` |
+| Sửa file cấu hình hệ thống | `sudo nano /etc/hosts` |
+| Đổi mật khẩu người khác | `sudo passwd an` |
+| Tắt, khởi động lại máy | `sudo reboot` |
+
+## Cập nhật phần mềm: apt update và apt upgrade
+
+Cập nhật phần mềm gồm hai bước. Bước một, tải **danh sách** gói mới nhất từ kho:
 
 ```bash
-sudo whoami
-sudo id
+sudo apt update
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `sudo` | Cần quyền root vì sửa dữ liệu hệ thống |
+| `apt` | Công cụ quản lý phần mềm của Ubuntu |
+| `update` | Làm mới danh sách gói từ các kho. **Chưa cài gì** |
+
+```text
+Hit:1 http://security.ubuntu.com/ubuntu noble-security InRelease
+Hit:2 http://archive.ubuntu.com/ubuntu noble InRelease
+Hit:3 http://archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:4 http://archive.ubuntu.com/ubuntu noble-backports InRelease
+Reading package lists...
+Building dependency tree...
+Reading state information...
+All packages are up to date.
+```
+
+`Hit` là kho không có gì mới, `Get` là đang tải danh sách mới. Dòng cuối cho biết có bao nhiêu gói cần nâng cấp. Ở đây mọi gói đã mới nhất; nếu có, dòng cuối sẽ là `N packages can be upgraded`.
+
+Bước hai, tải và cài bản mới:
+
+```bash
+sudo apt upgrade
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `upgrade` | Nâng cấp mọi gói đã cài lên bản mới nhất trong danh sách vừa tải |
+
+Nếu có gói cần nâng cấp, `apt` liệt kê các gói, cho biết dung lượng cần tải, rồi hỏi `Do you want to continue? [Y/n]`. Bấm `Enter` (hoặc `y`) để đồng ý, `n` để huỷ. Chữ hoa `Y` là lựa chọn mặc định khi chỉ bấm `Enter`. Khi không có gì cần nâng cấp:
+
+```text
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+```
+
+Thói quen tốt: luôn chạy `sudo apt update` trước khi cài hoặc nâng cấp. Phần mở rộng có bài riêng về `apt`.
+
+## Đổi mật khẩu: passwd
+
+Đổi mật khẩu của chính mình:
+
+```bash
+passwd
 ```
 
 ```text
-root
-uid=0(root) gid=0(root) groups=0(root)
+Changing password for hocvien.
+Current password:
+New password:
+Retype new password:
+passwd: password updated successfully
 ```
+
+Lệnh hỏi mật khẩu hiện tại, rồi mật khẩu mới hai lần. Cả ba lần đều không hiện gì khi gõ.
+
+Root đặt được mật khẩu cho người khác mà **không cần mật khẩu cũ**:
+
+```bash
+sudo passwd an
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `sudo passwd` | Chạy `passwd` bằng quyền root |
+| `an` | Người dùng cần đặt mật khẩu |
+
+```text
+New password:
+BAD PASSWORD: The password is shorter than 8 characters
+Retype new password:
+passwd: password updated successfully
+```
+
+Ubuntu cảnh báo khi mật khẩu ngắn hơn 8 ký tự. Người dùng thường tự đổi thì bị bắt nhập lại; riêng root chỉ bị cảnh báo, vẫn đặt được. Đừng lợi dụng điều đó: dùng mật khẩu dài.
+
+## Đặt mật khẩu cho root
+
+Trên Ubuntu, tài khoản root **chưa có mật khẩu** nên không đăng nhập thẳng được. Muốn đăng nhập bằng root (ví dụ để dùng lệnh `su`), đặt mật khẩu cho nó:
+
+```bash
+sudo passwd root
+```
+
+```text
+New password:
+Retype new password:
+passwd: password updated successfully
+```
+
+Từ giờ chuyển sang root được bằng `su` (**s**witch **u**ser), lệnh này hỏi **mật khẩu của root**:
+
+```bash
+su root
+```
+
+```text
+Password:
+root@ubuntu:/home/hocvien# whoami
+root
+root@ubuntu:/home/hocvien# exit
+exit
+```
+
+Dấu nhắc đổi thành `#`. Gõ `exit` để quay về tài khoản cũ.
+
+> **Lưu ý:** root có toàn quyền nên mật khẩu root phải thật mạnh. Trên máy chủ thật, người ta thường **không** đặt mật khẩu root mà chỉ dùng `sudo`: bớt một mật khẩu để kẻ xấu đoán, và mỗi lệnh `sudo` đều được ghi lại ai làm gì.
+
+## Mở rộng (chuẩn LPIC-1)
+
+Chuẩn LPIC-1 mục 110.1 yêu cầu biết cấu hình và dùng `sudo`, `su` đúng cách.
 
 ### Các cách dùng sudo hay gặp
 
@@ -110,8 +205,7 @@ uid=0(root) gid=0(root) groups=0(root)
 |---|---|
 | `sudo lệnh` | Chạy một lệnh bằng root |
 | `sudo !!` | Chạy lại lệnh vừa gõ, thêm `sudo` phía trước. Hay dùng khi vừa bị `Permission denied` |
-| `sudo -i` | Mở shell root đầy đủ: môi trường của root, đứng ở `/root`. Dùng khi cần gõ nhiều lệnh quản trị liền nhau. Xong việc gõ `exit` |
-| `sudo -u nobody whoami` | Chạy lệnh bằng một user khác (không phải root), ở đây là `nobody` |
+| `sudo -i` | Mở shell root mà không cần mật khẩu root (hỏi mật khẩu của bạn). Gõ `exit` khi xong |
 | `sudo -l` | Liệt kê những lệnh bạn được phép chạy bằng sudo |
 | `sudo -k` | Quên mật khẩu đã nhập, lần sau `sudo` sẽ hỏi lại |
 
@@ -120,20 +214,18 @@ sudo -l
 ```
 
 ```text
-Matching Defaults entries for hocvien on lab:
+Matching Defaults entries for hocvien on ubuntu:
     env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
 
-User hocvien may run the following commands on lab:
+User hocvien may run the following commands on ubuntu:
     (ALL : ALL) ALL
 ```
 
-Dòng cuối `(ALL : ALL) ALL` nghĩa là `hocvien` được chạy **mọi lệnh**, dưới danh nghĩa **mọi user** và **mọi nhóm**.
+Dòng cuối `(ALL : ALL) ALL` nghĩa là `hocvien` được chạy **mọi lệnh**, dưới danh nghĩa **mọi người dùng** và **mọi nhóm**.
 
-> **Bẫy hay gặp:** `sudo echo "127.0.0.1 web" >> /etc/hosts` vẫn báo `Permission denied`. Lý do: phần chuyển hướng `>>` do **shell của bạn** (user thường) thực hiện, `sudo` chỉ áp lên `echo`. Cách đúng là dùng `tee` chạy bằng sudo: `echo "127.0.0.1 web" | sudo tee -a /etc/hosts`. Chuyển hướng và `tee` học ở bài [Chuyển hướng và pipe](/bai/chuyen-huong-va-pipe).
+> **Bẫy hay gặp:** `sudo echo "127.0.0.1 web" >> /etc/hosts` vẫn báo `Permission denied`. Phần chuyển hướng `>>` do **shell của bạn** (người dùng thường) làm, `sudo` chỉ áp lên `echo`. Cách đúng: `echo "127.0.0.1 web" | sudo tee -a /etc/hosts`. Chuyển hướng học ở bài 13.
 
-## Ai được dùng sudo: /etc/sudoers
-
-Quyền dùng sudo ghi trong file `/etc/sudoers` và các file trong thư mục `/etc/sudoers.d/`.
+### File /etc/sudoers
 
 ```bash
 sudo grep -v '^#' /etc/sudoers | grep -v '^$'
@@ -154,151 +246,118 @@ root	ALL=(ALL:ALL) ALL
 
 | Phần | Ý nghĩa |
 |---|---|
-| `%sudo` | Áp cho nhóm `sudo` (dấu `%` là nhóm, không có `%` là một user) |
-| `ALL=` | Trên mọi máy (dùng khi một file sudoers chia sẻ cho nhiều máy) |
-| `(ALL:ALL)` | Được chạy lệnh dưới danh nghĩa mọi user : mọi nhóm |
+| `%sudo` | Áp cho nhóm `sudo` (dấu `%` là nhóm, không có `%` là một người dùng) |
+| `ALL=` | Trên mọi máy |
+| `(ALL:ALL)` | Được chạy lệnh dưới danh nghĩa mọi người dùng : mọi nhóm |
 | `ALL` (cuối) | Được chạy mọi lệnh |
 
-Dòng `@includedir /etc/sudoers.d` nghĩa là đọc thêm các file trong `/etc/sudoers.d/`. Muốn cấp quyền riêng, nên tạo file mới trong thư mục này thay vì sửa file chính.
+- Cho một người dùng quyền sudo: thêm vào nhóm `sudo` bằng `sudo usermod -aG sudo an` (Ubuntu), hoặc nhóm `wheel` trên họ Red Hat. Người đó đăng nhập lại thì có hiệu lực. `usermod` học ở bài 27.
+- Sửa file sudoers **phải dùng `sudo visudo`**: nó kiểm tra cú pháp trước khi lưu. File sai cú pháp thì `sudo` ngừng chạy hoàn toàn.
 
-Muốn cho một user dùng sudo, cách đơn giản nhất là thêm user đó vào nhóm `sudo` (Ubuntu/Debian) hoặc `wheel` (Red Hat/Rocky):
-
-```bash
-sudo usermod -aG sudo tenuser
-```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `usermod` | Sửa thông tin user |
-| `-aG sudo` | Thêm (**a**ppend) vào nhóm (**G**roup) `sudo`. Thiếu `-a` thì user bị gỡ khỏi các nhóm phụ khác |
-| `tenuser` | User cần cấp quyền |
-
-User đó phải **đăng xuất rồi đăng nhập lại** thì nhóm mới có hiệu lực. Lệnh `usermod` được học kỹ ở bài [Lệnh quản lý người dùng](/bai/lenh-quan-ly-nguoi-dung).
-
-### Sửa sudoers phải dùng visudo
-
-```bash
-sudo visudo
-sudo visudo -f /etc/sudoers.d/deploy
-```
-
-| Phần | Ý nghĩa |
-|---|---|
-| `visudo` | Mở file sudoers bằng trình soạn thảo, **kiểm tra cú pháp trước khi lưu** |
-| `-f /etc/sudoers.d/deploy` | Sửa một file cụ thể thay vì `/etc/sudoers` |
-
-Nếu file sudoers sai cú pháp, sudo sẽ ngừng hoạt động hoàn toàn, và trên VPS bạn có thể không còn cách nào lấy lại quyền root. `visudo` chặn lỗi này.
-
-Ví dụ một dòng cho user `deploy` được khởi động lại nginx mà không cần mật khẩu, và chỉ được làm đúng việc đó:
-
-```text
-deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart nginx
-```
-
-## su: chuyển hẳn sang user khác
-
-`su` (**s**witch **u**ser) mở một shell dưới danh nghĩa user khác, và hỏi **mật khẩu của user đích**.
+### su và su -
 
 | Lệnh | Làm gì |
 |---|---|
-| `su tenuser` | Chuyển sang `tenuser`, giữ phần lớn môi trường của bạn |
-| `su - tenuser` | Chuyển sang `tenuser` như đăng nhập mới: đổi sang thư mục home và môi trường của user đó. **Nên dùng dạng có dấu `-`** |
+| `su an` | Chuyển sang `an`, giữ phần lớn môi trường cũ (thư mục đang đứng, biến) |
+| `su - an` | Chuyển sang `an` như đăng nhập mới: về thư mục nhà và môi trường của `an`. **Nên dùng dạng có `-`** |
 | `su -` | Chuyển sang root (cần mật khẩu root) |
-| `sudo su -` / `sudo -i` | Thành root bằng mật khẩu của **bạn** (nếu bạn có quyền sudo) |
-
-Trên Ubuntu, tài khoản root **bị khoá mật khẩu** từ đầu. Dấu `*` trong `/etc/shadow` nghĩa là không có mật khẩu nào đăng nhập được:
-
-```bash
-sudo grep '^root' /etc/shadow
-su -
-```
-
-```text
-root:*:20767:0:99999:7:::
-Password:
-su: Authentication failure
-```
-
-Vì vậy trên Ubuntu cứ dùng `sudo`. Video TITV bài 8 có hướng dẫn đặt mật khẩu cho root bằng `sudo passwd root`. Cách này làm được, nhưng trên máy chủ thật **không khuyến khích**: thêm một mật khẩu để đoán, và mất dấu ai đã làm gì.
 
 | | `sudo` | `su` |
 |---|---|---|
-| Hỏi mật khẩu của | Chính bạn | User đích (thường là root) |
+| Hỏi mật khẩu của | Chính bạn | Người dùng đích (thường là root) |
 | Phạm vi | Từng lệnh | Cả một shell |
-| Ghi log | Mỗi lệnh đều ghi (ai, lúc nào, lệnh gì) | Chỉ ghi việc chuyển user |
-| Giới hạn được lệnh | Có (qua sudoers) | Không |
+| Ghi nhật ký | Mỗi lệnh (ai, lúc nào, lệnh gì) | Chỉ việc chuyển người dùng |
+
+### Khoá lại mật khẩu root
+
+Đã đặt mật khẩu root để thử, học xong thì khoá lại:
+
+```bash
+sudo passwd -l root
+sudo passwd -S root
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `-l` | Khoá mật khẩu (**l**ock): thêm dấu `!` trước mật khẩu mã hoá trong `/etc/shadow` |
+| `-S` | Xem trạng thái (**S**tatus) |
+
+```text
+passwd: password changed.
+root L 2026-11-27 0 99999 7 -1
+```
+
+Chữ `L` (locked) là đã khoá, `P` là có mật khẩu dùng được. `sudo -i` vẫn chạy bình thường vì nó dùng mật khẩu của bạn.
 
 ## Thực hành
 
-Làm trong container `lab` (user `hocvien`, mật khẩu `hocvien`).
-
-1. Thử đọc `/etc/shadow` bằng user thường, rồi đọc lại bằng `sudo` mà không gõ lại cả lệnh.
+1. Chạy `sudo apt update`, đọc dòng cuối xem có bao nhiêu gói cần nâng cấp. Nếu có, chạy `sudo apt upgrade` và đồng ý.
 
    <details>
-   <summary>Xem cách làm</summary>
+   <summary>Xem đáp án</summary>
 
    ```bash
-   cat /etc/shadow
-   sudo !!
+   sudo apt update
+   sudo apt upgrade
    ```
 
-   `sudo !!` được bash thay thành `sudo cat /etc/shadow` và in lệnh đó ra trước khi chạy.
+   Dòng cuối của `apt update` là `All packages are up to date.` hoặc `N packages can be upgraded`. `apt upgrade` hỏi `[Y/n]`, bấm `Enter` để đồng ý.
 
    </details>
 
-2. Mở một shell root đầy đủ. Kiểm tra bạn là ai, đang đứng ở đâu, dấu nhắc thay đổi thế nào. Sau đó thoát ra.
+2. Cài lệnh `tree` (dùng ở các bài sau) rồi chạy thử `tree -L 1 /`.
 
    <details>
-   <summary>Xem cách làm</summary>
+   <summary>Xem đáp án</summary>
 
    ```bash
-   sudo -i
+   sudo apt install tree
+   tree -L 1 /
+   ```
+
+   </details>
+
+3. Đổi mật khẩu của chính bạn, sau đó gõ `sudo -k` rồi `sudo whoami` để thử mật khẩu mới.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   passwd
+   sudo -k
+   sudo whoami
+   ```
+
+   `sudo -k` làm `sudo` quên lần nhập trước, nên lệnh sau hỏi lại mật khẩu. Gõ mật khẩu mới, kết quả in `root`.
+
+   </details>
+
+4. Đặt mật khẩu cho root, chuyển sang root bằng `su`, kiểm tra dấu nhắc, thoát ra, rồi khoá lại mật khẩu root.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   sudo passwd root
+   su root
    whoami
-   pwd
    exit
+   sudo passwd -l root
    ```
 
-   `whoami` in `root`, `pwd` in `/root`, dấu nhắc thành `root@lab:~#`. Sau `exit` bạn về lại `hocvien@lab:~$`.
-
-   </details>
-
-3. Thêm dòng `127.0.0.1 web.local` vào cuối `/etc/hosts`. Thử `sudo echo ... >> /etc/hosts` trước, xem lỗi gì, rồi làm đúng cách.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   sudo echo "127.0.0.1 web.local" >> /etc/hosts
-   echo "127.0.0.1 web.local" | sudo tee -a /etc/hosts
-   tail -1 /etc/hosts
-   ```
-
-   Lệnh đầu báo `Permission denied`, vì `>>` do shell của `hocvien` thực hiện. `sudo tee -a` chạy bằng root, ghi nối (`-a`) vào cuối file và in dòng đó ra màn hình.
-
-   </details>
-
-4. Xem ai thuộc nhóm `sudo` trên máy.
-
-   <details>
-   <summary>Xem đáp án</summary>
-
-   ```bash
-   getent group sudo
-   ```
-
-   Kết quả `sudo:x:27:ubuntu,hocvien`: phần sau dấu `:` cuối cùng là danh sách thành viên.
+   Khi đang là root, dấu nhắc kết thúc bằng `#` và `whoami` in `root`.
 
    </details>
 
 ## Tóm tắt
 
-| Việc | Lệnh |
+| Lệnh | Làm gì |
 |---|---|
-| Mình là ai, thuộc nhóm nào | `whoami`, `id` |
-| Chạy một lệnh bằng root | `sudo lệnh` |
-| Chạy lại lệnh vừa gõ bằng sudo | `sudo !!` |
-| Mở shell root | `sudo -i` (thoát: `exit`) |
-| Được phép chạy gì | `sudo -l` |
-| Cho user dùng sudo | `sudo usermod -aG sudo tenuser` |
-| Sửa quyền sudo | `sudo visudo` |
-| Ghi vào file của root | `echo ... \| sudo tee -a file` |
+| `sudo lệnh` | Chạy lệnh bằng quyền root, hỏi mật khẩu của bạn |
+| `sudo apt update` | Tải danh sách gói mới nhất, chưa cài gì |
+| `sudo apt upgrade` | Cài bản mới cho các gói đã có |
+| `passwd` | Đổi mật khẩu của mình |
+| `sudo passwd tên` | Đặt mật khẩu cho người khác |
+| `sudo passwd root` | Đặt mật khẩu cho root |
+| `su root` / `exit` | Chuyển sang root / quay lại |
+| `sudo -i` | Mở shell root bằng mật khẩu của bạn |

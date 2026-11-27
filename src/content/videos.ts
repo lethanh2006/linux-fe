@@ -66,6 +66,10 @@ export const VIDEOS: Record<number, Video> = {
 };
 
 export function videoUrl(n: number) {
-  const video = VIDEOS[n];
-  return `https://www.youtube.com/watch?v=${video.id}&list=${PLAYLIST_ID}&index=${n}`;
+  return `https://www.youtube.com/watch?v=${VIDEOS[n].id}&list=${PLAYLIST_ID}`;
+}
+
+/** Link nhúng: bản youtube-nocookie không đặt cookie theo dõi trước khi người học bấm phát. */
+export function videoEmbedUrl(n: number) {
+  return `https://www.youtube-nocookie.com/embed/${VIDEOS[n].id}`;
 }
