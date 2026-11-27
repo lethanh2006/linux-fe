@@ -3,6 +3,9 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import useSWR from "swr";
 import { api, ApiError } from "./api";
+import { LEGACY_LESSONS, legacyProgressView, progressWriteBody, type LessonProgress } from "./progress-compat";
+
+export type { LessonProgress } from "./progress-compat";
 
 /**
  * Tiến độ học lưu ở backend theo "học viên ẩn danh":
@@ -14,13 +17,6 @@ const STORAGE_KEY = "hoc-linux:learner";
 const CHANGE_EVENT = "hoc-linux:learner-change";
 
 export type Learner = { id: string; code: string };
-
-export type LessonProgress = {
-  slug: string;
-  completedAt: string | null;
-  quizScore: number | null;
-  quizTotal: number | null;
-};
 
 type ProgressResponse = {
   learner: { code: string; createdAt: string };
@@ -95,18 +91,23 @@ export function useProgress() {
     },
   );
 
-  const bySlug = useMemo(() => {
-    const map = new Map<string, LessonProgress>();
-    for (const item of data?.lessons ?? []) map.set(item.slug, item);
-    return map;
-  }, [data]);
+  const bySlug = useMemo(() => legacyProgressView(data?.lessons ?? []), [data]);
+  const legacyHistory = useMemo(
+    () => LEGACY_LESSONS.flatMap((legacy) => {
+      const progress = bySlug.get(legacy.slug);
+      return progress && (progress.completedAt || progress.quizTotal)
+        ? [{ ...legacy, progress }]
+        : [];
+    }),
+    [bySlug],
+  );
 
   const update = useCallback(
     async (slug: string, body: Partial<Pick<LessonProgress, "quizScore" | "quizTotal">> & { completed?: boolean }) => {
       const current = await ensureLearner();
       const saved = await api<LessonProgress>(
         `/progress/${slug}`,
-        withLearner(current.id, { method: "PUT", json: body }),
+        withLearner(current.id, { method: "PUT", json: progressWriteBody(slug, body, bySlug) }),
       );
       await mutate(
         (prev) => {
@@ -120,7 +121,7 @@ export function useProgress() {
       );
       return saved;
     },
-    [mutate],
+    [mutate, bySlug],
   );
 
   const restore = useCallback(async (code: string) => {
@@ -138,6 +139,7 @@ export function useProgress() {
     learner,
     code: data?.learner.code ?? learner?.code ?? null,
     bySlug,
+    legacyHistory,
     isLoading: Boolean(learner) && isLoading,
     error: error as Error | undefined,
     setCompleted: (slug: string, completed: boolean) => update(slug, { completed }),

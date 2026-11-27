@@ -1,110 +1,192 @@
 ---
-summary: "Hiểu nhóm chính, nhóm phụ, GID và bốn trường của /etc/group. Dùng id, groups và getent để biết một tài khoản thuộc nhóm nào."
-minutes: 25
-commands: ["id", "groups", "getent group", "cat /etc/group"]
+summary: Nhóm gom nhiều tài khoản lại để phân quyền một lần cho cả nhóm. Bài này giải thích GID, nhóm chính và nhóm phụ, rồi đọc 4 cột của file /etc/group.
+minutes: 20
+commands: [/etc/group, groups, id, getent group]
 quiz:
-  - q: "Một tài khoản có bao nhiêu nhóm chính tại một thời điểm?"
-    options: ["Không giới hạn", "Đúng một", "Luôn hai", "Không có nhóm chính"]
-    answer: 1
-    explain: "Mỗi tài khoản có một GID nhóm chính trong passwd, đồng thời có thể thuộc nhiều nhóm phụ."
-  - q: "Trường thứ ba của một dòng /etc/group là gì?"
-    options: ["UID", "Tên người tạo nhóm", "Đường dẫn home", "GID"]
-    answer: 3
-    explain: "Bốn trường lần lượt là tên nhóm, trường mật khẩu nhóm, GID, danh sách thành viên."
-  - q: "Danh sách thành viên trống trong /etc/group có chứng minh không ai dùng nhóm đó làm nhóm chính không?"
-    options: ["Không", "Có", "Có nếu GID trên 1000", "Chỉ root biết"]
-    answer: 0
-    explain: "Thành viên có nhóm chính này được xác định từ GID trong passwd; không nhất thiết được liệt kê lại ở trường thành viên của group."
-  - q: "Cách nào giúp kiểm tra đủ nhóm chính và nhóm phụ của một user?"
-    options: ["Chỉ nhìn tên thư mục home", "Đếm dòng /etc/group", "id tên-user", "cat /etc/hostname"]
+  - q: "File `/etc/group` mỗi dòng có mấy cột?"
+    options: ["7", "9", "4", "3"]
     answer: 2
-    explain: "id cho thấy UID, GID chính và danh sách nhóm đã tra được của tài khoản."
+    explain: "Tên nhóm : mật khẩu (x) : GID : danh sách thành viên phụ."
+  - q: "Dòng `sudo:x:27:ubuntu,hocvien,chau` cho biết gì?"
+    options: ["Nhóm sudo có GID 27, ba tài khoản là thành viên phụ", "Tài khoản sudo có UID 27", "Nhóm sudo có 27 thành viên", "sudo bị khoá"]
+    answer: 0
+    explain: "Cột 3 là GID, cột 4 là danh sách thành viên phụ ngăn bởi dấu phẩy."
+  - q: "Tạo tài khoản `chau` bằng useradd mà không có `-g`, nhóm chính của `chau` là gì?"
+    options: ["Nhóm root", "Nhóm users", "Nhóm mới cùng tên chau", "Không có nhóm"]
+    answer: 2
+    explain: "Ubuntu tạo cho mỗi tài khoản một nhóm riêng cùng tên, GID thường bằng UID."
+  - q: "Dòng `chau:x:1004:` trong /etc/group có cột cuối trống. Vì sao `chau` vẫn thuộc nhóm này?"
+    options: ["Vì lỗi", "Vì đây là nhóm chính của chau, ghi ở cột GID của /etc/passwd, không ghi lại ở /etc/group", "Vì chau là root", "Vì cột cuối chỉ ghi root"]
+    answer: 1
+    explain: "Cột 4 của /etc/group chỉ liệt kê thành viên **phụ**. Nhóm chính nằm ở cột 4 của /etc/passwd."
+  - q: Lệnh nào liệt kê các nhóm của bạn?
+    options: ["whoami", "groups", "pwd", "users"]
+    answer: 1
+    explain: "`groups` (hoặc `id`) in các nhóm của tài khoản hiện tại. `groups tên` cho tài khoản khác."
 ---
 
-> Bám video TITV bài 28. Bài 29 sẽ thực hành tạo, đổi tên và xoá nhóm thử nghiệm.
+> Bài này đi theo video TITV bài 28. Bài này chỉ đọc và hiểu; bài 29 mới tạo, sửa, xoá nhóm.
 
-## Vì sao cần nhóm
+## Nhóm là gì
 
-Giả sử một thư mục dùng chung cho nhóm làm website. Thay vì cấp quyền riêng cho từng người, ta gán thư mục cho một nhóm rồi thêm những người phù hợp vào nhóm đó. Nhóm giúp tổ chức quyền truy cập, không tự động làm mọi thành viên có quyền quản trị.
+**Nhóm** (group) gom nhiều tài khoản lại. Thay vì cấp quyền cho từng người, bạn cấp cho cả nhóm: ví dụ mọi người trong nhóm `marketing` được sửa thư mục tài liệu marketing (phân quyền học ở bài 30).
 
-Mỗi nhóm có tên và GID. File lưu quyền sở hữu nhóm bằng GID; tên nhóm giúp con người dễ đọc. Một tài khoản có một nhóm chính và có thể thuộc nhiều nhóm phụ.
+- Mỗi nhóm có **tên duy nhất** và một số **GID** (group ID).
+- Mỗi tài khoản có đúng **một nhóm chính** (primary group) và có thể thuộc **nhiều nhóm phụ** (supplementary group).
+- File mới tạo thuộc về nhóm chính của người tạo.
+
+Khi tạo tài khoản bằng `useradd`:
+
+| Cách tạo | Nhóm chính |
+|---|---|
+| Không có `-g` | Tạo nhóm mới **cùng tên** với tài khoản. GID thường bằng UID |
+| Có `-g marketing` | Đưa vào nhóm `marketing` có sẵn |
 
 ## Xem nhóm của mình
 
 ```bash
-id
 groups
-id -gn
-id -nG
+groups chau
+id -gn chau
 ```
 
-| Phần | Ý nghĩa |
+```text
+hocvien sudo
+chau : chau sudo
+chau
+```
+
+| Lệnh | Cho biết |
 |---|---|
-| `id` | Xem UID, GID và các nhóm |
-| `groups` | In tên các nhóm |
-| `id -g` | In GID của nhóm chính |
-| `id -gn` | `-n` đổi từ mã số sang tên nhóm |
-| `id -nG` | `-G` viết hoa chọn toàn bộ nhóm, kết hợp `-n` để in tên |
+| `groups` | Các nhóm của bạn. Nhóm đầu tiên là nhóm chính |
+| `groups tên` | Các nhóm của tài khoản khác |
+| `id -gn tên` | Chỉ nhóm chính (**g**roup, in tên thay cho số: **n**ame) |
 
-Nếu tra người khác, thêm tên user làm đối số, ví dụ `id sv_demo`. Lệnh chỉ xem thông tin; nó không thêm tài khoản đó vào nhóm nào.
+## File /etc/group
 
-## /etc/group có bốn trường
+Danh sách nhóm nằm trong `/etc/group`. **Mọi người dùng đọc được**, chỉ root sửa được.
 
 ```bash
-getent group root
+cat /etc/group
 ```
-
-Trên hệ thống có nhóm root thông thường:
 
 ```text
 root:x:0:
+daemon:x:1:
+bin:x:2:
+sys:x:3:
+adm:x:4:ubuntu
+tty:x:5:
+disk:x:6:
+...
+sudo:x:27:ubuntu,hocvien,chau
+...
+www-data:x:33:
+...
+users:x:100:
+nogroup:x:65534:
+ubuntu:x:1000:
+...
+hocvien:x:1001:
+an:x:1002:
+chau:x:1004:
 ```
 
-Một ví dụ minh hoạ khác:
+(File thật có 47 dòng; `...` là các dòng được bỏ bớt.) Mỗi dòng có **4 cột ngăn bởi dấu `:`**:
+
+| Cột | Ví dụ `sudo:x:27:ubuntu,hocvien,chau` | Ý nghĩa |
+|---|---|---|
+| 1 | `sudo` | Tên nhóm |
+| 2 | `x` | Mật khẩu nhóm. `x` nghĩa là nằm trong `/etc/gshadow` (ít khi dùng) |
+| 3 | `27` | GID |
+| 4 | `ubuntu,hocvien,chau` | Danh sách thành viên **phụ**, ngăn bởi dấu phẩy |
+
+Vài nhóm có sẵn đáng biết:
+
+| Nhóm | Thành viên được làm gì |
+|---|---|
+| `sudo` | Dùng lệnh `sudo` (bài 8). Trên họ Red Hat là nhóm `wheel` |
+| `adm` | Đọc nhật ký hệ thống trong `/var/log` |
+| `www-data` | Nhóm của máy chủ web |
+| `users` | Nhóm chung cho người dùng thường |
+
+### Vì sao cột 4 của nhóm `chau` trống?
+
+Dòng `chau:x:1004:` không liệt kê `chau`, nhưng `chau` vẫn thuộc nhóm này. Đó là **nhóm chính** của `chau`, đã ghi ở cột GID của `/etc/passwd` (`chau:x:1004:1004:...`). Cột 4 của `/etc/group` chỉ ghi thành viên **phụ**.
+
+## Mở rộng (chuẩn LPIC-1)
+
+Chuẩn LPIC-1 mục 107.1 còn có:
+
+| Mục | Nội dung |
+|---|---|
+| `/etc/gshadow` | Mật khẩu nhóm và người quản lý nhóm. Như `/etc/shadow`, chỉ root (và nhóm `shadow`) đọc được |
+| `getent group tên` | Tra nhóm qua mọi nguồn, kể cả máy chủ tài khoản tập trung |
+| Dải GID | Giống UID: dưới 1000 cho nhóm hệ thống, từ 1000 cho người dùng |
+| `newgrp tên-nhóm` | Mở shell mới với nhóm chính tạm thời là nhóm đó (phải là thành viên) |
+
+```bash
+ls -l /etc/group /etc/gshadow
+sudo grep -E "^(sudo|chau):" /etc/gshadow
+```
 
 ```text
-du_an_lab:x:1600:sv_demo,sv_phu
+-rw-r--r-- 1 root root   644 Nov 27 19:46 /etc/group
+-rw-r----- 1 root shadow 546 Nov 27 19:46 /etc/gshadow
+sudo:*::ubuntu,hocvien,chau
+chau:!::
 ```
 
-| Trường | Ví dụ | Ý nghĩa |
-|---|---|---|
-| 1 | `du_an_lab` | Tên nhóm |
-| 2 | `x` | Trường mật khẩu nhóm; thông tin bảo vệ có thể nằm trong gshadow |
-| 3 | `1600` | GID |
-| 4 | `sv_demo,sv_phu` | Danh sách thành viên được khai báo, ngăn cách bằng dấu phẩy |
+`/etc/gshadow` có 4 cột: tên, mật khẩu nhóm (`*` hoặc `!` là không có), người quản lý nhóm, thành viên.
 
-`getent group` tra cơ sở dữ liệu nhóm theo NSS, nên phù hợp hơn giả định mọi nhóm đều chỉ nằm trong `/etc/group`. `cat /etc/group` vẫn hữu ích để đọc file nhóm cục bộ như trong video.
-
-Đặc biệt: trường thành viên trống không đồng nghĩa nhóm không có ai sử dụng. Một user có GID nhóm chính là `1600` có thể không được ghi lại ở trường thành viên của nhóm `1600`. Hãy kiểm tra tài khoản bằng `id` và dòng passwd của user đó.
-
-## Nhóm chính, nhóm phụ và phiên đăng nhập
-
-Nhóm chính được khai báo trong `/etc/passwd`. Khi tạo file, nhóm sở hữu thường theo nhóm hiệu lực của tiến trình; thư mục có bit setgid có thể làm file mới thừa hưởng nhóm của thư mục. Bài phân quyền mở rộng sẽ giải thích trường hợp này.
-
-Khi quản trị viên thêm user vào nhóm phụ, các tiến trình của phiên đăng nhập cũ thường vẫn giữ danh sách nhóm cũ. Đăng xuất rồi đăng nhập lại là cách dễ hiểu để nhận nhóm mới. Đừng kết luận lệnh thêm nhóm thất bại chỉ vì terminal đang mở chưa nhận thay đổi.
-
-Nhóm `sudo` trên Ubuntu thường được cấu hình để cấp khả năng dùng sudo, nhưng chính sách nằm ở cấu hình sudo; tên nhóm không phải phép màu có hiệu lực giống nhau trên mọi bản Linux.
+Một điều hay gặp: vừa được thêm vào nhóm mới nhưng `groups` chưa thấy. Danh sách nhóm được nạp **lúc đăng nhập**, nên phải đăng xuất rồi đăng nhập lại (hoặc mở phiên mới bằng `su - tên`).
 
 ## Thực hành
 
-1. Xem tên nhóm chính và danh sách tất cả nhóm của bạn.
-2. Tra nhóm chính bằng `getent group`.
-3. Giải thích vì sao danh sách thành viên ở cuối một dòng group có thể trống mà user vẫn thuộc nhóm đó.
+1. Máy có bao nhiêu nhóm?
 
-<details>
-<summary>Xem cách làm</summary>
+   <details>
+   <summary>Xem đáp án</summary>
 
-```bash
-id -gn
-id -nG
-getent group "$(id -gn)"
-getent passwd "$(whoami)"
-```
+   ```bash
+   wc -l /etc/group
+   ```
 
-So sánh GID nhóm chính trong passwd với GID của dòng group. Thành viên nhóm chính được xác định qua GID đó; trường cuối của group không phải danh sách duy nhất của mọi quan hệ thành viên.
+   </details>
 
-</details>
+2. Những tài khoản nào được dùng `sudo`?
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   grep ^sudo: /etc/group
+   ```
+
+   Danh sách ở cột cuối. Muốn chỉ lấy danh sách: `grep ^sudo: /etc/group | cut -d : -f 4`.
+
+   </details>
+
+3. Nhóm chính của bạn có GID bao nhiêu? Tìm theo hai cách.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   id
+   grep "^$USER:" /etc/passwd | cut -d : -f 4
+   ```
+
+   Số sau `gid=` trong `id`, hoặc cột 4 của dòng bạn trong `/etc/passwd`.
+
+   </details>
 
 ## Tóm tắt
 
-Tên nhóm ánh xạ tới GID. Dòng group có bốn trường. Dùng `id` để xem nhóm của user; dùng `getent group` để tra nhóm. Phân biệt nhóm chính, nhóm phụ và nhóm đã có hiệu lực trong phiên hiện tại.
+| Ý | Ghi nhớ |
+|---|---|
+| Nhóm | Gom tài khoản để phân quyền chung. Có tên và GID |
+| Nhóm chính | Một nhóm, ghi ở cột 4 của `/etc/passwd`. Mặc định cùng tên tài khoản |
+| Nhóm phụ | Nhiều nhóm, ghi ở cột 4 của `/etc/group` |
+| `/etc/group` | 4 cột: tên, x, GID, thành viên phụ |
+| `groups`, `id` | Xem nhóm của mình |

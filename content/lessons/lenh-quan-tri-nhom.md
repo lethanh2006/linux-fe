@@ -1,121 +1,271 @@
 ---
-summary: "Tạo và đổi nhóm, thêm thành viên bằng usermod -aG, phân biệt nhóm chính và nhóm phụ, hiểu vì sao groupdel từ chối nhóm chính đang được sử dụng."
-minutes: 35
-commands: ["groupadd", "groupmod", "groupdel", "usermod -aG", "getent group", "id"]
+summary: Tạo nhóm bằng groupadd, đổi GID và đổi tên bằng groupmod, xoá bằng groupdel, đưa tài khoản vào nhóm khi tạo (useradd -g) hoặc sau đó (usermod -aG, gpasswd). Hiểu vì sao không xoá được nhóm chính của một tài khoản.
+minutes: 30
+commands: [groupadd, groupmod, groupdel, gpasswd, useradd -g, usermod -aG]
 quiz:
-  - q: "groupmod -n nhom_moi nhom_cu làm gì?"
-    options: ["Đổi tên nhom_cu thành nhom_moi", "Tạo user nhom_moi", "Xoá cả hai nhóm", "Chuyển mọi file sang root"]
-    answer: 0
-    explain: "-n nhận tên mới, đối số cuối là tên nhóm hiện tại."
-  - q: "Vì sao groupdel có thể từ chối xoá một nhóm?"
-    options: ["Tên nhóm không có dấu gạch", "Nhóm có quá nhiều chữ", "Nhóm đang là nhóm chính của một user", "Nhóm được tạo bằng groupadd"]
-    answer: 2
-    explain: "Phải xử lý quan hệ nhóm chính, chẳng hạn chuyển user thử nghiệm sang nhóm chính phù hợp trước. Không bắt buộc xoá user."
-  - q: "Đổi GID bằng groupmod có tự sửa mọi file mang GID cũ không?"
-    options: ["Có, toàn bộ máy", "Không; phải kiểm tra và xử lý quyền sở hữu file liên quan", "Chỉ nếu nhóm có ít thành viên", "Chỉ đổi tên file"]
+  - q: "Lệnh nào tạo nhóm `sales` với GID 555?"
+    options: ["sudo groupadd sales 555", "sudo groupadd -g 555 sales", "sudo groupmod -g 555 sales", "sudo useradd -g 555 sales"]
     answer: 1
-    explain: "Metadata của các file dùng GID; đổi định nghĩa nhóm không tự quét hết filesystem để sửa mọi file."
-  - q: "Sau khi được thêm vào nhóm phụ, terminal cũ chưa nhận nhóm mới thì nên làm gì?"
-    options: ["chmod 777 /etc/group", "Xoá user", "Khởi động lại router", "Đăng xuất/đăng nhập lại, rồi kiểm tra id"]
-    answer: 3
-    explain: "Danh sách nhóm của tiến trình được thiết lập khi tạo phiên. Phiên mới giúp nhận cập nhật nhóm."
+    explain: "`groupadd -g GID tên` tạo nhóm với GID chỉ định. `groupmod -g` là đổi GID của nhóm đã có."
+  - q: "`sudo groupmod -n accounting sales` làm gì?"
+    options: ["Tạo nhóm accounting", "Đổi tên nhóm sales thành accounting", "Đổi tên nhóm accounting thành sales", "Thêm sales vào accounting"]
+    answer: 1
+    explain: "`-n tên-mới`, rồi tới tên hiện tại ở cuối. GID giữ nguyên."
+  - q: "`sudo groupdel marketing` báo `cannot remove the primary group of user 'nv1'`. Phải làm gì?"
+    options: ["Thêm -f", "Xoá nv1 hoặc đổi nhóm chính của nv1 sang nhóm khác trước", "Khởi động lại", "Đổi tên nhóm"]
+    answer: 1
+    explain: "Không xoá được nhóm đang là nhóm chính của ai đó. Xoá tài khoản đó, hoặc `usermod -g nhóm-khác nv1`, rồi mới `groupdel`."
+  - q: "Thêm `nv1` vào nhóm phụ `accounting` mà giữ các nhóm cũ, lệnh nào đúng?"
+    options: ["sudo usermod -G accounting nv1", "sudo usermod -g accounting nv1", "sudo usermod -aG accounting nv1", "sudo groupadd nv1 accounting"]
+    answer: 2
+    explain: "`-a` (append) giữ các nhóm phụ cũ. Thiếu `-a` thì danh sách nhóm phụ bị thay hẳn. `-g` là đổi nhóm chính."
+  - q: "`sudo groupadd -g 555 ketoan` báo `GID '555' already exists`. Vì sao?"
+    options: ["Tên ketoan đã có", "GID 555 đã thuộc nhóm khác", "Thiếu quyền", "GID phải lớn hơn 1000"]
+    answer: 1
+    explain: "Mỗi GID chỉ thuộc một nhóm. Chọn số khác hoặc bỏ `-g` để hệ thống tự cấp."
 ---
 
-> Bám video TITV bài 29. Dùng tài khoản `sv_demo` tạo ở bài 27 và chỉ thay đổi các nhóm có hậu tố `_lab` do mình tạo.
+> Bài này đi theo video TITV bài 29. Chỉ tạo, sửa, xoá các nhóm và tài khoản thử trong bài (`marketing`, `sales`, `nv1`, `nv2`).
 
-## Tạo nhóm
+Như lệnh tài khoản, lệnh nhóm sửa file hệ thống nên cần root:
 
 ```bash
-sudo groupadd du_an_lab
-getent group du_an_lab
+groupadd marketing
 ```
 
-| Phần | Ý nghĩa |
+```text
+groupadd: Permission denied.
+groupadd: cannot lock /etc/group; try again later.
+```
+
+## groupadd: tạo nhóm
+
+```text
+groupadd [-g GID] tên-nhóm
+```
+
+```bash
+sudo groupadd marketing
+tail -1 /etc/group
+```
+
+```text
+marketing:x:1005:
+```
+
+Nhóm mới nằm cuối `/etc/group`, chưa có thành viên phụ (cột 4 trống). Không ghi `-g` thì hệ thống tự chọn GID.
+
+### Đưa tài khoản vào nhóm ngay khi tạo
+
+```bash
+sudo useradd -m -s /bin/bash -g marketing nv1
+sudo useradd -m -s /bin/bash -g marketing nv2
+id nv1
+tail -2 /etc/passwd
+grep marketing /etc/group
+```
+
+```text
+uid=1005(nv1) gid=1005(marketing) groups=1005(marketing)
+nv1:x:1005:1005::/home/nv1:/bin/bash
+nv2:x:1006:1005::/home/nv2:/bin/bash
+marketing:x:1005:
+```
+
+`-g marketing` làm `marketing` thành **nhóm chính** của `nv1`, `nv2`: cột GID trong `/etc/passwd` của cả hai là `1005`. Vì là nhóm chính, tên họ **không** xuất hiện ở cột 4 của `/etc/group` (bài 28). Lần này `useradd` cũng không tạo nhóm riêng tên `nv1`, `nv2`.
+
+### Chọn GID: -g
+
+```bash
+sudo groupadd -g 555 sales
+grep sales /etc/group
+sudo groupadd -g 555 ketoan
+```
+
+```text
+sales:x:555:
+groupadd: GID '555' already exists
+```
+
+Mỗi GID chỉ thuộc một nhóm.
+
+## groupmod: sửa nhóm
+
+| Tuỳ chọn | Ý nghĩa |
 |---|---|
-| `groupadd` | Tạo nhóm mới |
-| `du_an_lab` | Tên nhóm mới |
-| `getent group` | Tra lại định nghĩa nhóm |
-
-Kết quả có dạng `du_an_lab:x:GID:` với GID do hệ thống chọn. Tuỳ chọn `groupadd -g SỐ tên` cho phép chọn GID chưa dùng; trước khi chọn cần kiểm tra xung đột. Trong lab người mới, để hệ thống chọn thường đơn giản hơn.
-
-Nếu báo nhóm đã tồn tại, dùng `getent group du_an_lab` để xem. Không xoá nhóm có sẵn chỉ để lệnh tạo nhóm chạy lại được.
-
-## Thêm một thành viên mà giữ nhóm cũ
+| `-g GID-mới` | Đổi GID |
+| `-n tên-mới` | Đổi tên. Tên hiện tại ghi ở cuối lệnh |
 
 ```bash
-sudo usermod -aG du_an_lab sv_demo
-id sv_demo
+sudo groupmod -g 666 sales
+grep sales /etc/group
+sudo groupmod -n accounting sales
+grep -E "^(sales|accounting):" /etc/group
 ```
 
-| Phần | Ý nghĩa |
+```text
+sales:x:666:
+accounting:x:666:
+```
+
+Đổi tên giữ nguyên GID 666. Lưu ý khi đổi GID: các file đang thuộc nhóm (lưu bằng số GID cũ) **không tự đổi theo**, nên sẽ hiện là số 555 thay vì tên nhóm. Phải tự `chgrp` (bài 31) các file đó. Đừng đổi GID của nhóm hệ thống.
+
+## Thêm, bớt thành viên phụ
+
+```bash
+sudo usermod -aG accounting nv1
+id nv1
+grep accounting /etc/group
+```
+
+```text
+uid=1005(nv1) gid=1005(marketing) groups=1005(marketing),666(accounting)
+accounting:x:666:nv1
+```
+
+`nv1` giữ nhóm chính `marketing` và có thêm nhóm phụ `accounting`, nên giờ `nv1` xuất hiện ở cột 4. Cách khác để thêm, bớt thành viên là `gpasswd`:
+
+```bash
+sudo gpasswd -a nv2 accounting
+sudo gpasswd -d nv1 accounting
+grep accounting /etc/group
+```
+
+```text
+Adding user nv2 to group accounting
+Removing user nv1 from group accounting
+accounting:x:666:nv2
+```
+
+| Lệnh | Làm gì |
 |---|---|
-| `usermod` | Đổi thuộc tính tài khoản |
-| `-a` | Bổ sung, không thay toàn bộ danh sách nhóm phụ |
-| `-G du_an_lab` | Nhóm phụ cần thêm |
-| `sv_demo` | Tài khoản nhận thay đổi |
+| `usermod -aG nhóm tên` | Thêm `tên` vào nhóm phụ. Thiếu `-a` là **thay** toàn bộ nhóm phụ |
+| `gpasswd -a tên nhóm` | Thêm (**a**dd) thành viên |
+| `gpasswd -d tên nhóm` | Bớt (**d**elete) thành viên |
+| `usermod -g nhóm tên` | Đổi **nhóm chính** |
 
-Nhóm chính của `sv_demo` vẫn giữ nguyên. Để đổi nhóm chính dùng `usermod -g nhóm user`, một việc khác với thêm nhóm phụ. Nếu tạo user ngay từ đầu với nhóm chính đã có, dùng `useradd -g nhóm ... user`.
+Tài khoản đang đăng nhập phải đăng nhập lại mới thấy nhóm mới.
 
-Sau khi đổi nhóm phụ, phiên đăng nhập đang mở có thể vẫn giữ nhóm cũ. Đăng nhập lại user rồi chạy `id` để quan sát nhóm hiệu lực trong phiên mới.
-
-## Đổi tên và GID
-
-Tạo một nhóm riêng để thử đổi tên:
+## groupdel: xoá nhóm
 
 ```bash
-sudo groupadd nhom_cu_lab
-sudo groupmod -n nhom_moi_lab nhom_cu_lab
-getent group nhom_moi_lab
+sudo groupdel accounting
+grep accounting /etc/group
 ```
 
-`-n` là tên mới, đối số cuối là tên hiện tại. Đổi tên giữ nguyên GID, nên quyền sở hữu nhóm trên file vẫn được nhận diện theo cùng mã số.
+Không in gì: nhóm đã bị xoá (thành viên phụ chỉ mất nhóm đó, tài khoản vẫn còn).
 
-`groupmod -g GID_MỚI nhóm` đổi GID. Việc này cần xem xét file đang mang GID cũ: công cụ không tự quét và sửa quyền sở hữu của mọi file trên hệ thống. Không đổi GID của nhóm hệ thống để làm bài tập.
-
-## Xoá nhóm và nhóm chính
+Xoá nhóm đang là **nhóm chính** của ai đó thì bị từ chối:
 
 ```bash
-sudo groupdel nhom_moi_lab
+sudo groupdel marketing
 ```
 
-`groupdel` xoá định nghĩa nhóm, không xoá các file “thuộc nhóm đó”. File có thể còn lưu GID nhưng không còn tên nhóm để hiển thị. Cũng không dùng groupdel để xoá hàng loạt user.
+```text
+groupdel: cannot remove the primary group of user 'nv1'
+```
 
-Nếu nhóm đang là nhóm chính của một tài khoản, công cụ thường từ chối xoá. Cách xử lý là xác định user liên quan và chuyển nhóm chính phù hợp nếu đó đúng là ý định quản trị. Không bắt buộc phải xoá user như một lối tắt.
-
-Ví dụ chỉ dành cho tài khoản thử nghiệm mới:
+Phải xoá các tài khoản đó trước (hoặc đổi nhóm chính của họ bằng `usermod -g`):
 
 ```bash
-sudo groupadd nhom_tam_lab
-sudo useradd -m -g nhom_tam_lab -s /bin/bash sv_nhom_tap
-sudo usermod -g du_an_lab sv_nhom_tap
-sudo groupdel nhom_tam_lab
-sudo userdel -r sv_nhom_tap
+sudo userdel -r nv1
+sudo userdel -r nv2
+sudo groupdel marketing
+grep marketing /etc/group
 ```
 
-Ở đây user được chuyển khỏi nhóm chính tạm trước khi nhóm tạm bị xoá. Khi đổi nhóm chính còn phải kiểm tra quyền sở hữu các file liên quan, đặc biệt file ngoài home; các lệnh này không thay thế việc đánh giá dữ liệu thực tế.
+```text
+userdel: nv1 mail spool (/var/mail/nv1) not found
+userdel: nv2 mail spool (/var/mail/nv2) not found
+```
+
+Lần này `groupdel` chạy được, `grep` không còn thấy `marketing`.
+
+### Câu hỏi cuối video: xoá nhóm cùng mọi tài khoản trong nhóm một lần?
+
+Không có lệnh nào làm cả hai việc. Cách làm: tìm các tài khoản có nhóm chính là nhóm đó (cột 4 của `/etc/passwd` bằng GID của nhóm), xoá từng tài khoản, rồi xoá nhóm. Ví dụ với GID 1005:
+
+```bash
+cut -d : -f 1,4 /etc/passwd | grep ":1005$"
+```
+
+Kết quả là danh sách `tên:1005`; xoá từng tài khoản bằng `userdel -r`, rồi `groupdel`. Phần lập trình Bash (mở rộng) dạy cách dùng vòng lặp để làm tự động.
+
+## Mở rộng (chuẩn LPIC-1)
+
+| Lệnh, file | Ý nghĩa |
+|---|---|
+| `addgroup tên` | Lệnh thân thiện của Debian/Ubuntu, giống `groupadd` |
+| `groupadd -r tên` | Tạo nhóm hệ thống (GID dưới 1000) |
+| `gpasswd -A tên nhóm` | Đặt người quản lý nhóm (ghi ở `/etc/gshadow`), người này tự thêm bớt thành viên được |
+| `getent group tên` | Xem nhóm và thành viên |
+| `find / -group 555` | Tìm file còn thuộc GID cũ sau khi đổi GID |
 
 ## Thực hành
 
-Tạo nhóm `doc_lab`, thêm `sv_demo` làm thành viên phụ rồi kiểm tra. Tạo và đổi tên nhóm `doi_lab` thành `da_doi_lab`, sau đó chỉ xoá nhóm vừa đổi tên. Giữ `du_an_lab` để dùng ở bài phân quyền.
+1. Tạo nhóm `dev` (GID 2000) và nhóm `test`. Kiểm tra trong `/etc/group`.
 
-<details>
-<summary>Xem đáp án</summary>
+   <details>
+   <summary>Xem đáp án</summary>
 
-```bash
-sudo groupadd doc_lab
-sudo usermod -aG doc_lab sv_demo
-id sv_demo
-getent group doc_lab
-sudo groupadd doi_lab
-sudo groupmod -n da_doi_lab doi_lab
-getent group da_doi_lab
-sudo groupdel da_doi_lab
-```
+   ```bash
+   sudo groupadd -g 2000 dev
+   sudo groupadd test
+   grep -E "^(dev|test):" /etc/group
+   ```
 
-`id sv_demo` phải còn nhóm chính và các nhóm phụ cũ, đồng thời có thêm `doc_lab`.
+   </details>
 
-</details>
+2. Tạo tài khoản `lt1` có nhóm chính `dev`, nhóm phụ `test`.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   sudo useradd -m -s /bin/bash -g dev -G test lt1
+   id lt1
+   ```
+
+   </details>
+
+3. Đổi tên nhóm `test` thành `qa`. `lt1` có còn thuộc nhóm đó không?
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   sudo groupmod -n qa test
+   id lt1
+   ```
+
+   Còn: GID không đổi, nên `id` hiện nhóm phụ tên mới là `qa`.
+
+   </details>
+
+4. Xoá nhóm `dev`. Nếu bị từ chối, xử lý cho xoá được, rồi dọn hết tài khoản và nhóm vừa tạo.
+
+   <details>
+   <summary>Xem đáp án</summary>
+
+   ```bash
+   sudo groupdel dev
+   sudo userdel -r lt1
+   sudo groupdel dev
+   sudo groupdel qa
+   ```
+
+   Lần đầu bị từ chối vì `dev` là nhóm chính của `lt1`.
+
+   </details>
 
 ## Tóm tắt
 
-`groupadd` tạo, `groupmod` đổi, `groupdel` xoá định nghĩa nhóm. Thêm nhóm phụ bằng `usermod -aG`; đổi nhóm chính bằng `-g`. Kiểm tra user, GID và file liên quan trước khi đổi hoặc xoá nhóm.
+| Lệnh | Làm gì |
+|---|---|
+| `groupadd [-g GID] nhóm` | Tạo nhóm |
+| `groupmod -g GID nhóm` | Đổi GID |
+| `groupmod -n tên-mới tên-cũ` | Đổi tên nhóm |
+| `groupdel nhóm` | Xoá nhóm (không xoá được nhóm chính của ai đó) |
+| `useradd -g nhóm tên` | Tạo tài khoản với nhóm chính có sẵn |
+| `usermod -aG nhóm tên` | Thêm nhóm phụ |
+| `gpasswd -a` / `-d tên nhóm` | Thêm / bớt thành viên |

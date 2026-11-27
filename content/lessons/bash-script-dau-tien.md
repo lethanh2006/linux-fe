@@ -33,7 +33,7 @@ Một **script** là file chữ chứa các lệnh. Chạy script giống như g
 - Việc nhiều bước cần làm đúng thứ tự, không được sót.
 - Việc cần chạy tự động bằng cron, systemd timer, CI/CD.
 
-Mọi thứ đã học về lệnh, pipe, chuyển hướng đều dùng được trong script. Các bài từ đây đến [bài 39](/bai/bash-thuc-hanh-va-go-loi) bám theo video TITV bài 44–55.
+Mọi thứ đã học về lệnh, pipe, chuyển hướng đều dùng được trong script. Các bài từ đây đến [bài mở rộng 14](/bai/bash-thuc-hanh-va-go-loi) bám theo video TITV bài 44–55.
 
 ## Script đầu tiên
 
@@ -74,7 +74,7 @@ Bạn đang ở thư mục: /home/hocvien
 | `./chao.sh` | Cần quyền `x` (`chmod +x`) và dòng shebang. `./` nghĩa là "file ở thư mục hiện tại", vì `.` không có trong PATH |
 | `bash chao.sh` | Không cần quyền `x`, không cần shebang |
 | `/home/hocvien/chao.sh` | Đường dẫn tuyệt đối, chạy được từ bất cứ đâu |
-| `chao.sh` | Chỉ được nếu thư mục chứa nó nằm trong PATH ([bài 33](/bai/moi-truong-shell)) |
+| `chao.sh` | Chỉ được nếu thư mục chứa nó nằm trong PATH ([bài mở rộng 8](/bai/moi-truong-shell)) |
 | `source chao.sh` | Chạy trong **shell hiện tại** (biến tạo ra còn lại sau khi chạy). Dùng cho file cấu hình, không dùng cho script thường |
 
 Một số dạng shebang:
@@ -190,7 +190,7 @@ an - 20
 binh - 25
 ```
 
-`< ds.txt` đưa file vào stdin của cả vòng `while`, mỗi vòng `read` lấy một dòng. Vòng lặp học kỹ ở [bài 37](/bai/bash-vong-lap).
+`< ds.txt` đưa file vào stdin của cả vòng `while`, mỗi vòng `read` lấy một dòng. Vòng lặp học kỹ ở [bài mở rộng 12](/bai/bash-vong-lap).
 
 ## Mã thoát của script
 
@@ -208,7 +208,7 @@ exit 0
 
 | Phần | Ý nghĩa |
 |---|---|
-| `exit 1` | Kết thúc script ngay, mã thoát 1 (lỗi). `if` học ở [bài 36](/bai/bash-dieu-kien) |
+| `exit 1` | Kết thúc script ngay, mã thoát 1 (lỗi). `if` học ở [bài mở rộng 11](/bai/bash-dieu-kien) |
 | `exit 0` | Kết thúc thành công |
 | `>&2` | In thông báo ra **stderr** thay vì stdout. Thông báo lỗi nên đi đường này |
 
@@ -223,7 +223,7 @@ Kiểm tra bằng `./script.sh; echo $?`, hoặc dùng trong chuỗi: `./kiemtra
 | Bọc biến trong nháy kép: `"$ten"` | Giá trị có dấu cách không làm hỏng lệnh |
 | Đặt tên biến chữ thường cho biến của mình | Tránh trùng với biến môi trường viết hoa (`PATH`, `HOME`) |
 | In lỗi ra stderr và `exit` khác 0 khi lỗi | cron, CI biết script đã thất bại |
-| Thử với `bash -n script.sh` | Kiểm tra cú pháp mà không chạy ([bài 39](/bai/bash-thuc-hanh-va-go-loi)) |
+| Thử với `bash -n script.sh` | Kiểm tra cú pháp mà không chạy ([bài mở rộng 14](/bai/bash-thuc-hanh-va-go-loi)) |
 
 ## Thực hành
 

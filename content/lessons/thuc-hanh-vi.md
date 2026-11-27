@@ -108,7 +108,7 @@ Làm lần lượt. Mỗi nhiệm vụ, tự làm trước rồi mới mở các
    <details>
    <summary>Cách làm</summary>
 
-   Tìm bằng `/Ngay` rồi `Enter`. `d^` xoá về đầu dòng (còn `Ngay mai toi hoc tiep.`). `u` để hoàn tác. `d$` xoá tới cuối dòng (còn `Hom nay toi hoc vi. `).
+   Tìm bằng `/Ngay` rồi `Enter`. `d^` xoá về đầu dòng (còn `Ngay mai toi hoc tiep.`). Bấm `u` để hoàn tác, rồi tìm lại `/Ngay` và `Enter` để đặt con trỏ đúng chỗ. Sau đó `d$` xoá tới cuối dòng (còn `Hom nay toi hoc vi. `). Đừng giả định undo luôn đưa con trỏ trở lại vị trí tìm kiếm ban đầu.
 
    </details>
 

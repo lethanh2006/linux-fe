@@ -67,11 +67,11 @@ Cách dùng: ./nguyento.sh <số nguyên dương>
 | Phần | Ý nghĩa |
 |---|---|
 | `la_nguyen_to()` | Hàm trả mã 0 (đúng) hoặc 1 (sai), nên dùng trực tiếp trong `if` |
-| `local n=$1 i` | Biến cục bộ của hàm ([bài 38](/bai/bash-mang-va-ham)) |
+| `local n=$1 i` | Biến cục bộ của hàm ([bài mở rộng 13](/bai/bash-mang-va-ham)) |
 | `(( n < 2 )) && return 1` | 0 và 1 không phải số nguyên tố |
 | `i * i <= n` | Chỉ thử đến căn bậc hai của n |
 | `(( n % i == 0 )) && return 1` | Chia hết cho i thì có ước, không phải số nguyên tố |
-| `[[ ! $1 =~ ^[0-9]+$ ]]` | Kiểm tra đầu vào là số nguyên dương ([bài 36](/bai/bash-dieu-kien)) |
+| `[[ ! $1 =~ ^[0-9]+$ ]]` | Kiểm tra đầu vào là số nguyên dương ([bài mở rộng 11](/bai/bash-dieu-kien)) |
 
 Mở rộng: in các số nguyên tố đến 50 bằng vòng lặp gọi hàm:
 
@@ -180,7 +180,7 @@ Bảng xếp hạng (4 học viên)
 | Đổi chỗ cả `diem` lẫn `ten` | Giữ tên đi đúng với điểm |
 | `{ ... } > "$ra"` | Gom kết quả của cả nhóm lệnh ghi vào một file |
 
-Trong công việc thật, việc sắp xếp này làm bằng một dòng: `sort -k2 -rn diem.txt` ([bài 14](/bai/loc-van-ban)). Viết tay thuật toán giúp luyện mảng, vòng lặp và điều kiện.
+Trong công việc thật, việc sắp xếp này làm bằng một dòng: `sort -k2 -rn diem.txt` ([bài mở rộng 19](/bai/loc-van-ban)). Viết tay thuật toán giúp luyện mảng, vòng lặp và điều kiện.
 
 ## Gỡ lỗi script (TITV bài 55)
 

@@ -213,7 +213,7 @@ sed 's/GET/LAY/' access.log | head -2
 | Phần | Ý nghĩa |
 |---|---|
 | `s` | Thay thế (**s**ubstitute) |
-| `/GET/` | Mẫu cần tìm (là biểu thức chính quy, học ở [bài sau](/bai/grep-va-regex)) |
+| `/GET/` | Mẫu cần tìm (là biểu thức chính quy, học ở [bài15 về regex](/bai/bieu-thuc-chinh-quy)) |
 | `LAY/` | Chuỗi thay vào |
 | `g` | Thay mọi chỗ trên dòng. Không có `g` thì chỉ thay chỗ đầu tiên của mỗi dòng |
 

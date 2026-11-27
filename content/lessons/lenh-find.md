@@ -18,7 +18,7 @@ quiz:
   - q: "`find . -mtime -1` tìm file nào?"
     options: ["Nội dung được sửa trong vòng 1 ngày qua", "Sửa cách đây hơn 1 ngày", "Tạo đúng 1 ngày trước", "Chưa bao giờ sửa"]
     answer: 0
-    explain: "`-mtime` là thời gian sửa nội dung. `-1` là ít hơn 1 ngày, `+7` là hơn 7 ngày."
+    explain: "`-mtime` tính số ngày trọn vẹn từ lần sửa nội dung. `-1` là dưới 24 giờ; `+7` cần từ 8 ngày trọn vẹn trở lên vì phần lẻ bị bỏ."
   - q: "Trong `find . -name \"*.log\" -exec rm {} \\;`, `{}` là gì?"
     options: ["Một thư mục rỗng", "Chỗ find đặt tên từng file tìm được", "Ký tự đại diện", "Lỗi cú pháp"]
     answer: 1
@@ -159,19 +159,19 @@ find . -type f -size +1M -size -5M
 
 | Phần | Ý nghĩa |
 |---|---|
-| `-size +10M` | Lớn hơn 10 MB |
-| `-size -5M` | Nhỏ hơn 5 MB |
-| `-size 10M` | Đúng 10 MB (làm tròn lên theo đơn vị) |
-| Đơn vị | `k` (KB), `M` (MB), `G` (GB). Không ghi đơn vị thì tính theo khối 512 byte |
+| `-size +10M` | Lớn hơn 10 MiB |
+| `-size -5M` | Số khối MiB sau khi làm tròn lên nhỏ hơn 5; không phải mọi file dưới 5 MiB |
+| `-size 10M` | Số khối MiB sau khi làm tròn lên bằng 10; gồm file trên 9 MiB đến hết 10 MiB |
+| Đơn vị | `c` là byte; `k`, `M`, `G` lần lượt là KiB, MiB, GiB. Không ghi đơn vị thì tính theo khối 512 byte |
 
 ```text
 ./lon.bin
 ./vua.bin
 ```
 
-Hai điều kiện `-size +1M -size -5M` phải cùng thoả: từ 1 tới 5 MB.
+Hai điều kiện `-size +1M -size -5M` phải cùng thoả: lớn hơn 1 MiB và không quá 4 MiB. GNU find làm tròn kích thước lên theo đơn vị trước khi so sánh, nên file 4,5 MiB không khớp `-size -5M`. Muốn so chính xác nhỏ hơn 5 MiB theo byte, dùng `-size -5242880c`.
 
-Ổ đầy, tìm file lớn hơn 1 GB trong thư mục nhà: `find ~ -type f -size +1G`. Tìm trên cả máy thì cần `sudo`, và có thể chạy lâu (bấm `Ctrl+C` để dừng).
+Ổ đầy, tìm file lớn hơn 1 GiB trong thư mục nhà: `find ~ -type f -size +1G`. Tìm trên cả máy có thể cần `sudo` để đọc thư mục bị giới hạn quyền và có thể chạy lâu (bấm `Ctrl+C` để dừng).
 
 ## Tìm theo thời gian: -mtime, -atime, -ctime
 
@@ -181,7 +181,7 @@ Hai điều kiện `-size +1M -size -5M` phải cùng thoả: từ 1 tới 5 MB.
 | `-atime` | Lần **đọc** cuối (**a**ccess) |
 | `-ctime` | Lần **đổi trạng thái** cuối (**c**hange): sửa nội dung, đổi tên, đổi quyền, đổi chủ. Không phải "thời gian tạo" |
 
-Số đi kèm tính theo **ngày**: `-1` là trong vòng 1 ngày qua, `+7` là cách đây hơn 7 ngày.
+Số đi kèm tính theo số khoảng **24 giờ trọn vẹn**, bỏ phần lẻ: `-1` là dưới 24 giờ, còn `+7` cần từ 8 ngày trọn vẹn trở lên. File sửa cách đây 7,5 ngày chưa khớp `+7`; `-mtime 1` khớp tuổi từ 24 đến dưới 48 giờ. Mặc định đây không phải mốc nửa đêm của ngày trên lịch.
 
 ```bash
 find . -mtime +7
@@ -366,8 +366,8 @@ find / -name passwd -type f 2> /dev/null
 | `-name "mẫu"` | Theo tên, luôn để mẫu trong nháy |
 | `-maxdepth N` | Chỉ đi sâu N cấp |
 | `-type f` / `-type d` | Chỉ file / chỉ thư mục |
-| `-size +10M` / `-size -1k` | Lớn hơn 10 MB / nhỏ hơn 1 KB |
-| `-mtime -1` / `+7` | Sửa trong 1 ngày qua / hơn 7 ngày trước |
+| `-size +10M` / `-size -1024c` | Lớn hơn 10 MiB / nhỏ hơn 1024 byte |
+| `-mtime -1` / `+7` | Sửa dưới 24 giờ / từ 8 ngày trọn vẹn trở lên |
 | `-user tên` | Theo chủ sở hữu |
 | `-exec lệnh {} \;` | Chạy lệnh trên từng file |
 | `-printf "%f %s\n"` | In tên và kích thước |

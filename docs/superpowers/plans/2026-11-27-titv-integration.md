@@ -35,16 +35,22 @@
 
 ## Task 2: Main course
 
-- [ ] Claude authors videos 5–24, curriculum, labels, redirects, and main/extension UI.
-- [ ] Codex authors videos 25–34: system information, users, groups, permissions, links, and networking.
-- [ ] Each Markdown file has summary, minutes, command index, explained quiz answers, command breakdowns, and hidden exercise solutions.
-- [ ] Check source facts against notes and primary manuals; execute representative commands in isolated labs.
+- [x] Claude authors videos 5–20, curriculum, labels, redirects, and main/extension UI.
+- [x] Codex authors videos 21–34: date/time, shutdown, boot targets, text cutting, system information, users, groups, permissions, links, and networking.
+- [x] Each Markdown file has summary, minutes, command index, explained quiz answers, command breakdowns, and hidden exercise solutions.
+- [x] Check source facts against notes and primary manuals; execute representative commands in isolated labs.
 
 ## Task 3: Integration and delivery
 
 - [x] Fix the verified 320px previous/next navigation overflow with an explicit single-column grid.
-- [ ] Run `pnpm check`, `pnpm lint`, and `pnpm build`.
-- [ ] Audit one-to-one coverage of videos 5–34 and verify all video IDs.
-- [ ] Review the final diff independently and fix important findings.
-- [ ] Check main/extension navigation, quizzes, exercise expansion, redirects, and both themes in a browser.
+- [x] Run `pnpm check`, `pnpm lint`, and `pnpm build`.
+- [x] Audit one-to-one coverage of videos 5–34 and verify all video IDs.
+- [x] Review the final diff independently and fix important findings.
+- [x] Check main/extension navigation, quizzes, exercise expansion, redirects, and both themes in a browser.
 - [ ] Commit/push reviewed course work and check deployment.
+
+## Compatibility decision
+
+Retired lesson IDs unambiguously identify historical results, so their completion can carry to replacement topics and their quiz scores appear separately. Retained IDs cannot distinguish pre-rewrite from new submissions; they stay as saved snapshots, with a retake note, and never automatically complete another new topic. This avoids incorrectly marking new learners as finished.
+
+Validation includes the production build, six compatibility tests, all 30 video IDs, 320px layout, quiz submission and legacy-history browser fixtures. Temporary-IP examples and Netplan generation were tested in an isolated Ubuntu lab; real VM reboot/persistent network application was not exercised.

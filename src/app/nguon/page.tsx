@@ -123,7 +123,7 @@ export default function SourcesPage() {
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-bold tracking-tight">Nguồn học</h1>
       <p className="mt-2 text-muted">
-        Nội dung trên web được tổng hợp từ các nguồn dưới đây. Mọi lệnh trong bài đều được chạy thử trên Ubuntu 24.04 trước khi đưa vào.
+        Nội dung được biên soạn theo các nguồn dưới đây. Các ví dụ được đối chiếu tài liệu và kiểm tra trong môi trường Ubuntu 24.04; kết quả về phần cứng, mạng và dịch vụ có thể khác trên máy của bạn.
       </p>
       {GROUPS.map((group) => (
         <section key={group.title} className="mt-8">

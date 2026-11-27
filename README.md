@@ -45,6 +45,7 @@ Bài học đọc thẳng từ file, nên không có backend vẫn xem được 
 | `pnpm build` | Build bản production |
 | `pnpm start` | Chạy bản đã build ở cổng 3001 |
 | `pnpm lint` | Kiểm tra code bằng ESLint |
+| `pnpm test` | Kiểm tra tương thích tiến độ cũ (Node.js 22.6 trở lên) |
 | `pnpm check` | Kiểm tra nội dung bài học |
 
 ## Biến môi trường

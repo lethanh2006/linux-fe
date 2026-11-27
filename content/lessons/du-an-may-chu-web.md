@@ -406,7 +406,7 @@ log "Đã xoá $so_xoa bản cũ hơn $GIU_NGAY ngày"
 | `$(date +%F_%H%M)` | Tên file có ngày giờ ([bài 22](/bai/ngay-gio-he-thong)) |
 | `tar -czf ... -C / var/www/shop ...` | Đứng ở `/` rồi gói các đường dẫn tương đối, để khi giải nén với `-C /` file về đúng chỗ ([bài 18](/bai/nen-va-luu-tru)) |
 | `logger -t shop-backup` | Ghi vào journal ([bài mở rộng 17](/bai/nhat-ky-he-thong)) |
-| `find ... -mtime +7 -print -delete \| wc -l` | Xoá bản cũ hơn 7 ngày và đếm số bản đã xoá ([bài 16](/bai/lenh-find)) |
+| `find ... -mtime +7 -print -delete \| wc -l` | Xoá bản từ 8 ngày trọn vẹn trở lên và đếm số bản đã xoá; `-mtime` bỏ phần ngày lẻ trước khi so sánh ([bài 16](/bai/lenh-find)) |
 
 ```bash
 sudo mkdir -p /srv/backup && sudo chmod 700 /srv/backup

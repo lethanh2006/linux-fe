@@ -27,7 +27,7 @@ quiz:
 
 ## Biến môi trường
 
-[Bài 3](/bai/terminal-va-cu-phap) đã giới thiệu biến và `export`. Một số biến môi trường có sẵn quyết định cách shell và chương trình hoạt động:
+[bài 7](/bai/terminal-va-cu-phap) đã giới thiệu biến và `export`. Một số biến môi trường có sẵn quyết định cách shell và chương trình hoạt động:
 
 | Biến | Ý nghĩa | Ví dụ |
 |---|---|---|
@@ -38,7 +38,7 @@ quiz:
 | `PWD`, `OLDPWD` | Thư mục hiện tại / trước đó | |
 | `PS1` | Mẫu của dấu nhắc lệnh | `\u@\h:\w\$ ` |
 | `EDITOR` | Trình soạn thảo mặc định | `vim` |
-| `LANG` | Ngôn ngữ và bảng mã ([bài 41](/bai/ngon-ngu-mui-gio)) | `en_US.UTF-8` |
+| `LANG` | Ngôn ngữ và bảng mã ([bài mở rộng 21](/bai/ngon-ngu-mui-gio)) | `en_US.UTF-8` |
 | `HISTSIZE` | Số lệnh lịch sử giữ trong bộ nhớ | `1000` |
 
 | Lệnh | Làm gì |
@@ -150,7 +150,7 @@ pwd
 | `{ ...; }` | Thân hàm. Cần dấu cách sau `{` và dấu `;` trước `}` khi viết trên một dòng |
 | `$1` | Tham số thứ nhất truyền vào hàm |
 
-Hàm học kỹ ở [bài 38](/bai/bash-mang-va-ham).
+Hàm học kỹ ở [bài mở rộng 13](/bai/bash-mang-va-ham).
 
 ## Các file cấu hình của bash
 
@@ -214,7 +214,7 @@ ls -A /etc/skel
 .profile
 ```
 
-`useradd -m` chép mọi thứ trong `/etc/skel` vào home của user mới ([bài 17](/bai/lenh-quan-ly-nguoi-dung)).
+`useradd -m` chép mọi thứ trong `/etc/skel` vào home của user mới ([bài 27](/bai/lenh-quan-ly-nguoi-dung)).
 
 ## Dấu nhắc lệnh PS1
 
@@ -306,7 +306,7 @@ Mẹo bảo mật: gõ một dấu cách trước lệnh có mật khẩu để 
    <details>
    <summary>Xem đáp án</summary>
 
-   `env -i` xoá sạch môi trường, bash chỉ tự đặt một PATH mặc định. Cron cũng chạy job với môi trường tối thiểu như vậy, nên script chạy tay thì được mà chạy bằng cron lại lỗi ([bài 24](/bai/lap-lich-cong-viec)).
+   `env -i` xoá sạch môi trường, bash chỉ tự đặt một PATH mặc định. Cron cũng chạy job với môi trường tối thiểu như vậy, nên script chạy tay thì được mà chạy bằng cron lại lỗi ([bài mở rộng 18](/bai/lap-lich-cong-viec)).
 
    </details>
 

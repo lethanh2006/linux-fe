@@ -91,7 +91,7 @@ Xử lý d/a.log
 Xử lý d/b.log
 ```
 
-**Bẫy:** nếu không có file nào khớp, bash giữ nguyên mẫu ([bài 7](/bai/ky-tu-dai-dien)) và vòng lặp chạy một lần với chính chuỗi mẫu:
+**Bẫy:** nếu không có file nào khớp, bash giữ nguyên mẫu ([bài 11](/bai/ky-tu-dai-dien)) và vòng lặp chạy một lần với chính chuỗi mẫu:
 
 ```text
 Gặp: d/*.pdf

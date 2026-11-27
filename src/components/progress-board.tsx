@@ -14,7 +14,7 @@ type ModuleRow = {
 };
 
 export function ProgressBoard({ modules }: { modules: ModuleRow[] }) {
-  const { learner, code, bySlug, restore, forget, error } = useProgress();
+  const { learner, code, bySlug, legacyHistory, restore, forget, error } = useProgress();
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
@@ -100,7 +100,7 @@ export function ProgressBoard({ modules }: { modules: ModuleRow[] }) {
         <Stat label="Bài đã học" value={`${done}/${ready.length}`} />
         <Stat label="Bài đã làm kiểm tra" value={String(quizzes.length)} />
         <Stat
-          label="Tỉ lệ đúng"
+          label="Tỉ lệ đúng đã lưu"
           value={
             quizzes.length
               ? `${Math.round(
@@ -112,6 +112,30 @@ export function ProgressBoard({ modules }: { modules: ModuleRow[] }) {
           }
         />
       </section>
+
+      <p className="text-sm text-muted">
+        Điểm là kết quả đã lưu theo mã bài. Khi câu hỏi được cập nhật, bạn có thể làm lại kiểm tra để có kết quả mới.
+      </p>
+
+      {legacyHistory.length > 0 && (
+        <section className="panel p-5">
+          <h2 className="font-semibold">Tiến độ của bài cũ</h2>
+          <p className="mt-2 text-sm text-muted">
+            Các bài đổi mã kế thừa đánh dấu đã học ở chủ đề tương ứng. Điểm kiểm tra của mã cũ giữ ở đây; câu hỏi của mã mới cần làm lại.
+          </p>
+          <ul className="mt-3 divide-y divide-border text-sm">
+            {legacyHistory.map(({ slug, title, progress }) => (
+              <li key={slug} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span>{title}</span>
+                <span className="text-xs text-muted">
+                  {progress.completedAt ? "Đã học" : "Chưa đánh dấu"}
+                  {progress.quizTotal ? ` · Kiểm tra cũ ${progress.quizScore ?? 0}/${progress.quizTotal}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {modules.map((mod) => (
         <section key={mod.slug} className="panel overflow-hidden">
@@ -141,7 +165,7 @@ export function ProgressBoard({ modules }: { modules: ModuleRow[] }) {
                   </span>
                   {row?.quizTotal ? (
                     <span className={`shrink-0 text-xs font-medium ${row.quizScore === row.quizTotal ? "text-success" : "text-muted"}`}>
-                      Kiểm tra {row.quizScore}/{row.quizTotal}
+                      Đã lưu {row.quizScore}/{row.quizTotal}
                     </span>
                   ) : null}
                 </li>

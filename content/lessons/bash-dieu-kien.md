@@ -48,7 +48,7 @@ không có user khongco
 | `if lệnh; then` | Nếu lệnh trả mã 0 thì chạy phần sau `then` |
 | `fi` | Kết thúc `if` (chữ `if` viết ngược) |
 | `!` | Đảo ngược: đúng thành sai và ngược lại |
-| `grep -q` | Không in gì, chỉ trả mã thoát ([bài 15](/bai/grep-va-regex)) |
+| `grep -q` | Không in gì, chỉ trả mã thoát ([bài 14](/bai/lenh-grep)) |
 
 Cấu trúc đầy đủ:
 
