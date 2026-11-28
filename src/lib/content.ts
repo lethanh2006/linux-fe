@@ -6,6 +6,8 @@ import matter from "gray-matter";
 import { CURRICULUM, type LessonOutline, type ModuleOutline } from "@/content/curriculum";
 
 const LESSON_DIR = path.join(process.cwd(), "content", "lessons");
+/** Tóm tắt từng chặng: content/review/<slug-chặng>.md */
+export const SUMMARY_DIR = path.join(process.cwd(), "content", "review");
 
 export type QuizQuestion = {
   q: string;
@@ -92,11 +94,13 @@ export function getModules() {
     ...mod,
     index,
     lessons: entries.filter((entry) => entry.moduleIndex === index),
+    /** Chặng này có trang tóm tắt hay không. */
+    summary: existsSync(path.join(SUMMARY_DIR, `${mod.slug}.md`)),
   }));
 }
 
 /** Lấy tiêu đề cấp 2 (##) làm mục lục, id khớp với rehype-slug. */
-function extractHeadings(body: string): Heading[] {
+export function extractHeadings(body: string): Heading[] {
   const slugger = new GithubSlugger();
   const headings: Heading[] = [];
   let inFence = false;
@@ -105,7 +109,7 @@ function extractHeadings(body: string): Heading[] {
     if (inFence) continue;
     const match = /^(#{2,3}) (.+)$/.exec(line);
     if (!match) continue;
-    const text = match[2].replace(/`/g, "").trim();
+    const text = match[2].replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/`/g, "").trim();
     // Phải gọi slugger cho cả ### để id của ## không bị lệch khi trùng tên.
     const id = slugger.slug(text);
     if (match[1] === "##") headings.push({ id, text });

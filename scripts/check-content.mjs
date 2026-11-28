@@ -66,18 +66,18 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".md"))) {
   validateMarkdown(content, where);
 }
 
-for (const file of ["summary.md", "demo.md", "questions.md"]) {
+// Tóm tắt chặng: content/review/<slug-chặng>.md, tên file phải là slug của một chặng.
+const moduleSlugs = new Set([...curriculum.matchAll(/^ {4}slug: "([a-z0-9-]+)",$/gm)].map((m) => m[1]));
+const reviewDir = path.join(root, "content/review");
+const reviewFiles = existsSync(reviewDir) ? readdirSync(reviewDir).filter((f) => f.endsWith(".md")) : [];
+for (const file of reviewFiles) {
   const where = `content/review/${file}`;
-  const fullPath = path.join(root, where);
-  if (!existsSync(fullPath)) {
-    errors.push(`${where}: thiếu tài liệu ôn tập`);
-    continue;
-  }
-  validateMarkdown(readFileSync(fullPath, "utf8"), where);
+  if (!moduleSlugs.has(file.replace(/\.md$/, ""))) errors.push(`${where}: tên file không phải slug của chặng nào`);
+  validateMarkdown(readFileSync(path.join(reviewDir, file), "utf8"), where);
 }
 
 if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Nội dung hợp lệ (${slugs.size} bài trong lộ trình, 3 tài liệu ôn tập).`);
+console.log(`Nội dung hợp lệ (${slugs.size} bài trong lộ trình, ${reviewFiles.length} trang tóm tắt chặng).`);

@@ -47,11 +47,11 @@ export default function Home() {
 
       <section aria-labelledby="review" className="panel mt-8 flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 id="review" className="font-semibold">Sắp cần demo những gì đã học?</h2>
-          <p className="mt-1 text-sm text-muted">Ôn đến hết chặng 7, tự gõ kịch bản 15–20 phút và tập trả lời câu hỏi.</p>
+          <h2 id="review" className="font-semibold">Cần ôn nhanh?</h2>
+          <p className="mt-1 text-sm text-muted">Mỗi chặng của khoá chính có một trang tóm tắt: ý chính, bảng lệnh của từng bài và khối lệnh để chạy thử.</p>
         </div>
-        <Link href="/on-tap" className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-          Mở mục ôn tập <ArrowRight className="size-4" aria-hidden />
+        <Link href="/tom-tat" className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+          Xem tóm tắt các chặng <ArrowRight className="size-4" aria-hidden />
         </Link>
       </section>
 
@@ -102,6 +102,17 @@ export default function Home() {
                         )}
                       </li>
                     ))}
+                    {mod.summary && (
+                      <li>
+                        <Link href={`/tom-tat/${mod.slug}`} className="group flex items-center gap-3 bg-subtle/60 px-5 py-3 transition-colors hover:bg-subtle">
+                          <ListChecks className="ml-auto size-4 w-10 shrink-0 text-primary" aria-hidden />
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-medium text-primary group-hover:underline">Tóm tắt chặng {mod.index + 1}</span>
+                            <span className="mt-0.5 block text-xs text-muted">Ý chính, bảng lệnh của cả chặng và lệnh để chạy thử</span>
+                          </span>
+                        </Link>
+                      </li>
+                    )}
                   </ul>
                 </li>
               ))}

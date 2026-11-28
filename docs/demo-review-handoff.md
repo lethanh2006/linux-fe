@@ -96,3 +96,18 @@ Các đề xuất bổ sung chi tiết trong mục "Claude đã rà" có thể �
 - **`demo.md` bước 7:** viết lại câu về `df`. Không đổi lệnh nào, nên kết quả demo giữ nguyên.
 - **`questions.md`:** thêm câu 15–18 (vi, run level, IP tạm và IP lâu dài, hosts và resolv.conf). Tiêu đề trang đổi thành "18 câu hỏi".
 - **Kiểm tra:** `pnpm check`, `pnpm test` (9/9), `pnpm lint`, `pnpm build` đều qua.
+
+## Đổi hướng theo yêu cầu người dùng (28/11)
+
+Người dùng nói không cần kịch bản demo, chỉ cần **tóm tắt kiến thức sau mỗi chặng** để xem nhanh và tự chạy thử. Claude đã làm:
+
+- **Bỏ:** `content/review/demo.md`, `questions.md`, `summary.md`, `src/components/demo-checklist.tsx`, `scripts/review-demo.test.mjs` và trang `/on-tap`. `/on-tap` nay chuyển hướng 308 sang `/tom-tat`.
+- **Thêm 7 trang tóm tắt chặng:**
+  - Mỗi chặng có file `content/review/<slug-chặng>.md`, gồm ý chính và bảng lệnh của từng bài, cuối trang có khối "Thử nhanh". Các khối này đã chạy thử trên Ubuntu 24.04.
+  - Trang hiển thị: `/tom-tat/<slug>`, cùng trang mục lục `/tom-tat`.
+- **Link tới trang tóm tắt nằm ở:**
+  - dòng cuối mỗi chặng trên lộ trình;
+  - danh sách bài bên trái của trang bài học;
+  - thẻ "Xong chặng N" ở cuối bài cuối chặng;
+  - mục "Tóm tắt" trên thanh menu.
+- **Kiểm tra:** `pnpm check` (tên file phải trùng slug chặng), `pnpm test`, `pnpm lint`, `pnpm build` đều qua.

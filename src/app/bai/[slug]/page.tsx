@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, Clock, MonitorPlay } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, ListChecks, MonitorPlay } from "lucide-react";
 import { MarkDoneButton } from "@/components/lesson-done";
 import { Markdown } from "@/components/markdown";
 import { Quiz } from "@/components/quiz";
@@ -58,6 +58,14 @@ export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
                 )}
               </li>
             ))}
+            {mod.summary && (
+              <li>
+                <Link href={`/tom-tat/${mod.slug}`} className="flex gap-2 rounded-md px-2 py-1.5 text-muted transition-colors hover:bg-subtle hover:text-foreground">
+                  <ListChecks className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  <span>Tóm tắt chặng</span>
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </aside>
@@ -129,6 +137,16 @@ export default async function LessonPage({ params }: PageProps<"/bai/[slug]">) {
 
         <div className="mt-8 flex flex-col gap-6 border-t border-border pt-6">
           <MarkDoneButton slug={lesson.slug} />
+          {mod.summary && mod.lessons.at(-1)?.slug === lesson.slug && (
+            <Link href={`/tom-tat/${mod.slug}`} className="panel flex items-center gap-3 border-primary/40 bg-primary-soft p-4 transition-colors hover:border-primary">
+              <ListChecks className="size-5 shrink-0 text-primary" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold text-primary">Xong chặng {mod.index + 1}. Xem tóm tắt chặng</span>
+                <span className="block text-sm text-muted">Ôn lại ý chính, bảng lệnh của cả chặng và chạy thử một khối lệnh.</span>
+              </span>
+              <ArrowRight className="size-4 shrink-0 text-primary" aria-hidden />
+            </Link>
+          )}
           <nav aria-label="Bài trước và bài sau" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {prev ? (
               <Link href={`/bai/${prev.slug}`} className="panel flex items-center gap-3 p-4 transition-colors hover:border-border-strong">

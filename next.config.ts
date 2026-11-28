@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
       { source: "/bai/grep-va-regex", destination: "/bai/lenh-grep", permanent: true },
       { source: "/bai/tim-kiem-file", destination: "/bai/lenh-find", permanent: true },
       { source: "/bai/tai-khoan-va-nhom", destination: "/bai/quan-tri-nguoi-dung", permanent: true },
+      { source: "/on-tap", destination: "/tom-tat", permanent: true },
     ];
   },
   // Trình duyệt gọi /api/* cùng origin với web, Next.js chuyển tiếp sang backend → không cần CORS.

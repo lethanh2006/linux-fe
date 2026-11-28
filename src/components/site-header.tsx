@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
   { href: "/", label: "Lộ trình" },
-  { href: "/on-tap", label: "Ôn tập & demo" },
+  { href: "/tom-tat", label: "Tóm tắt" },
   { href: "/tra-cuu", label: "Tra cứu lệnh" },
   { href: "/tien-do", label: "Tiến độ" },
   { href: "/nguon", label: "Nguồn học" },

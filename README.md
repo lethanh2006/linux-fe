@@ -23,7 +23,7 @@ Bài học đọc thẳng từ file, nên không có backend vẫn xem được 
 | `/` | Lộ trình: phần 1 bám video TITV 5–34 (30 bài), phần 2 mở rộng theo LPIC-1; kèm tiến độ và nút học tiếp |
 | `/bai/<slug>` | Một bài: giải thích, bảng tách lệnh, thực hành có đáp án ẩn, câu hỏi kiểm tra, đánh dấu đã học |
 | `/tra-cuu` | Tìm lệnh đã được giải thích ở bài nào |
-| `/on-tap` | Ôn chặng 1–7 (bài 5–34), kịch bản demo, câu hỏi vấn đáp và checklist tự kiểm tra |
+| `/tom-tat`, `/tom-tat/<chặng>` | Tóm tắt từng chặng của khoá chính: ý chính, bảng lệnh của từng bài, khối lệnh để chạy thử |
 | `/tien-do` | Mã học viên, khôi phục tiến độ từ máy khác, điểm từng bài |
 | `/nguon` | Các nguồn dùng để soạn bài và để học thêm |
 
@@ -46,12 +46,12 @@ Bài học đọc thẳng từ file, nên không có backend vẫn xem được 
 | `pnpm build` | Build bản production |
 | `pnpm start` | Chạy bản đã build ở cổng 3001 |
 | `pnpm lint` | Kiểm tra code bằng ESLint |
-| `pnpm test` | Kiểm tra tiến độ cũ và xử lý lỗi chuẩn bị demo (Node.js 22.6 trở lên, Bash) |
+| `pnpm test` | Kiểm tra chuyển đổi tiến độ của slug cũ (Node.js 22.6 trở lên) |
 | `pnpm check` | Kiểm tra nội dung bài học |
 
-## Ôn tập & demo
+## Tóm tắt chặng
 
-Mục `/on-tap` ôn đến hết chặng 7 của lộ trình hiện tại (Mạng, bài 34), đọc ba tài liệu trong `content/review/`: `summary.md`, `demo.md`, `questions.md`. Checklist tập demo lưu riêng trong trình duyệt. `pnpm check` cũng kiểm tra link bài học, bảng, khối code và thẻ details của các tài liệu này.
+Mỗi chặng có thể có một file `content/review/<slug-chặng>.md` (slug lấy trong `src/content/curriculum.ts`). Có file thì trang `/tom-tat/<slug>` được tạo, và link "Tóm tắt chặng" hiện ở lộ trình, ở danh sách bài bên trái và ở cuối bài cuối chặng. `pnpm check` kiểm tra tên file, link bài học, bảng và khối code của các file này.
 
 ## Biến môi trường
 
